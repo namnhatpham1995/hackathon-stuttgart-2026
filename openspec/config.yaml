@@ -1,0 +1,20 @@
+schema: spec-driven
+
+# Shown to the AI when it creates artifacts. Replace the first line with your hackathon idea.
+context: |
+  Product: <one line on what the team is building and for whom>.
+  Stack: one Next.js 16 App Router app (TypeScript, React 19, Tailwind CSS 4), Better Auth for
+  email/password and optional Google/GitHub sign-in, PostgreSQL 16 through Drizzle ORM
+  (migrations in drizzle/, schema in src/db/schema/), Zod for input validation, Vitest against a
+  real PostgreSQL test database, Biome for lint.
+  Rules: every protected page, route handler and server action checks the session; data
+  invariants are PostgreSQL constraints, not only application checks; persistence tests never mock
+  the database; conventional commits; one PR per task group into main.
+
+rules:
+  tasks:
+    - Each top-level task group is one independently mergeable PR into main, ordered so every merge point is green and the app still runs for a demo.
+    - Give every task its verification (the test to add or the check to run).
+    - A data rule from the specs gets its own task for the PostgreSQL constraint and a test that attempts the bad write.
+  design:
+    - Name the tables, columns and constraints a change adds, and which pages or actions need a session.

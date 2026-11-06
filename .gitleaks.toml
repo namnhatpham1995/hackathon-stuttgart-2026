@@ -1,0 +1,15 @@
+# Gitleaks configuration (`gitleaks git .` before pushing a new repo or after importing code).
+# Extends the default rules; add an allowlist entry only for a reviewed false positive, scoped by
+# rule, path and exact value together.
+
+title = "hackathon-starter gitleaks configuration"
+
+[extend]
+useDefault = true
+
+# Local-only and test-only placeholders, never real credentials.
+[[allowlists]]
+description = "Test and CI auth secrets"
+condition = "AND"
+paths = ['''vitest\.config\.ts''', '''\.github/workflows/ci\.yml''']
+regexes = ['''(test|ci)-only-secret-0123456789abcdef0123456789''']

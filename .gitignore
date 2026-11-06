@@ -1,0 +1,22 @@
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+.mcp.json
+
+# Claude Code: commit rules, agents, skills and commands; ignore local state
+.claude/worktrees/
+.claude/settings.local.json
+.claude/session-state/
+.claude/metadata.json
+.impeccable/
+
+*.log
+.DS_Store

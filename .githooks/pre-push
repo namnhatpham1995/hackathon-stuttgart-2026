@@ -1,0 +1,16 @@
+#!/bin/sh
+# Runs before every push. Never bypass it with --no-verify (.claude/rules/git-pr-workflow.md).
+# A push that changes only docs, plans, OpenSpec proposals or .claude/ rules skips the checks.
+set -e
+
+remote_ref_base="origin/main"
+changed=$(git diff --name-only "$remote_ref_base"...HEAD 2>/dev/null || echo "unknown")
+
+if [ "$changed" != "unknown" ] && [ -n "$changed" ] && \
+   ! echo "$changed" | grep -qvE '^(docs/|plans/|openspec/|\.claude/|\.agents/|memory/|[^/]+\.md$)'; then
+  echo "pre-push: docs-only change, skipping checks"
+  exit 0
+fi
+
+echo "pre-push: lint, typecheck and tests"
+pnpm verify

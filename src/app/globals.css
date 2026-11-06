@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* Design tokens. Run the impeccable skill (`/impeccable init`, then `shape`) to replace this
+   neutral starting point with your project's own visual direction, recorded in DESIGN.md. */
+@theme {
+  --color-paper: oklch(0.985 0.002 250);
+  --color-ink: oklch(0.22 0.01 250);
+  --color-muted: oklch(0.52 0.01 250);
+  --color-line: oklch(0.9 0.005 250);
+  --color-accent: oklch(0.55 0.17 262);
+  --color-accent-ink: oklch(0.99 0 0);
+  --color-danger: oklch(0.55 0.2 25);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: oklch(0.18 0.01 250);
+    --color-ink: oklch(0.95 0.005 250);
+    --color-muted: oklch(0.7 0.01 250);
+    --color-line: oklch(0.3 0.01 250);
+    --color-accent: oklch(0.7 0.15 262);
+    --color-accent-ink: oklch(0.15 0.01 250);
+  }
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+@layer components {
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: opacity 150ms ease;
+  }
+  .btn-primary {
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+  .btn-secondary {
+    border: 1px solid var(--color-line);
+  }
+  .btn-primary:hover,
+  .btn-secondary:hover {
+    opacity: 0.88;
+  }
+  .btn-primary:disabled,
+  .btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-primary:focus-visible,
+  .btn-secondary:focus-visible,
+  .field:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .field {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--color-line);
+    border-radius: 0.5rem;
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary,
+  .btn-secondary {
+    transition-duration: 0s;
+  }
+}

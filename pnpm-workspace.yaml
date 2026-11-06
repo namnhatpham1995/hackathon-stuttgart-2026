@@ -1,0 +1,17 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+  "@tailwindcss/oxide": true
+  unrs-resolver: true
+
+# Keep Linux native binaries in the lockfile even when it is regenerated on Windows or macOS, so a
+# Linux host (CI, Railway, Vercel) can install with --frozen-lockfile.
+supportedArchitectures:
+  os: [current, linux]
+  cpu: [current, x64]
+  libc: [current, glibc]
+
+overrides:
+  # drizzle-kit's deprecated @esbuild-kit loader pins an esbuild with GHSA-67mh-4wv8-2f99 (dev
+  # server request forgery); move only that vulnerable range to a patched release.
+  "esbuild@<0.24.3": "0.25.12"
