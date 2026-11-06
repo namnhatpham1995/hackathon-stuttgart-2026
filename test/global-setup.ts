@@ -4,7 +4,7 @@ import { ensureDatabase, loadEnv, migrateDatabase } from "../scripts/db-tools";
 export default async function setup() {
   loadEnv();
   const url =
-    process.env.TEST_DATABASE_URL ?? "postgres://postgres:postgres@localhost:5433/hackathon_test";
+    process.env.TEST_DATABASE_URL ?? "postgres://postgres:postgres@localhost:5434/hackathon_test";
   try {
     await ensureDatabase(url, { fresh: true });
   } catch (error) {
