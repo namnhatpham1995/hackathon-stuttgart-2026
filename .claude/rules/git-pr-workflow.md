@@ -66,7 +66,7 @@ them only with `pnpm worktree`, never in a sibling folder, a temp folder, or an 
 desktop-app default, so the whole set can be listed with `git worktree list`.
 
 Shared by every checkout: the PostgreSQL container itself (`docker-compose.yml` pins the project
-name, so `pnpm db:up` from any worktree reaches the same container on port 5433). Inside one
+name, so `pnpm db:up` from any worktree reaches the same container on port 5434). Inside one
 worktree, run one test command at a time.
 
 Remove a worktree with `pnpm worktree remove <type>/<slug>` from the main checkout: it refuses when

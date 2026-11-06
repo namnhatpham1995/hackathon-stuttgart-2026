@@ -34,5 +34,5 @@ run("pnpm db:seed");
 run("node scripts/prepare-git-hooks.mjs");
 run("node scripts/memory-install.mjs");
 
-const port = /^PORT=(\d+)/m.exec(readFileSync(".env", "utf8"))?.[1] ?? "3000";
+const port = /^PORT=(\d+)/m.exec(readFileSync(".env", "utf8"))?.[1] ?? "3001";
 console.log(`\nReady. Run \`pnpm dev\` and open http://localhost:${port}`);

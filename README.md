@@ -27,10 +27,10 @@ pnpm dev:setup
 pnpm dev
 ```
 
-Open http://localhost:3000, create an account, and you land on the protected dashboard. The
+Open http://localhost:3001, create an account, and you land on the protected dashboard. The
 seeded demo account is in `.env` (`SEED_USER_EMAIL`, `SEED_USER_PASSWORD`).
 
-`pnpm dev:setup` writes `.env` with a fresh `BETTER_AUTH_SECRET`, starts PostgreSQL on port 5433,
+`pnpm dev:setup` writes `.env` with a fresh `BETTER_AUTH_SECRET`, starts PostgreSQL on port 5434,
 applies migrations, creates the demo user, installs the git hooks and copies the seed memories into
 Claude Code's memory for this folder. It is safe to run again.
 
@@ -55,7 +55,7 @@ databases (`hackathon_wt<N>`, `hackathon_wt<N>_test`) and its own dev port (`300
 |---|---|
 | `pnpm dev` | Dev server on `PORT` from `.env` |
 | `pnpm verify` | Typecheck, lint and tests (the pre-push hook and CI run this) |
-| `pnpm db:up` | Start PostgreSQL (Docker, port 5433) |
+| `pnpm db:up` | Start PostgreSQL (Docker, port 5434) |
 | `pnpm db:generate` | Generate a migration after changing `src/db/schema/` |
 | `pnpm db:migrate` / `pnpm db:seed` | Apply migrations / create the demo user |
 | `pnpm db:studio` | Browse the database in Drizzle Studio |
@@ -87,10 +87,10 @@ would reuse the first one's container and its `hackathon` database. Before its f
 
 1. In `docker-compose.yml`, change `name:` (for example `name: my-idea`). The data volume is
    named after it, so it gets its own data too.
-2. To run both at once, also pick a free database port: change `"5433:5432"` in
-   `docker-compose.yml` and `5433` in `DATABASE_URL` and `TEST_DATABASE_URL` in `.env.example`
+2. To run both at once, also pick a free database port: change `"5434:5432"` in
+   `docker-compose.yml` and `5434` in `DATABASE_URL` and `TEST_DATABASE_URL` in `.env.example`
    (and in `.env` if it already exists). Change `PORT` and `BETTER_AUTH_URL` too, since the
-   first project's dev server already holds port 3000.
+   first project's dev server already holds port 3001.
 
 If only one project runs at a time, step 1 is enough: stop the other with `docker compose stop`.
 

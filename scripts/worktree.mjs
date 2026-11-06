@@ -102,7 +102,7 @@ async function create(branch) {
   const mainEnv = readEnv(path.join(root, ".env")) || readEnv(path.join(root, ".env.example"));
   const databaseUrl =
     /^DATABASE_URL=(.+)$/m.exec(mainEnv)?.[1] ??
-    "postgres://postgres:postgres@localhost:5433/hackathon";
+    "postgres://postgres:postgres@localhost:5434/hackathon";
   let env = mainEnv;
   env = setEnv(env, "WORKTREE_SLOT", slot);
   env = setEnv(env, "DATABASE_URL", withDatabase(databaseUrl, `hackathon_wt${slot}`));

@@ -12,6 +12,6 @@ export default defineConfig({
   schema: "./src/db/schema/index.ts",
   casing: "snake_case",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:5433/hackathon",
+    url: process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:5434/hackathon",
   },
 });

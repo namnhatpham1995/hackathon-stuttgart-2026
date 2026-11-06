@@ -9,7 +9,7 @@ try {
 }
 
 const testDatabaseUrl =
-  process.env.TEST_DATABASE_URL ?? "postgres://postgres:postgres@localhost:5433/hackathon_test";
+  process.env.TEST_DATABASE_URL ?? "postgres://postgres:postgres@localhost:5434/hackathon_test";
 
 export default defineConfig({
   resolve: {
