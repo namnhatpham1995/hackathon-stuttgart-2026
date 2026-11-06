@@ -34,8 +34,8 @@ and keep `PRODUCT.md` in step.
 
 | Command | What it does |
 |---|---|
-| `pnpm install && pnpm dev:setup` | First run: `.env` with a fresh secret, PostgreSQL in Docker (port 5433), migrate, seed, git hooks, memory |
-| `pnpm dev` | Dev server on `PORT` from `.env` (3000 in the main checkout) |
+| `pnpm install && pnpm dev:setup` | First run: `.env` with a fresh secret, PostgreSQL in Docker (port 5434), migrate, seed, git hooks, memory |
+| `pnpm dev` | Dev server on `PORT` from `.env` (3001 in the main checkout) |
 | `pnpm verify` | Typecheck, lint and tests (what the pre-push hook and CI run) |
 | `pnpm db:generate` | Create a migration from schema changes in `src/db/schema/` |
 | `pnpm db:migrate` / `pnpm db:seed` | Apply migrations / create the demo user |
