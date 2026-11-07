@@ -21,7 +21,7 @@ export function ReportScreen({
   const [ready, setReady] = useState(Boolean(initial));
 
   useEffect(() => {
-    if (readOnly) {
+    if (readOnly || initial?.stored) {
       setProduct(initial);
       setReady(true);
       return;

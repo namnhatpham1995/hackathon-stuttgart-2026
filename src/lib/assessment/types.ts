@@ -179,15 +179,21 @@ export const workspaceViews = ["product", "uploads", "report"] as const;
 export const workspaceDirectiveSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("navigate"),
+    productId: z.string().min(1).max(200).optional(),
     view: z.enum(workspaceViews),
   }),
-  z.object({ type: z.literal("show_upload_card") }),
+  z.object({
+    type: z.literal("show_upload_card"),
+    productId: z.string().min(1).max(200).optional(),
+  }),
   z.object({
     type: z.literal("show_report"),
+    productId: z.string().min(1).max(200).optional(),
     resultId: z.string().min(1),
   }),
   z.object({
     type: z.literal("request_replacement"),
+    productId: z.string().min(1).max(200).optional(),
     documentId: z.string().min(1),
   }),
 ]);

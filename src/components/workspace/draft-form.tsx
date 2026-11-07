@@ -1,7 +1,7 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
-import { validateDraft } from "@/app/workspace/actions";
+import { type ChangeEvent, type FormEvent, useState } from "react";
+import { saveWorkspaceDraft, validateDraft } from "@/app/workspace/actions";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 
@@ -31,6 +31,19 @@ export function DraftForm({
     const input = Object.fromEntries(order.map((key) => [key, String(form.get(key) ?? "")]));
     setPending(true);
     try {
+      if (product.stored) {
+        const result = await saveWorkspaceDraft(product.id, input);
+        if (!result.ok) {
+          setErrors(result.errors);
+          focusFirstInvalid(result.errors, order);
+          return;
+        }
+        onSaved(result.product);
+        setErrors({});
+        setChanges({});
+        setSaved(true);
+        return;
+      }
       const result = await validateDraft(input);
       if (!result.ok) {
         setErrors(result.errors);
@@ -59,6 +72,12 @@ export function DraftForm({
     }
   }
 
+  function edit(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    setSaved(false);
+    setChanges((current) => ({ ...current, [input.name]: input.value }));
+  }
+
   function originBadge(name: keyof ProductFields) {
     const previous = fields[name];
     if (!previous && changes[name] === undefined) return null;
@@ -67,17 +86,7 @@ export function DraftForm({
   }
 
   return (
-    <form
-      id="product-draft"
-      className="space-y-4"
-      onSubmit={(event) => void onSubmit(event)}
-      onChange={(event) => {
-        const input = event.target;
-        if (!(input instanceof HTMLInputElement)) return;
-        setSaved(false);
-        setChanges((current) => ({ ...current, [input.name]: input.value }));
-      }}
-    >
+    <form id="product-draft" className="space-y-4" onSubmit={(event) => void onSubmit(event)}>
       <div className="space-y-1">
         <h2 className="section-title">Product draft</h2>
         <p className="text-sm text-muted">
@@ -90,11 +99,18 @@ export function DraftForm({
         </p>
       ) : null}
       <fieldset disabled={pending} className="space-y-4">
-        <Field label="Product name" name="name" defaultValue={product.name} error={errors.name} />
+        <Field
+          label="Product name"
+          name="name"
+          value={changes.name ?? product.name}
+          onChange={edit}
+          error={errors.name}
+        />
         <Field
           label="Supplier"
           name="supplierName"
-          defaultValue={fields.supplierName?.value ?? ""}
+          value={changes.supplierName ?? fields.supplierName?.value ?? ""}
+          onChange={edit}
           error={errors.supplierName}
           aside={originBadge("supplierName")}
         />
@@ -102,7 +118,8 @@ export function DraftForm({
           label="Part number"
           name="partNumber"
           mono
-          defaultValue={fields.partNumber?.value ?? ""}
+          value={changes.partNumber ?? fields.partNumber?.value ?? ""}
+          onChange={edit}
           error={errors.partNumber}
           aside={originBadge("partNumber")}
         />
@@ -110,21 +127,24 @@ export function DraftForm({
           label="Revision"
           name="revision"
           mono
-          defaultValue={fields.revision?.value ?? ""}
+          value={changes.revision ?? fields.revision?.value ?? ""}
+          onChange={edit}
           error={errors.revision}
           aside={originBadge("revision")}
         />
         <Field
           label="Material"
           name="material"
-          defaultValue={fields.material?.value ?? ""}
+          value={changes.material ?? fields.material?.value ?? ""}
+          onChange={edit}
           error={errors.material}
           aside={originBadge("material")}
         />
         <Field
           label="Packaging"
           name="packaging"
-          defaultValue={fields.packaging?.value ?? ""}
+          value={changes.packaging ?? fields.packaging?.value ?? ""}
+          onChange={edit}
           error={errors.packaging}
           aside={originBadge("packaging")}
         />
@@ -134,7 +154,7 @@ export function DraftForm({
           </Button>
           {saved ? (
             <p role="status" className="text-sm text-muted">
-              Draft saved in this browser.
+              {product.stored ? "Draft saved to your account." : "Draft saved in this browser."}
             </p>
           ) : (
             <p className="text-sm text-muted">Choose Save draft to keep your changes.</p>

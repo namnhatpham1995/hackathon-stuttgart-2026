@@ -142,14 +142,15 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
   - Note: Draft writes always use origin `assistant`. `start_assessment` calls `startAssessment` only when the checklist exists, at least one document is active and none are pending. Latest job and stored findings are read in this module; the jobs service has no product-scoped read and this lane does not own that file.
 - [x] 14.2 Add `POST /api/assistant` (session required): Gemini function calling over the history, at most 5 rounds, failures explained with a recovery step, replies only from tool results; verify a model-supplied foreign product ID gets "not found"
   - Blocked: Live Gemini check was not run. This VM has no GEMINI_API_KEY. Tests mock `callGemini`: a foreign product id on show_report returns "not found", tool rounds stop at 5, and a model failure is a recovery step. Production model is `gemini-3.6-flash` via `callGemini` (`GEMINI_MODEL`). The route is `POST /api/assistant` on Railway; Vercel proxies `/api/*`.
-- [ ] 14.3 Fill `assistant-panel.tsx`: text input, message list, applies directives through `workspace-events.ts`, stays usable while a job runs; verify the demo conversation: "I want to submit my product and documents for this buyer" opens the upload card; after the report, "Why did R3 fail?" cites the revision-A quote and offers a replacement
+- [x] 14.3 Fill `assistant-panel.tsx`: text input, message list, applies directives through `workspace-events.ts`, stays usable while a job runs; verify the demo conversation: "I want to submit my product and documents for this buyer" opens the upload card; after the report, "Why did R3 fail?" cites the revision-A quote and offers a replacement
+  - Note: Connected the panel, shared directives, owned product/draft/upload persistence, and stored reports. Automated DOM and real-PostgreSQL tests cover upload navigation, R3 citations, replacement routing, retry input, and draft provenance. Provider boundaries are mocked locally. Live Gemini verification remains on Railway with its configured environment.
 
 ## 15. Spoken replies (optional, cut at 15:15) · wave 4 · M4 · branch feat/spoken-replies
 
 - [x] 15.1 Add `POST /api/speech` (session required, text up to 600 characters, ElevenLabs text-to-speech with a stock voice, key server-side) and `src/components/voice/speak-reply.tsx` with a mute toggle; verify a reply plays audio and, with the key unset, the reply stays text with no error dialog
   - Note: Server env is `ELEVENLABS_API_KEY` (Railway only, never `NEXT_PUBLIC_`, never on Vercel). Stock voice Rachel `21m00Tcm4TlvDq8ikWAM`, model `eleven_flash_v2_5`. Missing key or a failed synthesis returns `{ available: false }` and the reply stays text.
-- [ ] 15.2 Mount the speaker in `assistant-panel.tsx` (one line); verify the 14.3 conversation still works with audio off
-  - Blocked: needs 14.3
+- [x] 15.2 Mount the speaker in `assistant-panel.tsx` (one line); verify the 14.3 conversation still works with audio off
+  - Note: Mounted the speaker in the assistant conversation with a shared mute control. DOM integration tests verify the upload/R3 conversation with speech off and no speech requests.
 
 ## 16. Submission package · wave 4 · M5 · branch docs/submission
 

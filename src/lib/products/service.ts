@@ -14,6 +14,8 @@ export const createProductInput = z.object({
   name: z.string().trim().min(1),
   requirementSetKey: z.string().min(1),
   requirementSetVersion: z.number().int().positive(),
+  fields: productFieldsSchema.optional(),
+  profile: supplierProfileSchema.optional(),
 });
 
 export const updateProductInput = z.object({
@@ -86,6 +88,8 @@ export async function createProduct(
       requirementSetKey: parsed.requirementSetKey,
       requirementSetVersion: parsed.requirementSetVersion,
       name: parsed.name,
+      fields: parsed.fields,
+      profile: parsed.profile,
     })
     .returning();
   if (!row) throw new ProductRequestError(400, "The product could not be saved");

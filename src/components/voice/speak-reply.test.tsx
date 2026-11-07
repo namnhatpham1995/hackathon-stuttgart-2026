@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
@@ -95,4 +96,31 @@ describe("spoken reply playback", () => {
     expect(html).not.toContain('role="alert"');
     expect(html.toLowerCase()).not.toContain("error");
   });
+});
+
+test("a muted mounted reply skips speech requests and keeps the complete text", async () => {
+  const { act } = await import("react");
+  const { createRoot } = await import("react-dom/client");
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  const fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValue(Response.json({ available: false }));
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  const fullText = "A".repeat(650);
+  try {
+    await act(async () => root.render(<SpeakReply text={fullText} muted />));
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(container.textContent).toBe(fullText);
+    await act(async () => root.render(<SpeakReply text={fullText} muted={false} />));
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(String(fetchSpy.mock.calls[0]?.[1]?.body)).text).toHaveLength(600);
+    expect(container.textContent).toBe(fullText);
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+    vi.unstubAllGlobals();
+  }
 });

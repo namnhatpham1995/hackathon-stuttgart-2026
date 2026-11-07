@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { setTheme } from "@/app/workspace/actions";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { NavItem } from "@/components/ui/nav-item";
 import { ConnectionsNav } from "@/components/connections/connections-nav";
 import { signOut } from "@/lib/auth-client";
 
-import { AssistantPanel } from "./assistant-panel";
+import { AssistantPanel } from "@/components/assistant/assistant-panel";
+import { subscribeWorkspaceDirective } from "./workspace-events";
 import { DocumentIcon, PanelIcon, ProductIcon, SignOutIcon, ThemeIcon } from "./icons";
 
 export function WorkspaceShell({
@@ -20,6 +21,9 @@ export function WorkspaceShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const params = useParams();
+  const productId = typeof params.productId === "string" ? params.productId : undefined;
   const [assistantOpen, setAssistantOpen] = useState(false);
   const assistantDialog = useRef<HTMLDialogElement>(null);
   const assistantTrigger = useRef<HTMLButtonElement>(null);
@@ -28,6 +32,27 @@ export function WorkspaceShell({
     if (assistantOpen) assistantDialog.current?.showModal();
     else assistantDialog.current?.close();
   }, [assistantOpen]);
+
+  useEffect(
+    () =>
+      subscribeWorkspaceDirective((directive) => {
+        if (!productId) return;
+        setAssistantOpen(false);
+        const base = `/workspace/${encodeURIComponent(directive.productId ?? productId)}`;
+        if (directive.type === "show_report") {
+          router.push(`${base}/report?result=${encodeURIComponent(directive.resultId)}`);
+        } else if (directive.type === "request_replacement") {
+          router.push(`${base}?replace=${encodeURIComponent(directive.documentId)}#upload-card`);
+        } else if (directive.type === "navigate" && directive.view === "report") {
+          router.push(`${base}/report`);
+        } else if (directive.type === "navigate" && directive.view === "product") {
+          router.push(`${base}?view=product#product-draft`);
+        } else {
+          router.push(`${base}?view=uploads#upload-card`);
+        }
+      }),
+    [productId, router],
+  );
 
   return (
     <div className="workspace-shell min-h-dvh bg-card text-ink">
@@ -112,7 +137,11 @@ export function WorkspaceShell({
         }}
       >
         <div className="h-full">
-          <AssistantPanel onCollapse={() => setAssistantOpen(false)} />
+          <AssistantPanel
+            key={productId ?? "workspace"}
+            productId={productId}
+            onCollapse={() => setAssistantOpen(false)}
+          />
         </div>
       </dialog>
     </div>

@@ -1,8 +1,4 @@
-/**
- * Local stand-in for `src/lib/assessment/types.ts` (group 3, design.md Decision 2).
- * Field names match that decision. When the contract file exists, switch these
- * imports over and delete this module.
- */
+/** Workspace presentation types. Stored findings are adapted from the shared assessment contract. */
 
 export const FINDING_STATUSES = [
   "DOCUMENTED",
@@ -65,7 +61,9 @@ export type EvidenceType =
   | "supplier declaration"
   | "material datasheet"
   | "inspection report"
-  | "submitted certificate";
+  | "submitted certificate"
+  | "traceability record"
+  | "packaging acceptance";
 
 export type Citation = {
   documentId: string;
@@ -129,11 +127,7 @@ export type AssessmentResult = {
   documents: AssessedDocument[];
 };
 
-export type WorkspaceDirective =
-  | { action: "navigate_workspace"; view: "product" | "uploads" | "report" }
-  | { action: "show_upload_card" }
-  | { action: "show_report"; resultId: string }
-  | { action: "request_replacement"; documentId: string };
+export type { WorkspaceDirective } from "@/lib/assessment/types";
 
 export type DocumentKind = "evidence" | "photo";
 export type DocumentState = "pending" | "active" | "inactive";
@@ -150,6 +144,8 @@ export type ProductDocument = {
 };
 
 export type WorkspaceProduct = {
+  stored?: boolean;
+  job?: { id: string; startedAt: number } | null;
   id: string;
   name: string;
   requirementSetKey: string;
