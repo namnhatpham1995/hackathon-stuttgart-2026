@@ -4,8 +4,8 @@
  */
 export function ReportShare({ resultId }: { resultId: string }) {
   return (
-    <section className="max-w-3xl space-y-2 rounded-lg border border-line bg-card p-4 shadow-card">
-      <h2 className="text-lg font-semibold tracking-tight">Share with a buyer</h2>
+    <section className="space-y-2 rounded-md border border-line bg-card p-4">
+      <h2 className="section-title">Share with a buyer</h2>
       <p className="text-sm text-muted" data-result-id={resultId}>
         Sharing this result with one signed-in buyer is not connected yet. Copy the document request
         if you need to send the open items yourself.

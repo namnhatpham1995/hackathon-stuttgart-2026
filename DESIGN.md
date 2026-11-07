@@ -6,9 +6,9 @@ This is an Operate surface. People scan a product, add documents, and read an ev
 
 ## Principles
 
-- Light and airy. White cards on an off-white background. A left sidebar. Deep navy for text and for the navigation. One calm blue accent.
-- One sans-serif for the whole product (Inter), with tabular numbers. Monospace only for part numbers, revisions, and quoted evidence. No display face.
-- Medium density. Lists and tables. No KPI tiles, charts, gauges, or progress rings.
+- Vanta and Drata page structure, ExportReady colours. White cards, a 1px border, a 4–6px radius. No decorative shadow.
+- One sans-serif (Inter). Body 14px, meta and labels 13px, page title 26px semibold. Weights 400, 500 and 600. Letter-spacing stays at 0. Near-black text, grey secondary text. Monospace only for part numbers, revisions, and quoted evidence.
+- Medium density. Breadcrumbs, a metadata strip, a summary panel beside an evidence card, checklist rows, a right-hand info sidebar, and the assistant docked on the left. No KPI tiles, charts, gauges, or progress rings.
 - Status is a chip: a soft tint, dark text, an icon, and a label. Counts read "1 documented · 0 open".
 - Hard rule: no score, percentage, readiness rating, "verified" badge, or "Compliant" badge. The report is not a certification.
 
@@ -22,7 +22,7 @@ Light is the default scene: a desk, a long reading session, paper behind the wor
 |---|---|
 | `paper` | Page background, off-white |
 | `card` | Cards, inputs, the assistant panel |
-| `ink` | Text and the navy used for body copy |
+| `ink` | Near-black body text |
 | `muted` | Secondary text, still 4.5:1 on paper and on card |
 | `line` | Hairline borders and dividers |
 | `accent` / `accent-ink` | The one accent, used for primary actions and links' focus |
@@ -39,14 +39,14 @@ The expired and processing-incomplete banners use an amber left border. That bor
 
 - Sans: Inter, loaded with `next/font`, `font-display: swap`. Fallback: `ui-sans-serif, system-ui, sans-serif`.
 - Mono: IBM Plex Mono, only on part numbers, revisions, and citation quotes.
-- Body 14px, titles 24px semibold, section headings 18px semibold. Tracking on titles stays tighter than -0.04em (`tracking-tight`).
+- Body 14px / 400. Meta and labels 13px / 400 or 500. Section titles 16px / 600. Page title 26px / 600. Letter-spacing is 0.
 - Numbers use `tabular-nums`.
 
 ## Space and depth
 
 - 4px base. Related items sit 8–12px apart. Sections sit 40px apart. A heading has more space above it than below it.
-- Cards use a 1px `line` border, an 8px radius, and a soft shadow with a 1px vertical offset. No glow, no hard offset shadow.
-- The sidebar is 240px from 768px up. The assistant column is 320px from 1280px up. Below that the assistant stacks under the work. Below 768px the sidebar becomes a menu.
+- Cards use a 1px `line` border and a 6px radius. No shadow.
+- From 1280px the assistant is a 300px column on the left of the work. The product and report pages add a 240px info sidebar on the right. Below that, both stack. The top bar holds Products, the current product, and Report.
 - Report and form copy stay in a column of about 65–75 characters.
 
 ## Components
@@ -71,15 +71,17 @@ Workspace components:
 ## Layout
 
 ```text
-+----------+---------------------------+------------------+
-| Sidebar  | Product, upload, report   | Assistant        |
-| Products |                           |                  |
-| Report   |                           |                  |
-| Connections (slot)                  |                  |
-+----------+---------------------------+------------------+
+Top bar: ExportReady · Products · Product · Report          Assistant · theme · account
+Connections strip
++------------------+----------------------------------+------------------+
+| Assistant        | Breadcrumb                       | Requested by     |
+| (Drata panel)    | Title, metadata, actions         | Date             |
+|                  | Summary        | Evidence        | 2 of 5 documented|
+|                  | Requirement checklist R1–R5      |                  |
++------------------+----------------------------------+------------------+
 ```
 
-At 375px the three regions stack and the sidebar is a menu. At 768px the sidebar sits beside the work and the assistant moves below. At 1280px and 1440px all three columns show.
+At 375px the assistant is closed until Assistant is pressed, and the info sidebar sits under the work. At 1280px and 1440px the three regions show.
 
 ## Voice
 

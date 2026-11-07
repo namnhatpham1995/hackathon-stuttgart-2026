@@ -7,7 +7,7 @@ export default async function HomePage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-8 px-6 py-16">
       <div className="space-y-3">
-        <h1 className="text-4xl font-semibold tracking-tight text-balance">ExportReady</h1>
+        <h1 className="page-title text-balance">ExportReady</h1>
         <p className="text-lg text-pretty text-muted">
           Add the documents a buyer asked for and read an evidence report: what is documented, what
           is still open, and what to provide next.

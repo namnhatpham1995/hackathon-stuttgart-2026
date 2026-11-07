@@ -41,7 +41,7 @@ export function WorkspaceHome() {
     <div className="max-w-4xl space-y-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
+          <h1 className="page-title">Products</h1>
           <p className="max-w-prose text-sm text-muted">
             Describe a product, add the buyer’s documents, and read the evidence report. The sample
             CAP-104 products are the demo. Products you create stay in this browser until the
@@ -207,7 +207,7 @@ function Onboarding({
     <form className="max-w-xl space-y-5" onSubmit={(event) => void onSubmit(event)}>
       <div className="space-y-2">
         <p className="text-sm text-muted">Step {step} of 2</p>
-        <h2 ref={heading} tabIndex={-1} className="text-lg font-semibold tracking-tight">
+        <h2 ref={heading} tabIndex={-1} className="section-title">
           {step === 1 ? "Supplier profile" : "Product draft"}
         </h2>
         <p className="text-sm text-muted">

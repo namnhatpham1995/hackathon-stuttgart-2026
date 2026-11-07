@@ -11,12 +11,18 @@ const variants: Record<Variant, string> = {
   ghost: "bg-transparent text-ink hover:bg-paper",
 };
 
+const sizes = {
+  md: "min-h-11 px-3.5 text-sm",
+  sm: "min-h-8 px-2.5 text-[13px]",
+};
+
 const base =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center gap-1.5 rounded-md font-medium tracking-normal motion-safe:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60";
 
 type Common = {
   variant?: Variant;
   pending?: boolean;
+  size?: "md" | "sm";
   children: ReactNode;
   className?: string;
 };
@@ -29,8 +35,8 @@ type ButtonProps = Common & {
 type LinkButtonProps = Common & { href: string };
 
 export function Button(props: ButtonProps | LinkButtonProps) {
-  const { variant = "primary", pending = false, children, className = "" } = props;
-  const classes = `${base} ${variants[variant]} ${className}`;
+  const { variant = "primary", pending = false, size = "md", children, className = "" } = props;
+  const classes = `${base} ${sizes[size]} ${variants[variant]} ${className}`;
 
   if ("href" in props && props.href) {
     return (
@@ -48,6 +54,7 @@ export function Button(props: ButtonProps | LinkButtonProps) {
     ref,
     variant: _variant,
     pending: _pending,
+    size: _size,
     className: _className,
     children: _children,
     href: _href,

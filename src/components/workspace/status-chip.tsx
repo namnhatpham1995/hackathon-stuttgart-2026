@@ -21,7 +21,7 @@ export function StatusChip({ status }: { status: FindingStatus }) {
   const Icon = icons[status];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium ${styles[status]}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[13px] font-medium ${styles[status]}`}
     >
       <Icon />
       {STATUS_LABELS[status]}

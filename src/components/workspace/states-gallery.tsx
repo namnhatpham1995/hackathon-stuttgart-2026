@@ -46,7 +46,7 @@ export function StatesGallery() {
   return (
     <div className="max-w-3xl space-y-12">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Interface states</h1>
+        <h1 className="page-title">Interface states</h1>
         <p className="text-sm text-muted">
           Typical, empty, loading, error, long values, and the file limit. This page is not part of
           the product and is absent in production.

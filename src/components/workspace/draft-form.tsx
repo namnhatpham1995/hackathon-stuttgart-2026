@@ -55,7 +55,7 @@ export function DraftForm({
   return (
     <form id="product-draft" className="space-y-4" onSubmit={(event) => void onSubmit(event)}>
       <div className="space-y-1">
-        <h2 className="text-lg font-semibold tracking-tight">Product draft</h2>
+        <h2 className="section-title">Product draft</h2>
         <p className="text-sm text-muted">
           Each value records who entered it. Assistant and document values stay editable.
         </p>

@@ -82,7 +82,7 @@ function FieldFrame({
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <label htmlFor={id} className="text-sm font-medium">
+        <label htmlFor={id} className="meta font-medium text-ink">
           {label}
         </label>
         {aside}

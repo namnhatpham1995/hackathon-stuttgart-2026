@@ -30,7 +30,7 @@ export function NavItem({
     <Link
       href={href}
       aria-current={current ? "page" : undefined}
-      className={`nav-on-navy flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-medium motion-safe:active:scale-[0.98] ${palette}`}
+      className={`nav-on-navy flex min-h-9 items-center gap-2 rounded-md px-2.5 text-sm font-medium tracking-normal motion-safe:active:scale-[0.98] ${palette}`}
     >
       <span className="min-w-0 flex-1 truncate">{children}</span>
       <NavPending />

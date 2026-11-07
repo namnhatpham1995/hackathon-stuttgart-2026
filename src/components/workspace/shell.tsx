@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { setTheme } from "@/app/workspace/actions";
 import { Button } from "@/components/ui/button";
 import { NavItem } from "@/components/ui/nav-item";
@@ -18,126 +18,73 @@ export function WorkspaceShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const menuButton = useRef<HTMLButtonElement>(null);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const productSegment = pathname.match(/^\/workspace\/([^/]+)/)?.[1];
   const productId =
     productSegment && productSegment !== "states" ? decodeURIComponent(productSegment) : null;
 
-  function closeMenu() {
-    setOpen(false);
-    menuButton.current?.focus();
-  }
-
   useEffect(() => {
-    if (!open) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      setOpen(false);
-      menuButton.current?.focus();
+    const wide = window.matchMedia("(min-width: 1280px)");
+    setAssistantOpen(wide.matches);
+    function onFocus() {
+      setAssistantOpen(true);
     }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
-
-  useEffect(() => {
-    if (pathname.startsWith("/workspace")) setOpen(false);
-  }, [pathname]);
-
-  const nav = (
-    <>
-      <div className="px-3 pb-4">
-        <p className="px-3 text-base font-semibold text-navy-ink">ExportReady</p>
-        <p className="px-3 text-sm text-navy-muted">Evidence workspace</p>
-      </div>
-      <nav
-        aria-label="Primary"
-        className="flex flex-col gap-1 px-3"
-        onClick={() => {
-          if (!open) return;
-          setOpen(false);
-          menuButton.current?.focus();
-        }}
-        onKeyDown={(event) => {
-          if (event.key !== "Enter" || !open) return;
-          setOpen(false);
-          menuButton.current?.focus();
-        }}
-      >
-        <NavItem href="/workspace" exact>
-          Products
-        </NavItem>
-        {productId ? (
-          <>
-            <NavItem href={`/workspace/${productId}`} exact>
-              Product draft
-            </NavItem>
-            <NavItem href={`/workspace/${productId}/report`} exact>
-              Evidence report
-            </NavItem>
-          </>
-        ) : null}
-      </nav>
-      <ConnectionsNav />
-      <div className="mt-auto space-y-3 px-3 pt-6">
-        <ThemeToggle />
-        <div className="min-w-0 px-3">
-          <p className="truncate text-sm font-medium text-navy-ink">{user.name}</p>
-          <p className="text-sm break-all text-navy-muted">{user.email}</p>
-        </div>
-        <SignOut />
-      </div>
-    </>
-  );
+    window.addEventListener("exportready:focus-assistant", onFocus);
+    return () => window.removeEventListener("exportready:focus-assistant", onFocus);
+  }, []);
 
   return (
-    <div className="min-h-dvh bg-paper text-ink md:grid md:grid-cols-[15rem_minmax(0,1fr)]">
+    <div className="min-h-dvh bg-paper text-ink">
       <a
         href="#workspace-main"
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-card focus:px-3 focus:py-2"
       >
         Skip to content
       </a>
-      <aside className="hidden md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:overflow-y-auto md:bg-navy md:py-4">
-        {nav}
-      </aside>
-      {open ? (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <button
+      <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-card px-4 py-2">
+        <p className="text-sm font-semibold text-accent">ExportReady</p>
+        <nav aria-label="Primary" className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+          <NavItem href="/workspace" exact tone="default">
+            Products
+          </NavItem>
+          {productId ? (
+            <>
+              <NavItem href={`/workspace/${productId}`} exact tone="default">
+                Product
+              </NavItem>
+              <NavItem href={`/workspace/${productId}/report`} exact tone="default">
+                Report
+              </NavItem>
+            </>
+          ) : null}
+        </nav>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <Button
             type="button"
-            className="absolute inset-0 bg-navy/50"
-            aria-label="Close menu"
-            onClick={closeMenu}
-          />
-          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col overflow-y-auto bg-navy py-4">
-            {nav}
-          </div>
+            variant="ghost"
+            size="sm"
+            onClick={() => setAssistantOpen((value) => !value)}
+          >
+            {assistantOpen ? "Hide assistant" : "Assistant"}
+          </Button>
+          <ThemeToggle />
+          <span className="meta hidden text-muted sm:inline">{user.name}</span>
+          <SignOut />
         </div>
-      ) : null}
-      <div className="min-w-0 xl:grid xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="min-w-0">
-          <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3 md:hidden">
-            <p className="font-semibold">ExportReady</p>
-            <Button
-              ref={menuButton}
-              type="button"
-              variant="secondary"
-              aria-expanded={open}
-              onClick={() => setOpen(true)}
-            >
-              Menu
-            </Button>
-          </header>
-          <main id="workspace-main" className="min-w-0 px-4 py-6 sm:px-6 lg:px-8">
-            {children}
-          </main>
-        </div>
-        <aside
-          aria-label="Assistant"
-          className="min-w-0 border-t border-line xl:sticky xl:top-0 xl:h-dvh xl:overflow-y-auto xl:border-t-0 xl:border-l"
-        >
-          <AssistantPanel />
-        </aside>
+      </header>
+      <ConnectionsNav />
+      <div className="xl:grid xl:grid-cols-[300px_minmax(0,1fr)]">
+        {assistantOpen ? (
+          <aside
+            aria-label="Assistant"
+            className="min-w-0 border-b border-line xl:sticky xl:top-0 xl:h-[calc(100dvh-3.25rem)] xl:overflow-y-auto xl:border-r xl:border-b-0"
+          >
+            <AssistantPanel onCollapse={() => setAssistantOpen(false)} />
+          </aside>
+        ) : null}
+        <main id="workspace-main" className="min-w-0 px-4 py-4 sm:px-6">
+          {children}
+        </main>
       </div>
     </div>
   );
@@ -166,7 +113,7 @@ function ThemeToggle() {
   }
 
   return (
-    <Button type="button" variant="secondary" className="w-full" onClick={toggle}>
+    <Button type="button" variant="secondary" size="sm" onClick={toggle}>
       {label}
     </Button>
   );
@@ -180,8 +127,8 @@ function SignOut() {
     <Button
       type="button"
       variant="secondary"
+      size="sm"
       pending={pending}
-      className="w-full"
       onClick={async () => {
         setPending(true);
         await signOut();

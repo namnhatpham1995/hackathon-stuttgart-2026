@@ -68,7 +68,7 @@ export function ProgressView({
 
   return (
     <section className="space-y-4" aria-live="polite">
-      <h2 className="text-lg font-semibold tracking-tight">Assessment</h2>
+      <h2 className="section-title">Assessment</h2>
       {failure ? <AttentionBanner title="Status unavailable">{failure}</AttentionBanner> : null}
       {current?.status === "NEEDS_ATTENTION" ? (
         <AttentionBanner title="Processing incomplete">

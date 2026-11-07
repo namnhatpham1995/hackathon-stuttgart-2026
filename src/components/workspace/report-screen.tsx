@@ -37,7 +37,7 @@ export function ReportScreen({
   if (!product) {
     return (
       <section className="max-w-xl space-y-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Evidence report</h1>
+        <h1 className="page-title">Evidence report</h1>
         <p className="text-muted">
           No report is stored for this product. Open the product, add documents, and choose Upload
           and assess.
