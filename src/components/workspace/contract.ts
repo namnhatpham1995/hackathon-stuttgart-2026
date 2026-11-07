@@ -151,6 +151,7 @@ export type WorkspaceProduct = {
   job?: { id: string; startedAt: number } | null;
   id: string;
   name: string;
+  listed: boolean;
   requirementSetKey: string;
   requirementSetVersion: number;
   fields: ProductFields;

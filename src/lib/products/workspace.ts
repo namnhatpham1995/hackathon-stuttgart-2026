@@ -43,6 +43,7 @@ export async function loadWorkspaceProduct(
   return {
     id: owned.id,
     name: owned.name,
+    listed: owned.listed,
     fields: owned.fields,
     requirementSetKey: owned.requirementSetKey,
     requirementSetVersion: owned.requirementSetVersion,

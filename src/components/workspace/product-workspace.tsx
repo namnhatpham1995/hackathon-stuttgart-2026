@@ -14,6 +14,7 @@ import { checklistFor } from "./checklists";
 import type { WorkspaceProduct } from "./contract";
 import { rejectionForFile } from "./documents";
 import { DraftForm } from "./draft-form";
+import { ListingStatus } from "./listing-status";
 import { MetaItem, PageHeader, ProductNav } from "./page-chrome";
 import { ProgressView } from "./progress-view";
 import { UploadCard } from "./upload-card";
@@ -170,6 +171,7 @@ export function ProductWorkspace({
                 {product.fields.revision?.value ?? "—"}
               </span>
             </MetaItem>
+            <MetaItem>Buyer requirements v{product.requirementSetVersion}</MetaItem>
             {open !== undefined ? (
               <MetaItem>
                 {job ? "Assessment in progress" : open === 1 ? "1 open" : `${open} open`}
@@ -186,10 +188,11 @@ export function ProductWorkspace({
         }
       />
       <ProductNav productId={product.id} current="documents" />
-      <p className="meta text-muted">
-        Requested by <span className="font-medium text-ink">Neckar Maschinenbau GmbH</span> · Buyer
-        requirements v{product.requirementSetVersion}
-      </p>
+      <ListingStatus
+        productId={product.id}
+        listed={product.listed}
+        onChanged={(listed) => update({ ...product, listed })}
+      />
       <UploadCard
         checklist={checklistFor(product.requirementSetKey, product.requirementSetVersion)}
         documents={product.documents}

@@ -26,6 +26,7 @@ import { auth } from "@/lib/auth";
 import { getProduct } from "./service";
 import { loadWorkspaceProduct } from "./workspace";
 import { startAssessment } from "@/lib/jobs/service";
+import { setProductListed } from "@/lib/connections/service";
 
 async function owner() {
   const email = `workspace-${crypto.randomUUID()}@example.com`;
@@ -212,4 +213,13 @@ test("Undo discards a pending replacement and retains its active predecessor", a
     status: 400,
     message: "Only a pending upload can be undone",
   });
+});
+
+test("a new product is unlisted and the owner can list it", async () => {
+  const userId = await owner();
+  const created = await create();
+  expect(created.listed).toBe(false);
+  expect((await readWorkspace(created.id))?.listed).toBe(false);
+  await setProductListed(userId, created.id, true);
+  expect((await readWorkspace(created.id))?.listed).toBe(true);
 });
