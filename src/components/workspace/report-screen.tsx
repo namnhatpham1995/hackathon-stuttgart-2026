@@ -1,15 +1,10 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
-import { Button } from "@/components/ui/button";
-import type { WorkspaceProduct } from "./contract";
 import { ReportShare } from "@/components/connections/report-share";
+import { Button } from "@/components/ui/button";
+
+import type { WorkspaceProduct } from "./contract";
 import { ReportView } from "./report-view";
-import { readProduct } from "./store";
 
 export function ReportScreen({
-  productId,
   initial,
   readOnly = false,
 }: {
@@ -17,29 +12,7 @@ export function ReportScreen({
   initial: WorkspaceProduct | null;
   readOnly?: boolean;
 }) {
-  const [product, setProduct] = useState<WorkspaceProduct | null>(initial);
-  const [ready, setReady] = useState(Boolean(initial));
-
-  useEffect(() => {
-    if (readOnly || initial?.stored) {
-      setProduct(initial);
-      setReady(true);
-      return;
-    }
-    const saved = readProduct(productId);
-    setProduct(saved?.result ? saved : (initial ?? saved));
-    setReady(true);
-  }, [initial, productId, readOnly]);
-
-  if (!ready) {
-    return (
-      <p className="text-sm text-muted" role="status">
-        Loading the report…
-      </p>
-    );
-  }
-
-  if (!product) {
+  if (!initial) {
     return (
       <section className="max-w-xl space-y-3">
         <h1 className="page-title">Evidence report</h1>
@@ -59,8 +32,8 @@ export function ReportScreen({
 
   return (
     <div className="workspace-content space-y-8">
-      <ReportView product={product} readOnly={readOnly} />
-      {readOnly || !product.result ? null : <ReportShare resultId={product.result.id} />}
+      <ReportView product={initial} readOnly={readOnly} />
+      {readOnly || !initial.result ? null : <ReportShare resultId={initial.result.id} />}
     </div>
   );
 }

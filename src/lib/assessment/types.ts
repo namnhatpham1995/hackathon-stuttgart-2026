@@ -45,6 +45,9 @@ export const requirementKinds = [
   "inspection_report",
   "traceability_record",
   "packaging_acceptance",
+  "product_specification",
+  "material_declaration",
+  "packaging_specification",
 ] as const;
 export type RequirementKind = (typeof requirementKinds)[number];
 
@@ -54,16 +57,22 @@ export const evidenceTypeLabels: Record<RequirementKind, string> = {
   inspection_report: "inspection report",
   traceability_record: "traceability record",
   packaging_acceptance: "packaging acceptance",
+  product_specification: "product specification",
+  material_declaration: "material declaration",
+  packaging_specification: "packaging specification",
 };
 
 /** Values the rules compare. Absent keys are not part of that requirement. */
 export type ExpectedValues = {
   partNumber?: string;
+  productName?: string;
   revision?: string;
   material?: string;
   grade?: string;
   supplierName?: string;
   scope?: string;
+  /** Covered like `scope`: "ISO 9001" is covered by "ISO 9001:2015". */
+  standard?: string;
   packagingCode?: string;
   packagingRevision?: string;
 };
@@ -74,6 +83,10 @@ export type Requirement = {
   kind: RequirementKind;
   dimension: ReadinessDimension;
   expected: ExpectedValues;
+  /** Short label for lists. Falls back to the id. */
+  name?: string;
+  /** Traceability links that must all be shown. Default: resin batch, production lot, shipment. */
+  traceLinks?: string[];
 };
 
 export type RequirementSet = {

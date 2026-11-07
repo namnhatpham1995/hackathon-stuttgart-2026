@@ -6,8 +6,8 @@ import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 import { AttentionBanner } from "./attention-banner";
+import { checklistFor } from "./checklists";
 import type { AssessmentResult, SupplierProfile, WorkspaceProduct } from "./contract";
-import { fixtureById, requirementNames, requirementSet } from "./fixtures";
 import { ChevronIcon, DocumentIcon } from "./icons";
 import { MetaItem, PageHeader, ProductNav } from "./page-chrome";
 import {
@@ -69,6 +69,10 @@ function ReportBody({
   result: AssessmentResult;
   readOnly: boolean;
 }) {
+  const { set: requirementSet, names: requirementNames } = checklistFor(
+    product.requirementSetKey,
+    product.requirementSetVersion,
+  );
   const summary = dimensionSummary(result.findings, requirementSet.requirements);
   const actions = actionPlan(result.findings);
   const draft = documentRequestDraft({
@@ -92,7 +96,6 @@ function ReportBody({
         meta={
           <>
             <MetaItem>{product.profile.companyName}</MetaItem>
-            {fixtureById(product.id) ? <MetaItem>Demo data</MetaItem> : null}
             <MetaItem>
               <span className="font-mono">
                 {product.fields.partNumber?.value ?? "—"} · Rev{" "}

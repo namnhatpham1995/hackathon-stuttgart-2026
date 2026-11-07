@@ -77,6 +77,41 @@ describe("assessment jobs", () => {
     expect(rows).toHaveLength(1);
   });
 
+  test("starting a failed snapshot again requeues the same job", async () => {
+    const owner = await createUser("Ada");
+    const productId = await createProduct(owner.id);
+    const first = await startAssessment(owner.id, productId);
+    await db
+      .update(assessmentJob)
+      .set({
+        status: "NEEDS_ATTENTION",
+        stage: "extracting_facts",
+        error: "Model overloaded",
+        attempts: 3,
+        startedAt: new Date(),
+        finishedAt: new Date(),
+      })
+      .where(eq(assessmentJob.id, first.id));
+
+    const again = await startAssessment(owner.id, productId);
+
+    expect(again.id).toBe(first.id);
+    const [stored] = await db.select().from(assessmentJob).where(eq(assessmentJob.id, first.id));
+    expect(stored).toMatchObject({
+      status: "QUEUED",
+      stage: null,
+      error: null,
+      attempts: 0,
+      startedAt: null,
+      finishedAt: null,
+    });
+    const rows = await db
+      .select()
+      .from(assessmentJob)
+      .where(eq(assessmentJob.productId, productId));
+    expect(rows).toHaveLength(1);
+  });
+
   test("a direct duplicate insert is rejected by the unique index", async () => {
     const owner = await createUser("Ada");
     const productId = await createProduct(owner.id);

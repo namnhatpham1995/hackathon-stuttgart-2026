@@ -38,7 +38,7 @@ type Issue =
   | { kind: "conflict"; field: string; values: string[] }
   | ValueIssue
   | { kind: "expired"; validUntil: string }
-  | { kind: "scope"; expected: string; observed: string }
+  | { kind: "scope"; field: string; expected: string; observed: string }
   | { kind: "missing-field"; field: string }
   | { kind: "bad-date"; value: string };
 
@@ -167,7 +167,8 @@ function missingReason(requirement: Requirement): string {
 function missingAction(requirement: Requirement): string {
   if (requirement.kind === "traceability_record") {
     const part = requirement.expected.partNumber ?? "the part";
-    return `Provide a traceability record that links a resin batch to a production lot and a shipment for ${part}.`;
+    const links = traceLinksFor(requirement).map(label);
+    return `Provide a traceability record that links ${listPhrase(links)} for ${part}.`;
   }
   return `Provide the ${evidenceTypeLabels[requirement.kind]} for this requirement.`;
 }
@@ -208,7 +209,7 @@ function collectIssues(
     if (expected === undefined) continue;
     const found = lookup(groups, field);
     if (found.state === "absent") issues.push({ kind: "missing-field", field });
-    else if (found.state === "value" && !valuesEqual(found.value, expected)) {
+    else if (found.state === "value" && !identityEqual(field, found.value, expected)) {
       issues.push({ kind: "identity", field, expected, observed: found.value });
     }
   }
@@ -233,9 +234,9 @@ function collectIssues(
       if (found.state === "absent") issues.push({ kind: "missing-field", field });
       continue;
     }
-    if (field === "scope") {
+    if (field === "scope" || field === "standard") {
       if (!scopeCovers(found.value, expected)) {
-        issues.push({ kind: "scope", expected, observed: found.value });
+        issues.push({ kind: "scope", field, expected, observed: found.value });
       }
       continue;
     }
@@ -258,8 +259,14 @@ function collectIssues(
   }
 
   if (requirement.kind === "traceability_record") {
-    for (const field of ["resinBatch", "productionLot", "shipment"]) {
+    for (const field of traceLinksFor(requirement)) {
       if (lookup(groups, field).state === "absent") issues.push({ kind: "missing-field", field });
+    }
+  }
+
+  if (requirement.kind === "packaging_specification") {
+    if (lookup(groups, "cartonConfiguration").state === "absent") {
+      issues.push({ kind: "missing-field", field: "cartonConfiguration" });
     }
   }
 
@@ -288,11 +295,14 @@ function statusFor(issues: Issue[]): FindingStatus {
 
 const fieldLabels: Record<string, string> = {
   partNumber: "part",
+  productName: "product name",
   revision: "revision",
   material: "material",
   grade: "grade",
   supplierName: "supplier",
   scope: "scope",
+  standard: "standard",
+  cartonConfiguration: "carton configuration",
   packagingCode: "packaging code",
   packagingRevision: "packaging revision",
   validityEnd: "validity end date",
@@ -321,7 +331,7 @@ function describe(requirement: Requirement, issue: Issue, assessmentDate: string
       }
       return `Buyer requires ${label(issue.field)} ${issue.expected}; document identifies ${issue.observed}.`;
     case "scope":
-      return `Buyer requires a scope covering ${issue.expected}; document identifies ${issue.observed}.`;
+      return `Buyer requires ${label(issue.field)} ${issue.expected}; document identifies ${issue.observed}.`;
     case "expired":
       return `The extracted document validity end date ${issue.validUntil} precedes the assessment date ${assessmentDate}.`;
     case "bad-date":
@@ -385,17 +395,68 @@ function citationKey(item: { documentId: string; page: number; quote: string }):
   return `${item.documentId}\0${item.page}\0${normaliseWhitespace(item.quote)}`;
 }
 
+const defaultTraceLinks = ["resinBatch", "productionLot", "shipment"];
+
+function traceLinksFor(requirement: Requirement): string[] {
+  return requirement.traceLinks ?? defaultTraceLinks;
+}
+
+function listPhrase(items: string[]): string {
+  const withArticle = items.map((item) => `a ${item}`);
+  if (withArticle.length <= 1) return withArticle.join("");
+  return `${withArticle.slice(0, -1).join(", ")} and ${withArticle.at(-1)}`;
+}
+
+/**
+ * Equal after case and whitespace folding, or when one side is the other's
+ * bracketed short form: "Polypropylene (PP)" equals "PP" and "Polypropylene".
+ */
 function valuesEqual(observed: string, expected: string): boolean {
-  return normaliseValue(observed) === normaliseValue(expected);
+  const left = valueForms(observed);
+  return valueForms(expected).some((form) => left.includes(form));
+}
+
+function valueForms(value: string): string[] {
+  const whole = normaliseValue(value);
+  const bracketed = /^(.+?)\s*\(([^()]+)\)$/.exec(whole);
+  if (!bracketed?.[1] || !bracketed[2]) return [whole];
+  return [whole, bracketed[1].trim(), bracketed[2].trim()];
+}
+
+/** Supplier names compare without punctuation: "Co. Ltd." equals "Co., Ltd.". */
+function identityEqual(field: string, observed: string, expected: string): boolean {
+  if (field !== "supplierName") return valuesEqual(observed, expected);
+  const fold = (value: string) =>
+    normaliseValue(value)
+      .replace(/[^\p{L}\p{N}]+/gu, " ")
+      .trim();
+  return fold(observed) === fold(expected);
 }
 
 function normaliseValue(value: string): string {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
+/**
+ * True when the expected words appear in order in the observed text, compared by
+ * word stem: "injection-moulded plastic components" covers "injection moulding",
+ * and "ISO 9001:2015" covers "ISO 9001".
+ */
 function scopeCovers(observed: string, expected: string): boolean {
-  const fold = (value: string) => normaliseValue(value).replace(/[-_]/g, " ").replace(/\s+/g, " ");
-  return fold(observed).includes(fold(expected));
+  const have = stems(observed);
+  const want = stems(expected);
+  if (want.length === 0) return true;
+  for (let start = 0; start + want.length <= have.length; start += 1) {
+    if (want.every((word, offset) => have[start + offset] === word)) return true;
+  }
+  return false;
+}
+
+function stems(value: string): string[] {
+  return normaliseValue(value)
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean)
+    .map((word) => (word.length > 4 ? word.replace(/(ing|ed|s)$/, "") : word));
 }
 
 function canonicalDate(value: string): string | null {

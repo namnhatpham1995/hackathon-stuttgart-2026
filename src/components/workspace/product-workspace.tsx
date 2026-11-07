@@ -8,19 +8,19 @@ import {
   readWorkspace,
   undoWorkspaceUpload,
 } from "@/app/workspace/actions";
-import { Button } from "@/components/ui/button";
-import type { ProductDocument, WorkspaceProduct } from "./contract";
-import { classifyFile, packFromFilenames, rejectionForFile } from "./documents";
-import { DraftForm } from "./draft-form";
-import { buildResult, type EvidencePack, fixtureById } from "./fixtures";
-import { MetaItem, PageHeader, ProductNav } from "./page-chrome";
 import { ProductConnections } from "@/components/connections/product-connections";
+import { Button } from "@/components/ui/button";
+import { checklistFor } from "./checklists";
+import type { WorkspaceProduct } from "./contract";
+import { rejectionForFile } from "./documents";
+import { DraftForm } from "./draft-form";
+import { MetaItem, PageHeader, ProductNav } from "./page-chrome";
 import { ProgressView } from "./progress-view";
-import { readProduct, writeProduct } from "./store";
 import { UploadCard } from "./upload-card";
+import { startAssessmentRequest, uploadDocumentRequest } from "./workspace-api";
 import { subscribeWorkspaceDirective } from "./workspace-events";
 
-type LiveJob = { id: string; startedAt: number; pack: EvidencePack };
+type LiveJob = { id: string; startedAt: number };
 
 export function ProductWorkspace({
   productId,
@@ -40,23 +40,14 @@ export function ProductWorkspace({
   const [highlighted, setHighlighted] = useState(Boolean(replaceDocumentId));
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [assessing, setAssessing] = useState(false);
-  const [job, setJob] = useState<LiveJob | null>(null);
+  const [job, setJob] = useState<LiveJob | null>(initial?.job ?? null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const files = useRef(new Map<string, File>());
 
   useEffect(() => {
-    if (initial?.stored) {
-      setProduct(initial);
-      setJob(initial.job ? { ...initial.job, pack: "baseline" } : null);
-      setReady(true);
-      return;
-    }
-    const saved = readProduct(productId);
-    if (saved) setProduct(saved);
+    setProduct(initial);
+    setJob(initial?.job ?? null);
     setReady(true);
-    const stored = readJob(productId);
-    if (stored) setJob(stored);
-  }, [productId, initial]);
+  }, [initial]);
 
   useEffect(() => {
     if (!replaceDocumentId) return;
@@ -90,7 +81,6 @@ export function ProductWorkspace({
   }, [search, revealUpload, productId]);
 
   function update(next: WorkspaceProduct) {
-    if (!next.stored) writeProduct(next);
     setProduct(next);
   }
 
@@ -100,126 +90,43 @@ export function ProductWorkspace({
       setUploadError("Choose one file to replace this document. The batch was not changed.");
       return;
     }
-    if (product.stored) {
-      setUploading(true);
-      setUploadError(null);
-      const documents = [...product.documents];
-      try {
-        for (const file of selected) {
-          const rejection = rejectionForFile(file, documents, replacingId);
-          if (rejection) throw new Error(rejection);
-          const body = new FormData();
-          body.set("file", file);
-          if (replacingId) body.set("replacesDocumentId", replacingId);
-          const response = await fetch(`/api/products/${productId}/documents`, {
-            method: "POST",
-            body,
-          });
-          if (!response.ok) throw new Error(await readError(response, file.name));
-          const document = (await response.json()) as ProductDocument;
-          documents.push({ ...document, requirementId });
-          update({ ...product, documents: [...documents] });
-        }
-        setReplacingId(null);
-      } catch (error) {
-        setUploadError(
-          error instanceof Error ? error.message : "The file could not be uploaded. Try again.",
-        );
-      } finally {
-        setUploading(false);
-      }
-      return;
-    }
-    const messages: string[] = [];
+    setUploading(true);
+    setUploadError(null);
     const documents = [...product.documents];
-    for (const file of selected) {
-      const message = rejectionForFile(file, documents, replacingId);
-      if (message) {
-        messages.push(message);
-        continue;
+    try {
+      for (const file of selected) {
+        const rejection = rejectionForFile(file, documents, replacingId);
+        if (rejection) throw new Error(rejection);
+        const document = await uploadDocumentRequest(productId, file, replacingId);
+        documents.push({ ...document, requirementId });
+        update({ ...product, documents: [...documents] });
       }
-      const classified = classifyFile(file);
-      if (!classified.ok) continue;
-      const id = crypto.randomUUID();
-      documents.push({
-        id,
-        requirementId,
-        filename: file.name,
-        mimeType: classified.mimeType,
-        kind: classified.kind,
-        sizeBytes: file.size,
-        state: "pending",
-        replacesDocumentId: replacingId,
-      });
-      files.current.set(id, file);
-    }
-    setUploadError(messages[0] ?? null);
-    if (documents.length !== product.documents.length) {
-      update({ ...product, documents });
       setReplacingId(null);
-      void postPending(productId, documents, files.current, setUploadError);
+    } catch (error) {
+      setUploadError(
+        error instanceof Error ? error.message : "The file could not be uploaded. Try again.",
+      );
+    } finally {
+      setUploading(false);
     }
   }
 
   async function assess() {
     if (!product) return;
-    if (product.stored) {
-      setAssessing(true);
-      setUploadError(null);
-      try {
-        const documents = await finaliseWorkspaceDocuments(productId);
-        update({ ...product, documents });
-        const response = await fetch("/api/jobs", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ productId }),
-        });
-        if (!response.ok)
-          throw new Error(
-            "The assessment could not start. Your files are saved. Try Upload and assess again.",
-          );
-        const started = (await response.json()) as { id: string };
-        setJob({ id: started.id, startedAt: Date.now(), pack: "baseline" });
-      } catch (error) {
-        setUploadError(
-          error instanceof Error ? error.message : "The assessment could not start. Try again.",
-        );
-      } finally {
-        setAssessing(false);
-      }
-      return;
-    }
-    const pending = product.documents.filter((document) => document.state === "pending");
-    if (pending.length === 0) return;
     setAssessing(true);
     setUploadError(null);
-    const promoted = promote(product.documents);
-    const names = promoted
-      .filter((document) => document.state === "active" && document.kind === "evidence")
-      .map((document) => document.filename);
-    const pack = packFromFilenames(names);
-    let jobId = `demo-${crypto.randomUUID()}`;
     try {
-      const response = await fetch(`/api/products/${productId}/assess`, { method: "POST" });
-      if (response.ok) {
-        const body = (await response.json()) as { id?: string; jobId?: string };
-        jobId = body.jobId ?? body.id ?? jobId;
-      } else if (response.status !== 404) {
-        setUploadError(
-          "The assessment could not be started. Check the documents and choose Upload and assess again.",
-        );
-        setAssessing(false);
-        return;
-      }
-    } catch {
-      jobId = `demo-${crypto.randomUUID()}`;
+      const documents = await finaliseWorkspaceDocuments(productId);
+      update({ ...product, documents });
+      const started = await startAssessmentRequest(productId);
+      setJob({ id: started.id, startedAt: Date.now() });
+    } catch (error) {
+      setUploadError(
+        error instanceof Error ? error.message : "The assessment could not start. Try again.",
+      );
+    } finally {
+      setAssessing(false);
     }
-    const next = { ...product, documents: promoted };
-    update(next);
-    const live = { id: jobId, startedAt: Date.now(), pack };
-    writeJob(productId, live);
-    setJob(live);
-    setAssessing(false);
   }
 
   if (!ready) {
@@ -236,7 +143,7 @@ export function ProductWorkspace({
         <h1 className="page-title">Product not found</h1>
         <p className="text-muted">
           This product is not in your workspace. It may belong to someone else, or it was never
-          created in this browser.
+          created.
         </p>
         <Button href="/workspace" variant="secondary">
           Back to products
@@ -257,7 +164,6 @@ export function ProductWorkspace({
         meta={
           <>
             <MetaItem>{product.profile.companyName}</MetaItem>
-            {fixtureById(product.id) ? <MetaItem>Demo data</MetaItem> : null}
             <MetaItem>
               <span className="font-mono">
                 {product.fields.partNumber?.value ?? "No part number"} · Rev{" "}
@@ -285,6 +191,7 @@ export function ProductWorkspace({
         requirements v{product.requirementSetVersion}
       </p>
       <UploadCard
+        checklist={checklistFor(product.requirementSetKey, product.requirementSetVersion)}
         documents={product.documents}
         replacing={replacing}
         highlighted={highlighted}
@@ -297,28 +204,18 @@ export function ProductWorkspace({
           setHighlighted(true);
         }}
         onCancelReplace={() => setReplacingId(null)}
-        canAssess={
-          product.stored && product.documents.some((document) => document.kind === "evidence")
-        }
+        canAssess={product.documents.some((document) => document.kind === "evidence")}
         onRemovePending={(id) => {
-          if (product.stored) {
-            setUploading(true);
-            void undoWorkspaceUpload(productId, id)
-              .then(() => {
-                update({
-                  ...product,
-                  documents: product.documents.filter((document) => document.id !== id),
-                });
-              })
-              .catch(() => setUploadError("The upload could not be undone. Try again."))
-              .finally(() => setUploading(false));
-            return;
-          }
-          update({
-            ...product,
-            documents: product.documents.filter((document) => document.id !== id),
-          });
-          files.current.delete(id);
+          setUploading(true);
+          void undoWorkspaceUpload(productId, id)
+            .then(() => {
+              update({
+                ...product,
+                documents: product.documents.filter((document) => document.id !== id),
+              });
+            })
+            .catch(() => setUploadError("The upload could not be undone. Try again."))
+            .finally(() => setUploading(false));
         }}
         onAssess={() => void assess()}
         inputRef={inputRef}
@@ -328,23 +225,16 @@ export function ProductWorkspace({
           jobId={job.id}
           startedAt={job.startedAt}
           onComplete={() => {
-            if (product.stored) {
-              void readWorkspace(productId)
-                .then((stored) => {
-                  if (stored) update(stored);
-                  setJob(null);
-                  router.push(`/workspace/${productId}/report`);
-                  router.refresh();
-                })
-                .catch(() =>
-                  setUploadError("The saved report could not be opened. Refresh this page."),
-                );
-              return;
-            }
-            const withResult = { ...product, result: buildResult(product.id, job.pack) };
-            update(withResult);
-            clearJob(productId);
-            router.push(reportHref(productId, job.pack));
+            void readWorkspace(productId)
+              .then((stored) => {
+                if (stored) update(stored);
+                setJob(null);
+                router.push(`/workspace/${productId}/report`);
+                router.refresh();
+              })
+              .catch(() =>
+                setUploadError("The saved report could not be opened. Refresh this page."),
+              );
           }}
         />
       ) : null}
@@ -386,90 +276,4 @@ function ProfileSummary({ product }: { product: WorkspaceProduct }) {
       </div>
     </dl>
   );
-}
-
-function promote(documents: ProductDocument[]): ProductDocument[] {
-  const replaced = new Set(
-    documents
-      .filter((document) => document.state === "pending" && document.replacesDocumentId)
-      .map((document) => document.replacesDocumentId),
-  );
-  return documents.map((document) => {
-    if (document.state === "pending") return { ...document, state: "active" as const };
-    if (replaced.has(document.id)) return { ...document, state: "inactive" as const };
-    return document;
-  });
-}
-
-async function postPending(
-  productId: string,
-  documents: ProductDocument[],
-  blobs: Map<string, File>,
-  setUploadError: (message: string | null) => void,
-) {
-  for (const document of documents) {
-    if (document.state !== "pending") continue;
-    const file = blobs.get(document.id);
-    if (!file) continue;
-    const body = new FormData();
-    body.set("file", file);
-    if (document.replacesDocumentId) body.set("replacesDocumentId", document.replacesDocumentId);
-    try {
-      const response = await fetch(`/api/products/${productId}/documents`, {
-        method: "POST",
-        body,
-      });
-      if (response.status === 404) return;
-      if (!response.ok) {
-        const message = await readError(response, file.name);
-        setUploadError(message);
-        return;
-      }
-    } catch {
-      return;
-    }
-  }
-}
-
-async function readError(response: Response, filename: string) {
-  try {
-    const payload = (await response.json()) as { message?: string; error?: string };
-    if (payload.message) return payload.message;
-    if (payload.error) return payload.error;
-  } catch {
-    // The route may return an empty body.
-  }
-  if (response.status === 413) {
-    return `${filename} is over the 4 MB limit and was not added.`;
-  }
-  return `${filename} was not accepted. Check the type and size, then try again.`;
-}
-
-function reportHref(productId: string, pack: EvidencePack | undefined) {
-  if (!pack || pack === "baseline") return `/workspace/${productId}/report`;
-  return `/workspace/${productId}/report?evidence=${pack}`;
-}
-
-function jobKey(productId: string) {
-  return `exportready.job.${productId}`;
-}
-
-function readJob(productId: string): LiveJob | null {
-  try {
-    const raw = sessionStorage.getItem(jobKey(productId));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as LiveJob;
-    if (!parsed.id || !parsed.startedAt || !parsed.pack) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function writeJob(productId: string, job: LiveJob) {
-  sessionStorage.setItem(jobKey(productId), JSON.stringify(job));
-}
-
-function clearJob(productId: string) {
-  sessionStorage.removeItem(jobKey(productId));
 }

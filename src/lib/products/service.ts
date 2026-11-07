@@ -72,10 +72,7 @@ function toProduct(row: typeof product.$inferSelect): ProductRecord {
   };
 }
 
-export async function createProduct(
-  userId: string,
-  input: z.infer<typeof createProductInput>,
-): Promise<ProductRecord> {
+export async function createProduct(userId: string, input: unknown): Promise<ProductRecord> {
   const parsed = parseInput(createProductInput, input);
   if (!getRequirementSet(parsed.requirementSetKey, parsed.requirementSetVersion)) {
     throw new ProductRequestError(400, "Unknown requirement set");
@@ -117,7 +114,7 @@ export async function listProducts(userId: string): Promise<ProductRecord[]> {
 export async function updateProduct(
   userId: string,
   productId: string,
-  input: z.infer<typeof updateProductInput>,
+  input: unknown,
 ): Promise<ProductRecord> {
   const parsed = parseInput(updateProductInput, input);
   const existing = await getProduct(userId, productId);
