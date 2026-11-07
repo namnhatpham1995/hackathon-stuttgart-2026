@@ -64,6 +64,7 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 - [x] 6.2 Implement `extractFacts` in `extract-facts.ts`: the plan's extraction instruction, requirements and page-labelled text in separate fields, structured output schema for observations only (no statuses), temperature 0, Zod-parse the response; verify `pnpm typecheck`
   - Note: requirements (id, statement, field names) and page-labelled text are separate JSON fields. Expected values are not sent. Null values with an empty quote are dropped. Field names: supplierName, partNumber, revision, material, grade, scope, validityEnd (YYYY-MM-DD), resinBatch, productionLot, shipment, packagingCode, packagingRevision, accepted (`yes` or null).
 - [ ] 6.3 Live smoke on fixtures 01-04 with a one-off `tsx` command (not committed): paste the observations into the PR description; verify doc 03 yields revision `A` with an exact quote and doc 02 yields validity end `2026-08-01`
+  - Blocked: needs GEMINI_API_KEY for the live check. Run an uncommitted tsx command: `extractPages` on fixtures 01-04, then `extractFacts` with `neckarCap104`. Doc 03 must yield revision `A` with an exact quote and doc 02 `validityEnd` `2026-08-01`. Paste the observations into the PR description.
 
 ## 7. Rules and citation checks · wave 2 · M1 · branch feat/rules-engine
 
