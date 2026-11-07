@@ -37,7 +37,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 - [x] 3.7 Add `/workspace` and `/connections` to the `src/proxy.ts` matcher; verify a signed-out request to either redirects to `/sign-in`
 - [x] 3.8 Add `vitest.golden.config.ts` (includes `src/**/*.golden.ts`, loads `.env`, `passWithNoTests`) and a `test:golden` script; add `unpdf` to `serverExternalPackages` in `next.config.ts` only if `next build` needs it; verify `pnpm test:golden` exits 0 and `pnpm build` passes
   - Note: `pnpm build` passed without listing `unpdf` in `serverExternalPackages`. Nothing imports it until group 5.
-- [ ] 3.9 Get one `independent-pr-reviewer` pass (Opus) and fix its blocking findings in one round; verify the review report says PASS for the final head
+- [x] 3.9 Get one `independent-pr-reviewer` pass (Opus) and fix its blocking findings in one round; verify the review report says PASS for the final head
+  - Note: Opus was rejected (weekly usage limit) and cursor-agent is not installed. A fresh independent-pr-reviewer on Grok returned FAIL, then PASS after 7c6821c. Round 1 finding R1-1: Gemini history could not echo function-call ids and thought signatures. Round 2 report says PASS.
 
 ## 4. Demo fixtures · wave 1 · M0 · branch feat/demo-fixtures
 
