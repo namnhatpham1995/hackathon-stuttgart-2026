@@ -31,7 +31,7 @@ This is the problem as written in `docs/exportready-passport-idea.md`. Customer 
 
 **Speaker note**
 
-This is on `main` as libraries and tests. The page that shows it to a person is **After merge** (group 11), and the job that runs the steps in production is **After merge** (group 13). Say "the engine decides this" if the screen is not merged yet. Say "the report shows this" only after group 11 and group 13 are on `main`.
+This is on `main` as libraries and tests. A live smoke of fixtures 01–04 on `gemini-3.6-flash` passed three times: the inspection file yielded revision A, and the certificate yielded validity end 2026-08-01. That smoke is not a full assessment job. The page that shows a report is **After merge** (group 11), and the job that runs the steps in production is **After merge** (group 13). Say "the engine decides this" if the screen is not merged yet. Say "the report shows this" only after group 11 and group 13 are on `main`.
 
 The demo checklist is `neckar-cap-104`: cover cap CAP-104, revision B, ABS grade LM-ABS-01, for fictional buyer Neckar Maschinenbau GmbH and fictional supplier Lotus Mould Co., Ltd.
 
