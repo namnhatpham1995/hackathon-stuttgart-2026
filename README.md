@@ -6,7 +6,7 @@ TradeReady turns a supplier's documents into a source-cited evidence report for 
 
 This repository is the Stuttgart hackathon build for 2026-11-07 (submission 16:45 Europe/Berlin). The paragraph above is the product. The sections below say what `main` actually does on that date, and what is still open.
 
-Demo UI: <https://exportready.vercel.app> (HTTP 200 on 2026-11-07).
+Demo UI: <https://tradeready-eu.vercel.app> (HTTP 200 on 2026-11-07).
 API server: <https://exportready-production.up.railway.app> (`GET /api/health` returns `{"ok":true}`).
 
 The public home page is still the starter landing. `/workspace` has no page on `main`, so the product screens are not in this deploy. See [In progress](#in-progress).
@@ -50,7 +50,7 @@ The demo the pitch describes, once 11, 13 and 17 are on `main`: fictional suppli
 ```mermaid
 flowchart LR
   browser[Browser]
-  vercel["Vercel UI<br/>exportready.vercel.app"]
+  vercel["Vercel UI<br/>tradeready-eu.vercel.app"]
   railway["Railway Next.js<br/>server and /api"]
   runner["Job runner<br/>after the response"]
   postgres[(PostgreSQL on Railway)]
@@ -121,7 +121,7 @@ Copy new keys into `src/env.ts` and `.env.example` only. Never commit `.env`.
 Two projects, both from `main`. Follow [docs/deploy.md](docs/deploy.md) to recreate them.
 
 - **Railway** (`exportready-production.up.railway.app`): Node 22, `pnpm build`, pre-deploy `pnpm db:migrate`, `pnpm start`, healthcheck `GET /api/health`. Private `DATABASE_URL`. Gemini and Brevo keys live here.
-- **Vercel** (`exportready.vercel.app`): build `node scripts/vercel-build.mjs` (build only, no migrate). `BACKEND_URL` is the Railway origin. `DATABASE_URL` is Railway's public Postgres URL. `BETTER_AUTH_SECRET` matches Railway. `BETTER_AUTH_URL` and `APP_BASE_URL` are the Vercel origin.
+- **Vercel** (`tradeready-eu.vercel.app`): build `node scripts/vercel-build.mjs` (build only, no migrate). `BACKEND_URL` is the Railway origin. `DATABASE_URL` is Railway's public Postgres URL. `BETTER_AUTH_SECRET` matches Railway. `BETTER_AUTH_URL` and `APP_BASE_URL` are the Vercel origin.
 
 Rollback is a Railway redeploy of the previous successful deployment, and a Vercel Promote of the previous production deployment. Migrations are additive.
 
