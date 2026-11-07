@@ -279,6 +279,25 @@ function calling for at most 5 rounds.
 
 History lives in the panel's state only. The source of truth is the database.
 
+**Revised for groups 26 and 27 (owner, 2026-11-07).** The assistant moves from one product to the
+whole site.
+- **Page context, not a role.** One account is both buyer and supplier, so each request carries
+  `page: { path, productId? }` instead of a role. The system instruction holds a short fixed site map
+  plus one sentence about the current page.
+- **Optional product.** Product tools without a product answer "Open a product first."
+- **Navigation.** `navigate_site` opens only a route from an enum, so navigation is still not
+  arbitrary.
+- **History** moves from panel state to `sessionStorage`, under a key that contains the user's id. The
+  three signed-in layouts (workspace, buyer, connections) and the dashboard are separate, and storage
+  is what carries the chat across them and across a reload without a shared root provider. Every
+  sign-out button clears it.
+- **Panel.** On wide screens it is a non-modal side panel that stays open while the user navigates.
+  Below 768 px it closes after the assistant navigates.
+- **Connection actions** (group 27) wrap the existing services with the session's `userId`. Anything
+  that emails or publishes to another company is not executed on the server. The tool returns a
+  `confirm_action` directive, and the panel's Send button calls the existing server action, so
+  validation, ownership and the email stay on the manual path.
+
 ### 10. Live roadmap: separate static project, data from GitHub
 
 ```
