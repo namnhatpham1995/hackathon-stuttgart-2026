@@ -25,11 +25,13 @@ export function RequestsHome({
       <PageHeader
         crumbs={[{ label: "Buyer workspace" }, { label: "Overview" }]}
         title="Overview"
-        meta={<span className="meta text-muted">{overviewLine(overview)}</span>}
+        meta={
+          <>
+            <span className="meta text-muted">{overviewLine(overview)}</span>
+            {example ? <span className="meta text-muted">Example data</span> : null}
+          </>
+        }
       />
-      {example ? (
-        <p className="meta text-muted">Example data until the buyer service is connected.</p>
-      ) : null}
       {requests.length === 0 ? <EmptyRequests /> : <RequestList requests={requests} />}
     </div>
   );
@@ -69,17 +71,13 @@ function RequestList({ requests }: { requests: BuyerRequestSummary[] }) {
                 <p className="meta mt-1 break-words text-muted">
                   {request.buyerOrgName}
                   <span aria-hidden="true"> · </span>
-                  <span className="font-mono text-ink">{request.partNumber}</span>
+                  <span className="font-mono whitespace-nowrap text-ink">{request.partNumber}</span>
                   <span aria-hidden="true"> · </span>
                   {request.visibility === "direct" ? "Direct" : "On the board"}
                   <span aria-hidden="true"> · </span>
                   {request.status === "open" ? "Open" : "Closed"}
                   <span aria-hidden="true"> · </span>
                   {postedOn.format(request.createdAt)}
-                </p>
-                <p className="meta mt-1 break-words text-muted">
-                  Requirement set{" "}
-                  <span className="font-mono text-ink">{request.requirementSetKey}</span>
                 </p>
               </div>
               {request.status === "open" ? (

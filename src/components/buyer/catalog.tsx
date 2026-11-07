@@ -1,6 +1,7 @@
 import { ConnectionStatus } from "@/components/buyer/status-chip";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
+import { ArrowIcon } from "@/components/workspace/icons";
 import { PageHeader } from "@/components/workspace/page-chrome";
 import type { CatalogProduct } from "@/lib/buyer/service";
 
@@ -23,14 +24,14 @@ export function Catalog({
         crumbs={[{ href: "/buyer", label: "Buyer workspace" }, { label: "Find products" }]}
         title="Find products"
         meta={
-          <span className="meta text-muted">
-            Listed products. The profile is declared by the supplier, not evidence.
-          </span>
+          <>
+            <span className="meta text-muted">
+              Listed products. The profile is declared by the supplier, not evidence.
+            </span>
+            {example ? <span className="meta text-muted">Example data</span> : null}
+          </>
         }
       />
-      {example ? (
-        <p className="meta text-muted">Example data until the buyer service is connected.</p>
-      ) : null}
       <form method="get" action="/buyer/products" className="space-y-4">
         <div className="grid gap-4 md:grid-cols-3">
           <Field
@@ -71,7 +72,7 @@ export function Catalog({
           {products.map((product) => (
             <li
               key={product.productId}
-              className="border-b border-line px-4 py-5 last:border-b-0 md:px-5"
+              className="border-b border-line px-4 py-5 last:border-b-0 hover:bg-paper md:px-5"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -79,11 +80,12 @@ export function Catalog({
                     href={`/buyer/products/${product.productId}`}
                     variant="ghost"
                     size="sm"
-                    className="h-auto justify-start px-0 text-left"
+                    className="h-auto max-w-full justify-start px-0 text-left"
                   >
                     <span className="break-words">{product.productName}</span>
+                    <ArrowIcon />
                   </Button>
-                  <p className="meta mt-1 font-mono text-ink">
+                  <p className="meta mt-1 font-mono whitespace-nowrap text-ink">
                     {product.partNumber ?? "No part number"}
                   </p>
                 </div>

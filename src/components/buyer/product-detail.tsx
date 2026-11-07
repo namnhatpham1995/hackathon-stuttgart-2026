@@ -16,12 +16,14 @@ export function ProductDetail({ product, example }: { product: CatalogProduct; e
         ]}
         title={product.productName}
         meta={
-          <span className="meta font-mono text-ink">{product.partNumber ?? "No part number"}</span>
+          <>
+            <span className="meta font-mono whitespace-nowrap text-ink">
+              {product.partNumber ?? "No part number"}
+            </span>
+            {example ? <span className="meta text-muted">Example data</span> : null}
+          </>
         }
       />
-      {example ? (
-        <p className="meta text-muted">Example data until the buyer service is connected.</p>
-      ) : null}
       <section className="max-w-3xl">
         <h2 className="section-title">Declared by supplier</h2>
         {product.profile ? (
