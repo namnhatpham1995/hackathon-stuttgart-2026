@@ -2,7 +2,7 @@
 
 Two deployments of this repo, both from `main`.
 
-**Public URL since 2026-11-07: <https://exportready-production.up.railway.app>.** Vercel's free plan stopped new deploys, so Railway now serves the pages too. Better Auth trusts both origins (`trustedOrigins` in `src/lib/auth.ts`). To make Railway the canonical origin, set `BETTER_AUTH_URL` and `APP_BASE_URL` on Railway to `https://exportready-production.up.railway.app`. The Vercel sections below describe the earlier split setup.
+**Public URL since 2026-11-07: <https://exportready-production.up.railway.app>.** Vercel's free plan stopped new deploys, so Railway now serves the pages too. On Railway, `BETTER_AUTH_URL` and `APP_BASE_URL` are `https://exportready-production.up.railway.app`, so sign-in and email links use the Railway origin. Sign-in through the old Vercel URL no longer works, because its `/api` proxy reaches a server that trusts only the Railway origin. The Vercel sections below describe the earlier split setup.
 
 - **Railway** runs the full Next.js server (Node 22, `pnpm build`, pre-deploy `pnpm db:migrate`, `pnpm start` on `$PORT`) and a Railway PostgreSQL service. Every `/api/*` route (auth, uploads, jobs, assistant) is served here. The job runner lives here: Railway has no 4.5 MB body limit and no function timeout.
 - **Vercel** serves pages and the UI. When `BACKEND_URL` is set, `next.config.ts` rewrites `/api/:path*` to `${BACKEND_URL}/api/:path*` before the app's own API routes, so the browser stays on the Vercel origin and Better Auth cookies still work. Vercel never migrates. Its server components and server actions read the same Railway Postgres through `DATABASE_URL` (the public connection URL).
