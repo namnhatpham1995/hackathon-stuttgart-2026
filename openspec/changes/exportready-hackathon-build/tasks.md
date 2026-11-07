@@ -11,7 +11,7 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 1. Hackathon-mode workflow rules · wave 0 · M0 · branch chore/hackathon-mode
 
-- [ ] 1.1 Write `.claude/rules/hackathon-mode.md` with every override and every kept rule from design.md Decision 12, its expiry (after submission on 2026-11-07), the claim protocol commands and the merge sequence; verify each bullet of Decision 12 appears in the file
+- [x] 1.1 Write `.claude/rules/hackathon-mode.md` with every override and every kept rule from design.md Decision 12, its expiry (after submission on 2026-11-07), the claim protocol commands and the merge sequence; verify each bullet of Decision 12 appears in the file
 - [ ] 1.2 Add a worker brief template to the same file (group number, branch, owned files from Decision 1, needs, tests to add, review yes/no, "stop when the PR is ready and the hook is green"); verify a controller can fill it for group 7 without reading other files
 - [ ] 1.3 Add one index line for `hackathon-mode.md` to `.claude/rules/CLAUDE.md` stating it overrides the git, review and handoff rules until submission; verify the link resolves. Commit with the `agents:` prefix; docs-only, no tests
 
