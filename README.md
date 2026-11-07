@@ -1,8 +1,8 @@
-# ExportReady
+# TradeReady
 
 **From Supplier Potential to Buyer Confidence.**
 
-ExportReady turns a supplier's documents into a source-cited evidence report for one buyer's checklist. Gemini reads the text and returns observations with exact quotes. Deterministic rules decide each finding. The model never declares that a supplier is compliant, and the report has no score.
+TradeReady turns a supplier's documents into a source-cited evidence report for one buyer's checklist. Gemini reads the text and returns observations with exact quotes. Deterministic rules decide each finding. The model never declares that a supplier is compliant, and the report has no score.
 
 This repository is the Stuttgart hackathon build for 2026-11-07 (submission 16:45 Europe/Berlin). The paragraph above is the product. The sections below say what `main` actually does on that date, and what is still open.
 
@@ -22,7 +22,7 @@ A signed-in user can use the APIs below. There is no product screen for them yet
 - **Jobs.** `POST /api/jobs` with `{ "productId" }` starts one job per document snapshot. The same snapshot returns the same job. `GET /api/jobs/[jobId]` returns status, stage, error and result id. A job stuck in `PROCESSING` for more than five minutes is re-queued, up to two attempts. The runner is scheduled with `after()` on the Railway process. Its body still throws `not implemented: runAssessment`, so a started job does not extract facts, save a result or send mail.
 - **Gemini extraction library.** `extractFacts` asks `gemini-3.6-flash` for observations and quotes only, at temperature 0. Expected statuses are not sent to the model. Production keeps `GEMINI_API_KEY` on Railway. A live smoke of fixtures 01–04 on that model passed three times: document 03 yielded revision A with the quote "Drawing revision: A.", and document 02 yielded validity end 2026-08-01 with the quote "Valid until: 2026-08-01". That smoke is the extraction call, not a full assessment job.
 - **Assistant API.** `POST /api/assistant` runs Gemini function calling for at most five rounds, and only the eight approved tools. A model-supplied product id the user does not own returns "not found" and the model is not called for that id. The chat panel component still renders nothing, and no page mounts it.
-- **Completion email.** Brevo is called with `fetch` (`POST /v3/smtp/email`, 15 second timeout). The subject is "Your ExportReady assessment is ready". The body is text, with a link to `/workspace/<productId>/report` and no attachment. The team received one live completion email on 2026-11-07. That link does not open a report page yet. A missing Brevo key marks the notification failed with "email not configured" and leaves any stored result alone.
+- **Completion email.** Brevo is called with `fetch` (`POST /v3/smtp/email`, 15 second timeout). The subject is "Your TradeReady assessment is ready". The body is text, with a link to `/workspace/<productId>/report` and no attachment. The team received one live completion email on 2026-11-07. That link does not open a report page yet. A missing Brevo key marks the notification failed with "email not configured" and leaves any stored result alone.
 - **Deploy.** Vercel serves the UI and rewrites `/api/*` to Railway. Railway runs the Next.js server, the job runner and PostgreSQL. Migrations run on Railway before start. Vercel does not migrate.
 
 The database already has `product`, `document`, `assessment_job`, `assessment_result`, `buyer_request`, `request_connection` and `notification`, with the ownership and status checks from the schema. The buyer-connection service functions still throw `not implemented`.

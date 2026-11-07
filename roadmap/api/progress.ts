@@ -96,7 +96,7 @@ async function githubGraphql(token: string): Promise<unknown> {
       authorization: `Bearer ${token}`,
       "content-type": "application/json",
       accept: "application/json",
-      "user-agent": "exportready-roadmap",
+      "user-agent": "tradeready-roadmap",
     },
     body: JSON.stringify({
       query: ROADMAP_QUERY,
@@ -183,7 +183,7 @@ async function loadFromGitHub(token: string): Promise<Loaded> {
 async function loadFromRaw(): Promise<Loaded> {
   const url = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${TASKS_PATH}`;
   const response = await fetch(url, {
-    headers: { accept: "text/plain", "user-agent": "exportready-roadmap" },
+    headers: { accept: "text/plain", "user-agent": "tradeready-roadmap" },
     signal: AbortSignal.timeout(15_000),
   });
   if (!response.ok) throw new Error(`Could not read tasks.md from main (${response.status})`);
