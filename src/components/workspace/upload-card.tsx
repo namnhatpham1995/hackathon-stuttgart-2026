@@ -15,6 +15,17 @@ import {
 import { ChevronIcon, DocumentIcon, UploadIcon } from "./icons";
 import { StatusChip } from "./status-chip";
 
+/** The organisers' test case 1 pack, served from `public/samples/tc01/`. */
+const SAMPLE_PDFS = [
+  "TC01_01_Buyer_Requirements_CAP-104.pdf",
+  "TC01_02_Product_Specification_RevB.pdf",
+  "TC01_03_Material_Declaration_CAP104.pdf",
+  "TC01_04_Inspection_Report_RevB.pdf",
+  "TC01_05_ISO9001_Certificate_Current_Sample.pdf",
+  "TC01_06_Traceability_Record_CAP104.pdf",
+  "TC01_07_Packaging_Specification_CAP104.pdf",
+] as const;
+
 export function UploadCard({
   documents,
   replacing,
@@ -106,6 +117,27 @@ export function UploadCard({
           <UploadIcon /> Add files
         </Button>
       </div>
+      <details className="border-b border-line">
+        <summary className="cursor-pointer px-5 py-3 text-[13px] font-medium">
+          Download sample PDFs (test case 1)
+        </summary>
+        <p className="meta px-5 pb-2 text-muted">
+          A complete fictional pack for Cover Cap CAP-104. Upload all seven to try a check.
+        </p>
+        <ul className="px-5 pb-3 text-[13px]">
+          {SAMPLE_PDFS.map((filename) => (
+            <li key={filename} className="py-1">
+              <a
+                href={`/samples/tc01/${filename}`}
+                download
+                className="text-accent [overflow-wrap:anywhere] hover:underline"
+              >
+                {filename}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </details>
       <div className="evidence-heading" aria-hidden="true">
         <span>Requirement</span>
         <span>Status</span>
