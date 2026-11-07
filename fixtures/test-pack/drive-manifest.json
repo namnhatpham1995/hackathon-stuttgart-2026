@@ -1,0 +1,133 @@
+{
+  "sourceFolder": "https://drive.google.com/drive/folders/1wIKt_pcEOXHp0TZvUvJxBelUTKcRY6oS",
+  "files": [
+    {
+      "id": "1i05RY28XOOYXaOsz_W2xq5fqNdb0C5Ek",
+      "name": "00_README_Test_Pack_Guide.pdf",
+      "url": "https://drive.google.com/file/d/1i05RY28XOOYXaOsz_W2xq5fqNdb0C5Ek/view?usp=drivesdk",
+      "size": 3551,
+      "path": "fixtures/test-pack/tc01/00_README_Test_Pack_Guide.pdf",
+      "sha256": "6c83971337b65fb3a139a0fa5c0e76c0261d4f34898f1d24a49bfbef0d16fd25"
+    },
+    {
+      "id": "1cc2IZApSaqPqxDwloRqpis5mtTG8oEnH",
+      "name": "TC02_02_Product_Specification_RevA_WRONG.pdf",
+      "url": "https://drive.google.com/file/d/1cc2IZApSaqPqxDwloRqpis5mtTG8oEnH/view?usp=drivesdk",
+      "size": 3127,
+      "path": "fixtures/test-pack/tc02/TC02_02_Product_Specification_RevA_WRONG.pdf",
+      "sha256": "9c37292a8742c01a63464112b66cc85786a8f4a924bfbd810298e43ea0301997"
+    },
+    {
+      "id": "1efcURL5NXAzgwry-4I-EjNzcy2xF0EHy",
+      "name": "TC02_03_Inspection_Report_RevA_WRONG.pdf",
+      "url": "https://drive.google.com/file/d/1efcURL5NXAzgwry-4I-EjNzcy2xF0EHy/view?usp=drivesdk",
+      "size": 3093,
+      "path": "fixtures/test-pack/tc02/TC02_03_Inspection_Report_RevA_WRONG.pdf",
+      "sha256": "9c22f0128b33924859a66619f7d72fb10990bade381e4e171a2996dedc4c27de"
+    },
+    {
+      "id": "1XB9Ikyauh349VzN5vP2FhPCauPgXOZbB",
+      "name": "TC03_01_ISO9001_Certificate_EXPIRED_Sample.pdf",
+      "url": "https://drive.google.com/file/d/1XB9Ikyauh349VzN5vP2FhPCauPgXOZbB/view?usp=drivesdk",
+      "size": 2973,
+      "path": "fixtures/test-pack/tc03/TC03_01_ISO9001_Certificate_EXPIRED_Sample.pdf",
+      "sha256": "612cb2b8aef16e4ee5d3391a45c9f520409f32fda4e9037148d6419f2fb6246c"
+    },
+    {
+      "id": "1doBnKxruHh8MMaAVtfTdqSVGVKRZUQGg",
+      "name": "TC04_01_Product_Specification_CAP104.pdf",
+      "url": "https://drive.google.com/file/d/1doBnKxruHh8MMaAVtfTdqSVGVKRZUQGg/view?usp=drivesdk",
+      "size": 2944,
+      "path": "fixtures/test-pack/tc04/TC04_01_Product_Specification_CAP104.pdf",
+      "sha256": "8bbde7e47a6a235ea239483d22d9f89fdbc020a6d4de79ab709caae123fa5bd2"
+    },
+    {
+      "id": "14TDVDyh9ml3vtVKTrR0bv87ExPlKfLb9",
+      "name": "TC04_02_Material_Declaration_CAP104.pdf",
+      "url": "https://drive.google.com/file/d/14TDVDyh9ml3vtVKTrR0bv87ExPlKfLb9/view?usp=drivesdk",
+      "size": 2872,
+      "path": "fixtures/test-pack/tc04/TC04_02_Material_Declaration_CAP104.pdf",
+      "sha256": "7d21478f2e076eda80e36dccdaf50cfeacc72a2e7098fea8b74afcf7a4151860"
+    },
+    {
+      "id": "1rFahk2aktJQdAJqhRUvPVVkstdEFo4ec",
+      "name": "TC04_03_Inspection_Report_RevB.pdf",
+      "url": "https://drive.google.com/file/d/1rFahk2aktJQdAJqhRUvPVVkstdEFo4ec/view?usp=drivesdk",
+      "size": 3106,
+      "path": "fixtures/test-pack/tc04/TC04_03_Inspection_Report_RevB.pdf",
+      "sha256": "6fd8c27d57f8046a9ce408cd3df9193dbdbd15077bb4a58299e9ffe14d862200"
+    },
+    {
+      "id": "1GPp7Y7VRqey-285iBtA47gVtA1upPxiA",
+      "name": "TC05_01_CORRECTED_Product_Specification_RevB.pdf",
+      "url": "https://drive.google.com/file/d/1GPp7Y7VRqey-285iBtA47gVtA1upPxiA/view?usp=drivesdk",
+      "size": 3353,
+      "path": "fixtures/test-pack/tc05/TC05_01_CORRECTED_Product_Specification_RevB.pdf",
+      "sha256": "741ed7e616f2e8a38d239853e5a1e44687ab8c205bb429aa31f99a58662e22ca"
+    },
+    {
+      "id": "1UFTgIOKa8J2yYswwsI6rloeAgpjkGJzW",
+      "name": "TC01_01_Buyer_Requirements_CAP-104.pdf",
+      "url": "https://drive.google.com/file/d/1UFTgIOKa8J2yYswwsI6rloeAgpjkGJzW/view?usp=drivesdk",
+      "size": 3330,
+      "path": "fixtures/test-pack/tc01/TC01_01_Buyer_Requirements_CAP-104.pdf",
+      "sha256": "19e89a81c525e5da1615f28dbc8adef6690aace88015eec7a618d451c506e652"
+    },
+    {
+      "id": "1NsOCIsiS0iqIdUmKXduoV3-DxKtke9vm",
+      "name": "TC01_02_Product_Specification_RevB.pdf",
+      "url": "https://drive.google.com/file/d/1NsOCIsiS0iqIdUmKXduoV3-DxKtke9vm/view?usp=drivesdk",
+      "size": 3328,
+      "path": "fixtures/test-pack/tc01/TC01_02_Product_Specification_RevB.pdf",
+      "sha256": "fc7f90bd507e0d4b57901cf7a8d51f2e719259a64ec71236b28cae3704ce1721"
+    },
+    {
+      "id": "1XqHu8WSCGL6cnbOWWhiO745rDCdPdwk7",
+      "name": "TC01_03_Material_Declaration_CAP104.pdf",
+      "url": "https://drive.google.com/file/d/1XqHu8WSCGL6cnbOWWhiO745rDCdPdwk7/view?usp=drivesdk",
+      "size": 3007,
+      "path": "fixtures/test-pack/tc01/TC01_03_Material_Declaration_CAP104.pdf",
+      "sha256": "258d3b23b418dbd3cd1d44cb4d171e024dc3af40cff450d66e97bd79802cef1d"
+    },
+    {
+      "id": "15A5uPYf0GhqO0KFRKX50fUjOIq2ov3pd",
+      "name": "TC01_04_Inspection_Report_RevB.pdf",
+      "url": "https://drive.google.com/file/d/15A5uPYf0GhqO0KFRKX50fUjOIq2ov3pd/view?usp=drivesdk",
+      "size": 3115,
+      "path": "fixtures/test-pack/tc01/TC01_04_Inspection_Report_RevB.pdf",
+      "sha256": "7bb26e8d77b42a915d47053754d182ce3cbaac888fad9c54d40cc73c35fb007f"
+    },
+    {
+      "id": "1uLZlYQdluaK-lK3H4It-ufheG9pmdVwI",
+      "name": "TC01_05_ISO9001_Certificate_Current_Sample.pdf",
+      "url": "https://drive.google.com/file/d/1uLZlYQdluaK-lK3H4It-ufheG9pmdVwI/view?usp=drivesdk",
+      "size": 2946,
+      "path": "fixtures/test-pack/tc01/TC01_05_ISO9001_Certificate_Current_Sample.pdf",
+      "sha256": "07d16ad10d11430aa25ba60aa95977a12101de2285a0824bda793f7cb5f52202"
+    },
+    {
+      "id": "14N8UBh5YNYZQxZwrENJuTBQdc2khJcRQ",
+      "name": "TC01_06_Traceability_Record_CAP104.pdf",
+      "url": "https://drive.google.com/file/d/14N8UBh5YNYZQxZwrENJuTBQdc2khJcRQ/view?usp=drivesdk",
+      "size": 3127,
+      "path": "fixtures/test-pack/tc01/TC01_06_Traceability_Record_CAP104.pdf",
+      "sha256": "a6c50929e234f2b955de5c47e05f5896f73b2e8c7ef802dcdbd8174971191eb3"
+    },
+    {
+      "id": "1OL35Xn6VsfgSxn7pFXzAwkrtvAiuwlhc",
+      "name": "TC01_07_Packaging_Specification_CAP104.pdf",
+      "url": "https://drive.google.com/file/d/1OL35Xn6VsfgSxn7pFXzAwkrtvAiuwlhc/view?usp=drivesdk",
+      "size": 3039,
+      "path": "fixtures/test-pack/tc01/TC01_07_Packaging_Specification_CAP104.pdf",
+      "sha256": "d41af5b20b3c1d5d29e43a8ec6305fc73c195875ff18700dba1223f8b0c8bb5e"
+    },
+    {
+      "id": "1-yxncGpgCepBsVfuVQ0U0rorxvCcUe55",
+      "name": "TC02_01_Buyer_Requirement_RevisionB.pdf",
+      "url": "https://drive.google.com/file/d/1-yxncGpgCepBsVfuVQ0U0rorxvCcUe55/view?usp=drivesdk",
+      "size": 2883,
+      "path": "fixtures/test-pack/tc02/TC02_01_Buyer_Requirement_RevisionB.pdf",
+      "sha256": "67bba1ad755dc621a1fb6c2685c074b129cdc57cc6987db2d083825a69f98722"
+    }
+  ]
+}

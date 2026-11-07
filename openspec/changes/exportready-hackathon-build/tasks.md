@@ -368,6 +368,15 @@ Follow-up to group 25. The same account can use both workspaces. Keep each journ
 - [x] 28.5 Exercise 19.6 and 17.8 as far as the available local/production environment allows, recording actual evidence and remaining verification limits
   - Note: 28 local rendered cases passed at 375/1280 px in light/dark across Buyer overview, request form, shared report and inbox, and Supplier board, inbox and connection. Buyer uses a vertical left sidebar on desktop and a native left drawer on mobile. Drawer navigation, Escape and focus passed. Authenticated HTTP checks verified role-specific return links, legacy redirects, wrong-role/third-party not-found pages, separate counts, scoped mark-read and the buyer request redirect. The transparent logo and Welcome heading were checked in the local browser. Production flow evidence is recorded under 17.8 and 19.6.
 
+## 29. Drive ground-truth scenario validation · wave 4 · M4 · branch test/drive-scenario-validation
+
+Use the user's linked Google Doc and all sixteen original PDFs from Drive folder `1wIKt_pcEOXHp0TZvUvJxBelUTKcRY6oS`. Preserve source bytes and distinguish PDF/rule regression checks from live provider assessments. The buyer PDF's R1-R6 list resolves the older five-requirement wording. TC05's supplied replacement is a product specification while the remaining inspection is Revision A, so record that source conflict explicitly. Owns `fixtures/test-pack/tc02` through `tc05`, the source manifest and scenario definitions, `src/lib/assessment/drive-scenarios.test.ts`, and the scenario validation report.
+
+- [x] 29.1 Retrieve original Drive fixtures, record source links and checksums, and map TC01-TC05 to explicit expected statuses and source conflicts
+- [x] 29.2 Run PDF extraction/citation/rule regression tests for revision mismatch, expired certification, missing traceability, supplied TC05 and an inspection-correction control; preserve unrelated findings
+- [ ] 29.3 Wait for deployment availability and run live uploads, assessments, replacements and history checks against the deployed provider
+- [ ] 29.4 Record status agreement, citation support, reassessment isolation and source inconsistencies; publish a reviewable test PR after the pre-push hook passes
+
 ## Workflow follow-up
 
 - After submission, delete `.claude/rules/hackathon-mode.md` and its index line so the normal rules apply again.

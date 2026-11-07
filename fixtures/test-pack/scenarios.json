@@ -1,0 +1,45 @@
+{
+  "assessmentDate": "2026-11-07",
+  "requirementSetKey": "neckar-cap-104-qualification",
+  "requirementSetVersion": 1,
+  "sourceDocument": "https://docs.google.com/document/d/1k_pXfXq23UQ-u4S8D38zJvA1YBasoS5DnmxeX38RQhE/edit?tab=t.okqq27emmfeo",
+  "cases": [
+    {
+      "id": "TC01",
+      "files": ["TC01_01_Buyer_Requirements_CAP-104.pdf", "TC01_02_Product_Specification_RevB.pdf", "TC01_03_Material_Declaration_CAP104.pdf", "TC01_04_Inspection_Report_RevB.pdf", "TC01_05_ISO9001_Certificate_Current_Sample.pdf", "TC01_06_Traceability_Record_CAP104.pdf", "TC01_07_Packaging_Specification_CAP104.pdf"],
+      "expected": {"R1":"DOCUMENTED","R2":"DOCUMENTED","R3":"DOCUMENTED","R4":"DOCUMENTED","R5":"DOCUMENTED","R6":"DOCUMENTED"}
+    },
+    {
+      "id": "TC02",
+      "files": ["TC02_01_Buyer_Requirement_RevisionB.pdf", "TC02_02_Product_Specification_RevA_WRONG.pdf", "TC02_03_Inspection_Report_RevA_WRONG.pdf"],
+      "expected": {"R1":"DOCUMENTED","R2":"MISSING","R3":"MISMATCH","R4":"MISSING","R5":"MISSING","R6":"MISSING"},
+      "note": "The saved TC01 R1 checklist checks product identity, not the product-specification revision. TC02's separate buyer PDF also requires specification Revision B; that additional requirement is not represented by the configured checklist."
+    },
+    {
+      "id": "TC03",
+      "files": ["TC03_01_ISO9001_Certificate_EXPIRED_Sample.pdf"],
+      "expected": {"R1":"MISSING","R2":"MISSING","R3":"MISSING","R4":"EXPIRED","R5":"MISSING","R6":"MISSING"}
+    },
+    {
+      "id": "TC04",
+      "files": ["TC04_01_Product_Specification_CAP104.pdf", "TC04_02_Material_Declaration_CAP104.pdf", "TC04_03_Inspection_Report_RevB.pdf"],
+      "expected": {"R1":"DOCUMENTED","R2":"DOCUMENTED","R3":"DOCUMENTED","R4":"MISSING","R5":"MISSING","R6":"MISSING"},
+      "note": "The supplied three-file bundle also lacks an ISO certificate and packaging specification."
+    }
+  ],
+  "correction": {
+    "id":"TC05",
+    "baseCase":"TC02",
+    "replace":"TC02_02_Product_Specification_RevA_WRONG.pdf",
+    "with":"TC05_01_CORRECTED_Product_Specification_RevB.pdf",
+    "statedExpected":{"R3":"DOCUMENTED"},
+    "sourceConsistentExpected":{"R1":"DOCUMENTED","R2":"MISSING","R3":"MISMATCH","R4":"MISSING","R5":"MISSING","R6":"MISSING"},
+    "conflict":"The supplied replacement corrects the product specification. The active inspection report still says A, so R3 cannot be documented against required inspection Revision B."
+  },
+  "inspectionCorrectionControl": {
+    "id":"TC05-inspection-control",
+    "replace":"TC02_03_Inspection_Report_RevA_WRONG.pdf",
+    "with":"TC01_04_Inspection_Report_RevB.pdf",
+    "expected":{"R1":"DOCUMENTED","R2":"MISSING","R3":"DOCUMENTED","R4":"MISSING","R5":"MISSING","R6":"MISSING"}
+  }
+}
