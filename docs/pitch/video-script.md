@@ -12,7 +12,7 @@ No line claims that a customer would pay, has asked for a price, or has agreed t
 
 ## 0:00–0:12 — Title and fictional data
 
-**On screen:** ExportReady. From Supplier Potential to Buyer Confidence. Under it: "Fictional demo. Not valid for commercial use."
+**On screen:** TradeReady. From Supplier Potential to Buyer Confidence. Under it: "Fictional demo. Not valid for commercial use."
 
 **Voice:**
 
@@ -28,7 +28,7 @@ A European buyer looking for a Vietnamese manufacturer still qualifies suppliers
 
 **Voice:**
 
-ExportReady holds one buyer checklist. The supplier uploads the files they have. Gemini reads the text and returns an observation with the exact quote. Rules in our code set the status: documented, missing, mismatch, expired, or needs review. There is no score. The model is not asked to say the supplier is compliant.
+TradeReady holds one buyer checklist. The supplier uploads the files they have. Gemini reads the text and returns an observation with the exact quote. Rules in our code set the status: documented, missing, mismatch, expired, or needs review. There is no score. The model is not asked to say the supplier is compliant.
 
 **On screen if the report page is not merged yet:** the five status words, and the line "Statuses come from code." Do not show a fake report.
 

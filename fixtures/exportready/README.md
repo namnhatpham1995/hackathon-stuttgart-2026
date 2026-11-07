@@ -1,6 +1,6 @@
-# ExportReady demo fixtures
+# TradeReady demo fixtures
 
-These files are test-only. They are fictional demo documents for the ExportReady assessment.
+These files are test-only. They are fictional demo documents for the TradeReady assessment.
 
 Never send `answer-key.json`, or any expected outcome in it, to the model. A live assessment receives the PDF text and the buyer requirements, not this answer key.
 

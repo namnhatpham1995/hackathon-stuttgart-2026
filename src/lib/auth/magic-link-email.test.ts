@@ -14,7 +14,7 @@ describe("magic-link send callback", () => {
     vi.clearAllMocks();
   });
 
-  test("emails the submitted address the verify link with the ExportReady subject", async () => {
+  test("emails the submitted address the verify link with the TradeReady subject", async () => {
     const { sendBrevoEmail } = await import("@/lib/notify/brevo");
 
     await sendMagicLinkEmail({ email: "supplier@example.com", url: verifyUrl });
@@ -22,9 +22,9 @@ describe("magic-link send callback", () => {
     expect(sendBrevoEmail).toHaveBeenCalledTimes(1);
     expect(sendBrevoEmail).toHaveBeenCalledWith({
       to: "supplier@example.com",
-      subject: "Your ExportReady sign-in link",
+      subject: "Your TradeReady sign-in link",
       text: expect.stringContaining(verifyUrl),
     });
-    expect(MAGIC_LINK_SUBJECT).toBe("Your ExportReady sign-in link");
+    expect(MAGIC_LINK_SUBJECT).toBe("Your TradeReady sign-in link");
   });
 });

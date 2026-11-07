@@ -10,7 +10,7 @@ export default async function ConnectionsLayout({ children }: { children: ReactN
   return (
     <div className="min-h-dvh">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
-        <p className="text-sm font-semibold">ExportReady</p>
+        <p className="text-sm font-semibold">TradeReady</p>
         <p className="min-w-0 truncate text-sm text-muted">{user.name}</p>
         <SignOutButton />
       </header>

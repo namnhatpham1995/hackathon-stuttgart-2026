@@ -1,6 +1,6 @@
 # Deck outline
 
-Six slides for the ExportReady submission deck. Turn this into a PDF. Keep the tagline **From Supplier Potential to Buyer Confidence.**
+Six slides for the TradeReady submission deck. Turn this into a PDF. Keep the tagline **From Supplier Potential to Buyer Confidence.**
 
 Claims below match `main` on 2026-11-07 unless a line says **After merge**. Those lines depend on groups 11 (workspace and report), 13 (end-to-end assessment) and 17 (buyer–supplier connections). Do not present an **After merge** line as something the live app already does. Screenshots wait for group 11. See the placeholder in `README.md`.
 

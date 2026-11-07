@@ -315,7 +315,7 @@ export async function completeJob(
       recipientUserId: owner.userId,
       recipientEmail: owner.email,
       type: "assessment_completed",
-      title: "Your ExportReady assessment is ready",
+      title: "Your TradeReady assessment is ready",
       status: "pending",
     });
 

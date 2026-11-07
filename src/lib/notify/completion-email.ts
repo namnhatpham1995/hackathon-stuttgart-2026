@@ -43,7 +43,7 @@ export function renderCompletionEmail(input: {
   const base = input.appBaseUrl.trim().replace(/\/+$/, "");
   const link = `${base}/workspace/${encodeURIComponent(input.productId)}/report`;
   return {
-    subject: "Your ExportReady assessment is ready",
+    subject: "Your TradeReady assessment is ready",
     text: [
       `Your document review is complete and ${issuePhrase(input.issueCount)}.`,
       "Open your report to see the supporting evidence and next steps.",

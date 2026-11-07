@@ -1,4 +1,4 @@
-// Dependency-free one-page PDFs for the ExportReady demo fixtures.
+// Dependency-free one-page PDFs for the TradeReady demo fixtures.
 // Helvetica + WinAnsi, with a hand-written xref table. No PDF library.
 import { mkdirSync, writeFileSync } from "node:fs";
 import os from "node:os";

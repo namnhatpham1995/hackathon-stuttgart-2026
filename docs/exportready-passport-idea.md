@@ -1,10 +1,10 @@
-# **Project: ExportReady Passport**
+# **Project: TradeReady Passport**
 
 # **Tagline: From Supplier Potential to Buyer Confidence.**
 
 # **Team: Phuong \+ Nam \+ up to 2 additional members.**
 
-# **ExportReady Passport**
+# **TradeReady Passport**
 
 A digital readiness assessment and evidence passport connecting emerging suppliers with international buyers.
 
@@ -150,13 +150,13 @@ Do not assume willingness to pay until validated.
 
 # **From Supplier Potential to Buyer Confidence**
 
-ExportReady Passport
+TradeReady Passport
 
 International sourcing is full of untapped opportunities, but discovering a supplier is not the same as trusting one.
 
 Thousands of manufacturers have the production capabilities to serve international markets, yet buyers struggle to evaluate their quality systems, documentation, traceability and export readiness.
 
-We are building ExportReady Passport: a digital platform that turns fragmented supplier information into structured, evidence-based readiness profiles.
+We are building TradeReady Passport: a digital platform that turns fragmented supplier information into structured, evidence-based readiness profiles.
 
 Suppliers understand exactly what they need to improve. Buyers discover suppliers with transparent capabilities and evidence gaps. And industry ecosystems can connect both sides more efficiently.
 

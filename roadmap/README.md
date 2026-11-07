@@ -1,4 +1,4 @@
-# ExportReady live roadmap
+# TradeReady live roadmap
 
 A read-only page for the hackathon build. It shows milestones, waves and task groups from
 `openspec/changes/exportready-hackathon-build/tasks.md`. Ticking a task and pushing is the update.
