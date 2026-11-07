@@ -288,6 +288,10 @@ Fields have a visible 13px label, `card` background, 1px `control-border`, 6px c
 
 ### Navigation and report tabs
 
+The supplied passport symbol is the brand mark on sign-in, sign-up, workspace choice, and application headers. It sits on a fixed light `brand-surface` so the navy cover stays visible in both themes. Authentication shows the symbol above the form heading.
+
+One account can use both workspaces. The default post-sign-in dashboard offers Supplier and Buyer as separate choices, and a shared workspace navigation row provides an explicit switch with selected state. Supplier tools stay under `/workspace`, buyer tools under `/buyer`, and shared Board, Directory, and Inbox pages under `/connections`. The connections shell includes Back to workspaces. In the supplier sidebar these three links form a vertical list, while narrow screens and connections pages use wrapping horizontal navigation. Email sign-in links preserve the selected on-site destination.
+
 The sidebar carries global navigation and account controls, the top bar carries Assistant and the single theme control. The selected sidebar entry has both a tinted background and `aria-current="page"`. Product navigation uses a 2px selected underline and 44px targets. Atlaskit Tabs provides the report's tab/panel relationships, keyboard navigation, selection and focus. Findings, Action plan, and Request draft replace the same working area.
 
 ### Upload and report states

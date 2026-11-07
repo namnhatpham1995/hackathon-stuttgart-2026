@@ -11,6 +11,7 @@
   --theme-rays-opacity: 1;
   --theme-rays-position: rotate(0deg) scale(1);
   --card: oklch(1 0 89.876);
+  --brand-surface: oklch(1 0 0);
   --ink: oklch(0.28559 0.00741 274.703);
   --muted: oklch(0.43891 0.01014 271.182);
   --line: oklch(0.17329 0.0136 159.534 / 0.14118);
@@ -322,10 +323,18 @@ textarea {
   font-size: 1rem;
   font-weight: 600;
 }
-.workspace-brand > svg {
-  width: 21px;
-  height: 21px;
-  color: var(--accent);
+.brand-mark {
+  width: 32px;
+  height: 40px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 4px;
+  /* The supplied navy passport needs a light backing in either theme. */
+  background: var(--brand-surface);
+}
+.auth-brand-mark {
+  width: 96px;
+  height: 124px;
 }
 .workspace-sidebar :where(nav) > a {
   display: flex;

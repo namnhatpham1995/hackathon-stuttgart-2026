@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/ui/brand-mark";
 import { getSession } from "@/lib/session";
 
 export default async function HomePage() {
@@ -7,6 +8,7 @@ export default async function HomePage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-8 px-6 py-16">
       <div className="space-y-3">
+        <BrandMark alt="TradeReady passport" />
         <h1 className="page-title text-balance">TradeReady</h1>
         <p className="text-lg text-pretty text-muted">
           Add the documents a buyer asked for and read an evidence report: what is documented, what
@@ -15,11 +17,16 @@ export default async function HomePage() {
       </div>
       <div className="flex flex-wrap gap-3">
         {session ? (
-          <Button href="/workspace">Open workspace</Button>
+          <>
+            <Button href="/workspace">Supplier workspace</Button>
+            <Button href="/buyer" variant="secondary">
+              Buyer workspace
+            </Button>
+          </>
         ) : (
           <>
-            <Button href="/sign-in?next=/workspace">Sign in</Button>
-            <Button href="/sign-up?next=/workspace" variant="secondary">
+            <Button href="/sign-in">Sign in</Button>
+            <Button href="/sign-up" variant="secondary">
               Create an account
             </Button>
           </>

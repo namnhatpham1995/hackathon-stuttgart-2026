@@ -3,15 +3,16 @@
 import { type FormEvent, useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
+import { safeNextPath } from "@/lib/safe-next-path";
 
-/** Body for `signIn.magicLink`. New accounts use the mailbox name; both land on `/workspace`. */
-export function magicLinkSignInBody(email: string) {
+/** New accounts use the mailbox name; redirects stay on this site. */
+export function magicLinkSignInBody(email: string, next = "/workspace") {
   const at = email.indexOf("@");
   const name = at > 0 ? email.slice(0, at) : email;
-  return { email, name, callbackURL: "/workspace" as const };
+  return { email, name, callbackURL: safeNextPath(next) };
 }
 
-export function MagicLinkForm() {
+export function MagicLinkForm({ next }: { next: string }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -21,7 +22,9 @@ export function MagicLinkForm() {
     setError(null);
     setPending(true);
     const email = String(new FormData(event.currentTarget).get("email"));
-    const { error: resultError } = await authClient.signIn.magicLink(magicLinkSignInBody(email));
+    const { error: resultError } = await authClient.signIn.magicLink(
+      magicLinkSignInBody(email, next),
+    );
     setPending(false);
     if (resultError) {
       setError(resultError.message ?? "Could not send the sign-in link. Try again.");

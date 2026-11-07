@@ -6,7 +6,9 @@ import { type ReactNode, useEffect, useState } from "react";
 
 import { setTheme } from "@/app/workspace/actions";
 import { Button } from "@/components/ui/button";
-import { DocumentIcon, SignOutIcon, ThemeIcon } from "@/components/workspace/icons";
+import { BrandMark } from "@/components/ui/brand-mark";
+import { WorkspaceSwitcher } from "@/components/ui/workspace-switcher";
+import { SignOutIcon, ThemeIcon } from "@/components/workspace/icons";
 import { signOut } from "@/lib/auth-client";
 
 export function BuyerShell({
@@ -43,7 +45,7 @@ export function BuyerShell({
       <header className="border-b border-line bg-card">
         <div className="flex min-h-16 items-center gap-3 px-4 py-3 md:px-10">
           <Link href="/buyer" className="inline-flex min-w-0 items-center gap-2 font-medium">
-            <DocumentIcon />
+            <BrandMark />
             <span className="truncate">TradeReady</span>
           </Link>
           <span className="meta hidden text-muted lg:inline">Buyer workspace</span>
@@ -58,6 +60,7 @@ export function BuyerShell({
             </div>
           </div>
         </div>
+        <WorkspaceSwitcher />
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pb-3 md:px-10">
           <nav aria-label="Buyer" className="flex flex-wrap items-center gap-1">
             <BuyerLink href="/buyer" current={onOverview && !onRequests}>
@@ -73,9 +76,6 @@ export function BuyerShell({
           <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
             <Button href="/connections/requests/new" size="sm">
               New request
-            </Button>
-            <Button href="/workspace" variant="secondary" size="sm">
-              Supplier workspace
             </Button>
           </div>
         </div>
