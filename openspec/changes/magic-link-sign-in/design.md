@@ -74,8 +74,10 @@ and existing users. Password sign-in still follows `?next=`. Styles reuse `.fiel
 - Opening a link for a password account whose email is not verified deletes that password
   and its sessions (`revokeUnprovenAccountAccess`). Password sign-in is unchanged until then.
   The demo account's password stops working if that address opens a magic link.
-- In-memory rate limits reset on process restart and are not shared across instances. Accepted:
-  no extra infrastructure.
+- In-memory rate limits reset on process restart and are not shared across instances.
+  When the client IP is not a single `x-forwarded-for` value, every visitor shares one bucket
+  of 5 magic-link sends per 60 seconds. That is recorded in `docs/security-accepted-risks.md`.
+  `trustedProxies` stays unset until a production header is captured.
 - Live delivery cannot be checked in this run: there is no `BREVO_API_KEY`.
 
 ## Migration Plan
