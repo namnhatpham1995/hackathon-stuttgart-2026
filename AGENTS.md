@@ -1,6 +1,6 @@
 # Agent instructions
 
-Every coding agent (Claude Code, Codex, Cursor, Copilot, …) follows the same rules here. They live
+Every coding agent (Claude Code, Cursor, Gemini CLI, Codex, Copilot, …) follows the same rules here. They live
 in one place so they never drift:
 
 - Project guide, layout, commands and engineering rules: [`CLAUDE.md`](CLAUDE.md)
@@ -13,8 +13,11 @@ in one place so they never drift:
 - Product and design context for UI work: `PRODUCT.md` and `DESIGN.md` at the root, written by the
   impeccable skill (`/impeccable init`, then `/impeccable document` once a look is built)
 
-Plan features as OpenSpec changes (`openspec/changes/`); the OpenSpec skills for Codex are in
-`.agents/skills/`, for Claude Code in `.claude/skills/`.
+Plan features as OpenSpec changes (`openspec/changes/`), then build each task group with the
+`full-feature-develop` skill. Skills: Claude Code and Cursor read `.claude/skills/` (Cursor also
+`.cursor/skills/`), Gemini CLI `.gemini/skills/` and `.agents/skills/`, Codex `.agents/skills/`.
+Which model to use and how to start the review roles in each tool:
+[`.claude/rules/multi-tool-agents.md`](.claude/rules/multi-tool-agents.md).
 
 <!-- BEGIN:nextjs-agent-rules -->
 
