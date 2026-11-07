@@ -152,7 +152,7 @@ Use one Next.js/TypeScript application if that is comfortable for the team. Anot
 | Worker | Durable backend workflow; use n8n if familiar, otherwise an existing worker setup |
 | Email | Brevo transactional API after result persistence |
 
-A managed Postgres database with private object storage is a practical implementation option. Do not build a full data platform. The minimum records are product, requirement set, document, job, result and email notification. A small team should use managed infrastructure it already knows.
+A managed Postgres database with private object storage is a practical implementation option. Do not build a full data platform. The minimum records are product, requirement set, document, job, result and email notification. A small team should use managed infrastructure it already knows. This build uses Vercel for the UI and Railway for the Next.js server, the job runner and PostgreSQL. There is no Neon database. Production `GEMINI_MODEL` is `gemini-3.6-flash`.
 
 If using n8n, keep the app's job record authoritative. The workflow reads the immutable input snapshot, calls the evidence service, stores the result and triggers notification. An independent conversational n8n agent is unnecessary.
 
@@ -206,7 +206,7 @@ Bound tool-call rounds and retries. If the user cancels upload, wait. If a tool 
 
 ## 7. Document pipeline and data contract
 
-1. Validate file type and size. Suggested demo limits: five active PDFs, five pages per PDF, 5 MB per file; accept at most two optional JPEG/PNG photos of up to 5 MB each as attachments. Check hosting limits before deployment.
+1. Validate file type and size. Suggested demo limits: five active PDFs, five pages per PDF, 5 MB per file; accept at most two optional JPEG/PNG photos of up to 5 MB each as attachments. Production `/api/*` is served by Railway, which has no 4.5 MB body limit and no function timeout.
 2. Assign document IDs and content hashes. Retain the originals and an immutable active-document snapshot for each assessment.
 3. Extract PDF text with page boundaries. Flag empty or failed extraction before making absence claims.
 4. Give Gemini the buyer requirements and labelled document text, or supported PDF input, in distinct fields. Gemini supports PDF understanding and structured output. [3][4]
@@ -503,7 +503,7 @@ Continue when users return, share relevant data and see a measurable benefit. Na
 
 ### Remaining decisions at check-in
 
-- Which Google API route and model are actually accessible with the offer?
+- Production `GEMINI_MODEL` is `gemini-3.6-flash`. Gemini 3.8 Flash was too slow.
 - Can the Wispr sponsor approve API access immediately?
 - Is Brevo sender setup ready for a team-controlled test address?
 - Does the team have a familiar durable worker and storage setup?

@@ -95,11 +95,13 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 ## 12. Production deploy · wave 2 · M1 · branch chore/production-deploy
 
 - [x] 12.1 Add `scripts/vercel-build.mjs`: run `pnpm db:migrate` only when `VERCEL_ENV` is `production`, then `next build`; verify locally that without `VERCEL_ENV` it skips migration and builds
-  - Note: a production `DATABASE_URL` whose host contains `-pooler`, or which sets `pgbouncer=true`, exits before migrating. `docs/deploy.md` tells the owner to use the direct Neon URL.
+  - Note: 12.5 changed this script. It only runs `next build`. Railway runs `pnpm db:migrate`. There is no Neon pooler check.
 - [x] 12.2 Write `docs/deploy.md`: Vercel project, Neon from the Marketplace, build command, previews off, the env list from design.md Decision 11, rollback by Promote; verify the owner can follow it alone
-  - Note: the env table is Decision 11 plus the task 3.2 names. `GEMINI_MODEL` and `BREVO_SENDER_EMAIL` are required for those features; `ELEVENLABS_API_KEY` is optional. Production `DATABASE_URL` is the direct `DATABASE_URL_UNPOOLED` value.
-- [ ] 12.3 Owner step: create the app's Vercel project (build command `node scripts/vercel-build.mjs`, previews off) and Neon database and set the env from `docs/deploy.md`; the worker ticks this after the owner confirms; verify the project and env exist in the Vercel dashboard
+  - Note: 12.5 rewrote `docs/deploy.md` for Railway (backend and Postgres) and Vercel (UI). There is no Neon database. Production `GEMINI_MODEL` is `gemini-3.6-flash`.
+- [ ] 12.3 Owner step: create the Railway project (Next.js service from this repo, Node 22, build `pnpm build`, pre-deploy `pnpm db:migrate`, start `pnpm start`, healthcheck `/api/health`, Railway Postgres, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, env from `docs/deploy.md`) and the Vercel project (build command `node scripts/vercel-build.mjs`, previews off, `BACKEND_URL`, Railway's public `DATABASE_URL`, and the same `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`); the worker ticks this after the owner confirms; verify both projects and their env
 - [ ] 12.4 (post-merge) Smoke-test the first production deploy: sign up, sign in, open `/workspace`; verify each works, then record the URL as a note and set `APP_BASE_URL` and `BETTER_AUTH_URL` to it
+- [x] 12.5 Railway backend + Postgres deploy (railway.json, /api rewrite, health route, docs)
+  - Blocked: `BACKEND_URL` was not added to `src/env.ts` or `.env.example`, and `GEMINI_MODEL=gemini-3.6-flash` was not written into `.env.example`. Group 3 (PR #8, `feat/assessment-contract`) is mid-edit on both files. On that branch `GEMINI_MODEL=` is blank. The rewrite reads `process.env.BACKEND_URL`. After PR #8 merges, add `BACKEND_URL` and set the example model to `gemini-3.6-flash`.
 
 ## 13. End-to-end assessment · wave 3 · M2 · branch feat/assessment-integration
 

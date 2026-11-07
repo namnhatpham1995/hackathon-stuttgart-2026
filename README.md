@@ -126,6 +126,9 @@ How each tool runs the review roles: `.claude/rules/multi-tool-agents.md`.
 
 ## Deploying
 
-Any Node host with PostgreSQL works (Railway, Render, Fly, Vercel + Neon). Set `DATABASE_URL`,
-`BETTER_AUTH_SECRET` (32+ random characters) and `BETTER_AUTH_URL` (the public URL), run
-`pnpm db:migrate` once, then `pnpm build && pnpm start`.
+The UI runs on Vercel. The Next.js server (`/api/*`, including the job runner) and PostgreSQL run
+on Railway. There is no Neon database. Production `GEMINI_MODEL` is `gemini-3.6-flash`. Steps and
+the owner commands are in [`docs/deploy.md`](docs/deploy.md).
+
+Locally, leave `BACKEND_URL` unset. Set `DATABASE_URL`, `BETTER_AUTH_SECRET` (32+ random characters)
+and `BETTER_AUTH_URL`, then `pnpm db:migrate`, `pnpm build` and `pnpm start`.

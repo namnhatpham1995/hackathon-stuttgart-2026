@@ -23,7 +23,7 @@ change. This design covers how to build it in parallel.
 - Progress is visible on the roadmap within a minute of a worker pushing.
 
 **Non-Goals:**
-- Durability across a crashed server function (see Decision 6).
+- Durability across a crashed Railway process (see Decision 6).
 - OCR, drawings, photos as evidence, editable requirement sets, public profiles, Exa, Page Agent,
   n8n, Wispr API integration (dictating with the installed Wispr app into the text box is allowed and
   needs no code).
@@ -213,16 +213,16 @@ buyer or the product's owner; anyone else gets 404.
   forbids a score), public signed-out passports (a report is shared only with one signed-in buyer
   through a connection, Decision 16), buyer-entered requirements (buyers pick a fixed requirement set;
   there is no editor), free-form message threads, compliance conclusions, and Supabase (the stack is
-  Postgres with Drizzle and Neon).
+  Postgres with Drizzle on Railway).
 - Alternative considered: let Gemini output statuses. Rejected because R2 and R3 are what the demo
   shows, and code makes them deterministic and testable without an API key.
 
 ### 5. Gemini access
 
-The client is `@google/genai` with `GEMINI_API_KEY`. The model comes from `GEMINI_MODEL`, set at
-check-in to whatever the Google credits fund. Group 6 wraps the client in `gemini.ts` (retry twice with
-backoff, a 60 s timeout), and group 14 reuses it for function calling, so no second AI dependency is
-added. The key stays server-side.
+The client is `@google/genai` with `GEMINI_API_KEY`. Production `GEMINI_MODEL` is
+`gemini-3.6-flash`. The owner chose it; Gemini 3.8 Flash was too slow. Group 6 wraps the client in
+`gemini.ts` (retry twice with backoff, a 60 s timeout), and group 14 reuses it for function calling,
+so no second AI dependency is added. The key stays server-side.
 
 ### 6. Jobs: stored state, run after the response
 
@@ -231,18 +231,23 @@ added. The key stays server-side.
 - The runner claims the job with `update ... set status='PROCESSING' where id=$1 and status='QUEUED'
   returning *`. Zero rows means another runner has it.
 - The start action schedules the runner with Next's `after()`, so it keeps running when the user closes
-  the tab. The workspace route sets `maxDuration` to 300 s.
+  the tab.
+- In production the job runner must run on Railway. Railway has no function timeout. Start it from a
+  Railway-served `/api` route, not from a Vercel server action: `after()` there still ends with that
+  function.
 - Status reads re-queue a job stuck in PROCESSING for more than 5 minutes (up to 2 attempts). That is
-  the recovery path for a function that died mid-job.
+  the recovery path when the Railway process dies mid-job.
 - The UI polls `GET /api/jobs/[jobId]` every 2 s while the job is not final. The model never polls.
 - Alternative considered: Vercel Workflow or n8n. Rejected for today because each is new infrastructure
-  on demo day. The README states that durability across a crashed function is limited to this re-queue.
+  on demo day. The README states that durability across a crashed process is limited to this re-queue.
 
 ### 7. Uploads go through a route handler, one file per request
 
-Vercel limits a function request body to 4.5 MB, and Server Actions default to a 1 MB body. The UI
-therefore posts each file to `POST /api/products/[productId]/documents` as `multipart/form-data`, and
-the file cap is 4 MB (the plan suggested 5 MB). Files land as `pending`.
+Server Actions default to a 1 MB body, so uploads do not use them. The UI posts each file to
+`POST /api/products/[productId]/documents` as `multipart/form-data`, one file per request, and the
+file cap is 4 MB (the plan suggested 5 MB). In production that route is served by Railway
+(Decision 11). Vercel's 4.5 MB function body limit does not apply there, and Railway has no function
+timeout. Files land as `pending`.
 "Upload and assess" turns pending into active (and replaced documents into inactive) in one
 transaction, then starts the job.
 
@@ -310,14 +315,28 @@ History lives in the panel's state only. The source of truth is the database.
 
 ### 11. Production deploy from `main`
 
-- The app's Vercel project uses Neon Postgres from the Vercel Marketplace.
-- The build command is `node scripts/vercel-build.mjs`. It runs `pnpm db:migrate` only when
-  `VERCEL_ENV === "production"`, then `next build`.
-- Preview deployments of the app are turned off, since there is no pre-prod database and a preview
-  build must never migrate production.
-- Production env: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (= `APP_BASE_URL`), and the
-  Gemini and Brevo keys.
-- Rollback is Vercel "Promote" of the previous deployment. Migrations here are additive only.
+The same codebase is deployed twice. There is no Neon database.
+
+- **Railway** runs the full Next.js server and a Railway PostgreSQL service. All `/api/*` routes
+  (auth, uploads, jobs, assistant) are served from Railway, and the job runner runs there (Decision
+  6): no 4.5 MB body limit and no function timeout. `DATABASE_URL` on that service is
+  `${{Postgres.DATABASE_URL}}`. `railway.json` records Railpack, build `pnpm build`, pre-deploy
+  `pnpm db:migrate`, start `pnpm start` (listens on `$PORT`), and healthcheck `GET /api/health`.
+  Node 22 is pinned with `RAILPACK_NODE_VERSION=22`. A project created now does not read
+  `railway.json` (Config as Code is closed to new services; the file stops being read on
+  2026-12-01), so the owner copies those settings onto the service. `docs/deploy.md` has the steps.
+- **Vercel** serves pages and the UI. `next.config.ts` rewrites `/api/:path*` to
+  `${BACKEND_URL}/api/:path*` only when `BACKEND_URL` is set (unset in local dev and on Railway),
+  and the rewrite is `beforeFiles` so Vercel does not serve its own `/api` routes. The browser stays
+  on the Vercel origin, so Better Auth cookies keep working. Vercel never migrates. Its server
+  components and server actions read the same Railway Postgres through `DATABASE_URL` (Railway's
+  public connection URL). The build command is `node scripts/vercel-build.mjs`, which runs
+  `next build` only. Preview deployments stay off.
+- `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` are identical on both. `BETTER_AUTH_URL` and
+  `APP_BASE_URL` are the Vercel origin. Railway also gets `GEMINI_API_KEY`, `GEMINI_MODEL`
+  (`gemini-3.6-flash`), `BREVO_API_KEY` and `BREVO_SENDER_EMAIL`.
+- Rollback is redeploying the previous Railway deployment and promoting the previous Vercel
+  deployment. Migrations here are additive only.
 
 ### 12. Hackathon-mode rules (group 1)
 
@@ -391,7 +410,7 @@ has run and `pnpm db:up` is running, even for pure lanes.
 | Node, no database in the code itself | 2, 4, 5, 7, 11 | [D] / [O-x] workers, or a Cursor agent on a set-up machine |
 | Gemini key in `.env` | 6, 13, 14 | a worker whose `.env` has `GEMINI_API_KEY` |
 | PostgreSQL used by the code | 3, 8, 9, 10, 13, 17 | [D] / [O-x] workers |
-| Owner's dashboards (Vercel, Neon, Brevo, GitHub token) | 2, 12 | worker prepares; owner clicks |
+| Owner's dashboards (Vercel, Railway, Brevo, GitHub token) | 2, 12 | worker prepares; owner clicks |
 
 A Cursor cloud agent may write code for a pure lane, but its branch is then pushed by a [D] or
 [O-x] worker that merges `origin/main` and lets the hook run. Never `--no-verify`.
@@ -442,9 +461,11 @@ A Cursor cloud agent may write code for a pure lane, but its branch is then push
   request makes the pre-push hook verify the combined code.
 - [Gemini extraction is inaccurate on fixtures] → The rules and citation checks decide statuses. Group 13
   tunes the prompt against the golden test. The cut rule is text-based PDFs only.
-- [Vercel 4.5 MB body limit] → 4 MB file cap and one file per request.
-- [`after()` work dies with the function] → Re-queue on status read for jobs stuck in PROCESSING. The
-  README states the limit honestly.
+- [Vercel 4.5 MB body limit] → Does not apply to `/api/*` in production. Those routes run on Railway,
+  which has no 4.5 MB body limit. Uploads stay one file per request, with the app's 4 MB cap. Server
+  Actions stay at their 1 MB default and are not the upload path.
+- [Railway process dies mid-job] → Re-queue on status read for jobs stuck in PROCESSING. The README
+  states the limit honestly. The runner must run on Railway, not in a Vercel server action.
 - [Brevo sender not verified in time] → The notification is marked failed and the report still works.
   The demo then shows the stored report and states that email is unfinished. A mocked email is never
   shown.
@@ -460,16 +481,15 @@ A Cursor cloud agent may write code for a pure lane, but its branch is then push
 2. Wave 0: group 1 alone; merge it at once.
 3. Wave 1, in parallel: groups 2, 3, 4. The owner creates the roadmap Vercel project and token when
    group 2 asks.
-4. After group 3 merges: start groups 5-12 in parallel. Group 12 puts the app on Vercel; from then on
-   every merge to `main` deploys production.
+4. After group 3 merges: start groups 5-12 in parallel. Group 12 puts the UI on Vercel and the
+   Next.js server plus PostgreSQL on Railway; from then on every merge to `main` deploys both.
 5. After groups 5-11 merge: group 13, then the golden tests. Group 17 starts as soon as 8-11 merge,
    in parallel with 13.
 6. Then groups 14, 16 and optionally 15. Feature freeze at 15:15.
-7. Rollback: promote the previous Vercel deployment. The schema is additive, so no down-migration is
-   needed.
+7. Rollback: redeploy the previous Railway deployment and promote the previous Vercel deployment.
+   The schema is additive, so no down-migration is needed.
 
 ## Open Questions
 
-- Which `GEMINI_MODEL` the Google credits fund. This is set in env at check-in and changes no code.
 - The production domain for `APP_BASE_URL` and `BETTER_AUTH_URL`, known once group 12 creates the
-  Vercel project.
+  Vercel project. Production `GEMINI_MODEL` is `gemini-3.6-flash` (Decision 5).

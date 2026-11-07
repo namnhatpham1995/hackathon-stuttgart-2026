@@ -52,8 +52,10 @@ also production, so the plan has to keep every merge point green.
 - **Kept out from the idea**: numeric readiness scores, public (signed-out) passports, buyer-defined
   checklists (buyers pick from the fixed requirement sets), free-form messaging threads, compliance
   conclusions and Supabase.
-- **Production deploy from `main`**: a Vercel project for the app with managed Postgres; migrations
-  run only on production builds.
+- **Production deploy from `main`**: Vercel serves the UI and Railway runs the Next.js server
+  plus PostgreSQL. Vercel rewrites `/api/:path*` to Railway when `BACKEND_URL` is set. Migrations
+  run on Railway (`pnpm db:migrate` as the pre-deploy command), never on Vercel. There is no Neon
+  database.
 
 ## Capabilities
 
@@ -89,9 +91,12 @@ None. `openspec/specs/` is empty.
   `/workspace` and `/connections`.
 - **Dependencies**: `@google/genai` (Gemini), `unpdf` (PDF text). Brevo and ElevenLabs are called
   over `fetch`, with no SDK.
-- **Environment**: `GEMINI_API_KEY`, `GEMINI_MODEL`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`,
-  `APP_BASE_URL`, optional `ELEVENLABS_API_KEY`; the roadmap project has its own `GITHUB_TOKEN`.
+- **Environment**: `GEMINI_API_KEY`, `GEMINI_MODEL` (`gemini-3.6-flash` in production),
+  `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `APP_BASE_URL`, optional `ELEVENLABS_API_KEY`. Vercel
+  also sets `BACKEND_URL` (the Railway origin). Railway does not. The roadmap project has its own
+  `GITHUB_TOKEN`.
 - **Process**: `.claude/rules/hackathon-mode.md` overrides parts of the git, review and task-handoff
   rules until submission.
-- **Infrastructure the owner sets up**: two Vercel projects (app and roadmap), a managed Postgres
-  database, a Brevo sender, a Gemini API key, a read-only GitHub token.
+- **Infrastructure the owner sets up**: a Railway project (backend service + Railway PostgreSQL),
+  a Vercel project for the UI app, a separate Vercel project for the roadmap, no Neon, a Brevo
+  sender, a Gemini API key, a read-only GitHub token.
