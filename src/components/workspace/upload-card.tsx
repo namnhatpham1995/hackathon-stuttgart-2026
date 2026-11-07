@@ -5,7 +5,13 @@ import { type RefObject, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { type Checklist, checklistFor } from "./checklists";
 import { DIMENSION_LABELS, FILE_LIMITS, type Finding, type ProductDocument } from "./contract";
-import { currentDocuments, evidenceSlots, formatBytes, photoSlots } from "./documents";
+import {
+  assignDocuments,
+  currentDocuments,
+  evidenceSlots,
+  formatBytes,
+  photoSlots,
+} from "./documents";
 import { ChevronIcon, DocumentIcon, UploadIcon } from "./icons";
 import { StatusChip } from "./status-chip";
 
@@ -49,11 +55,8 @@ export function UploadCard({
   const pdfs = evidenceSlots(documents);
   const photos = photoSlots(documents);
   const pendingDocs = documents.filter((document) => document.state === "pending");
-  const assignedIds = new Set(
-    checklist.set.requirements.map(
-      (requirement) => linkedDocument(requirement.id, documents, findings)?.id,
-    ),
-  );
+  const assignments = assignDocuments(checklist.set.requirements, documents, findings);
+  const assignedIds = new Set([...assignments.values()].map((document) => document?.id));
   const additionalDocuments = currentDocuments(documents).filter(
     (document) => !assignedIds.has(document.id),
   );
@@ -111,7 +114,7 @@ export function UploadCard({
       </div>
       <ul className="divide-y divide-line">
         {checklist.set.requirements.map((requirement) => {
-          const linked = linkedDocument(requirement.id, documents, findings);
+          const linked = assignments.get(requirement.id) ?? null;
           const finding = findings?.find(
             (item) =>
               item.requirementId === requirement.id &&
@@ -315,53 +318,4 @@ export function UploadCard({
       </div>
     </fieldset>
   );
-}
-
-function linkedDocument(
-  requirementId: string,
-  documents: readonly ProductDocument[],
-  findings?: readonly Finding[],
-) {
-  const usable = currentDocuments(documents).filter((document) => document.kind === "evidence");
-  const matches = (document: ProductDocument) =>
-    document.requirementId === requirementId ||
-    Boolean(
-      findings
-        ?.find((finding) => finding.requirementId === requirementId)
-        ?.evidence.some((citation) => citation.documentId === document.id),
-    ) ||
-    matchesRequirement(requirementId, document) ||
-    Boolean(
-      document.replacesDocumentId &&
-        documents.some(
-          (previous) =>
-            previous.id === document.replacesDocumentId &&
-            matchesRequirement(requirementId, previous),
-        ),
-    );
-  return (
-    usable.find((document) => document.state === "pending" && matches(document)) ??
-    usable.find(matches) ??
-    null
-  );
-}
-
-function matchesRequirement(requirementId: string, document: ProductDocument) {
-  if (document.requirementId) return document.requirementId === requirementId;
-  const name = document.filename.toLowerCase();
-  if (requirementId === "R1")
-    return document.id === "doc-datasheet" || name.includes("datasheet") || name.startsWith("01_");
-  if (requirementId === "R2")
-    return document.id === "doc-iso" || name.includes("iso") || name.startsWith("02_");
-  if (requirementId === "R3") {
-    return (
-      document.id.startsWith("doc-inspection") ||
-      name.includes("inspection") ||
-      name.startsWith("03_") ||
-      name.startsWith("05_")
-    );
-  }
-  if (requirementId === "R5")
-    return document.id === "doc-packaging" || name.includes("packaging") || name.startsWith("04_");
-  return false;
 }
