@@ -52,14 +52,19 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 5. PDF text extraction · wave 2 · M1 · branch feat/pdf-text
 
-- [ ] 5.1 Implement `extractPages` in `src/lib/assessment/pdf-text.ts` with `unpdf`, returning text per page with document ID, filename and 1-based page number, and an `empty` flag when a document yields no text; verify with 5.2
-- [ ] 5.2 Add `pdf-text.test.ts` reading the fixture files: 01 page 1 contains `LM-ABS-01`, 02 contains `2026-08-01`, 03 contains revision `A`, `empty.pdf` is flagged empty; verify it passes and fails if extraction returns an empty string
+- [x] 5.1 Implement `extractPages` in `src/lib/assessment/pdf-text.ts` with `unpdf`, returning text per page with document ID, filename and 1-based page number, and an `empty` flag when a document yields no text; verify with 5.2
+  - Note: a document with no non-whitespace text is listed in `emptyDocuments` and contributes no pages. Page numbers stay 1-based.
+- [x] 5.2 Add `pdf-text.test.ts` reading the fixture files: 01 page 1 contains `LM-ABS-01`, 02 contains `2026-08-01`, 03 contains revision `A`, `empty.pdf` is flagged empty; verify it passes and fails if extraction returns an empty string
+  - Note: returning an empty string for page text fails the datasheet assertion (`expected '' to contain 'LM-ABS-01'`).
 
 ## 6. Gemini fact extraction · wave 2 · M1 · branch feat/gemini-extraction
 
-- [ ] 6.1 Implement `src/lib/assessment/gemini.ts`: client from `requireEnv("GEMINI_API_KEY")` and `GEMINI_MODEL`, two retries with backoff, 60 s timeout, typed errors; verify a call without a key fails with the clear env message
-- [ ] 6.2 Implement `extractFacts` in `extract-facts.ts`: the plan's extraction instruction, requirements and page-labelled text in separate fields, structured output schema for observations only (no statuses), temperature 0, Zod-parse the response; verify `pnpm typecheck`
+- [x] 6.1 Implement `src/lib/assessment/gemini.ts`: client from `requireEnv("GEMINI_API_KEY")` and `GEMINI_MODEL`, two retries with backoff, 60 s timeout, typed errors; verify a call without a key fails with the clear env message
+  - Note: one call plus two retries (1s, then 2s) for timeout, network, 408, 429 and 5xx. Each attempt aborts at 60s. A missing key throws `GEMINI_API_KEY is not set. Add it to .env before using this feature (see .env.example).` before any attempt. Tool calls disable automatic function calling and return the model content unchanged.
+- [x] 6.2 Implement `extractFacts` in `extract-facts.ts`: the plan's extraction instruction, requirements and page-labelled text in separate fields, structured output schema for observations only (no statuses), temperature 0, Zod-parse the response; verify `pnpm typecheck`
+  - Note: requirements (id, statement, field names) and page-labelled text are separate JSON fields. Expected values are not sent. Null values with an empty quote are dropped. Field names: supplierName, partNumber, revision, material, grade, scope, validityEnd (YYYY-MM-DD), resinBatch, productionLot, shipment, packagingCode, packagingRevision, accepted (`yes` or null).
 - [ ] 6.3 Live smoke on fixtures 01-04 with a one-off `tsx` command (not committed): paste the observations into the PR description; verify doc 03 yields revision `A` with an exact quote and doc 02 yields validity end `2026-08-01`
+  - Blocked: needs GEMINI_API_KEY for the live check. Run an uncommitted tsx command: `extractPages` on fixtures 01-04, then `extractFacts` with `neckarCap104`. Doc 03 must yield revision `A` with an exact quote and doc 02 `validityEnd` `2026-08-01`. Paste the observations into the PR description.
 
 ## 7. Rules and citation checks · wave 2 · M1 · branch feat/rules-engine
 
@@ -69,9 +74,9 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 8. Products and document upload · wave 2 · M1 · branch feat/document-upload
 
-- [ ] 8.1 Implement `src/lib/products/service.ts`: create a product for `neckar-cap-104`, get and list owned products, update allowed fields with origin and the declared supplier profile (both Zod-validated), all filtered by `userId`; verify `pnpm typecheck`; full check in 13.4
-- [ ] 8.2 Implement `src/lib/documents/service.ts`: add a pending file (MIME, 4 MB, 5 active PDFs, 2 photos, sha256), list active and pending, replace (new pending linked by `replaces_document_id`), and finalise in one transaction (pending to active, replaced to inactive) returning the active set; verify `pnpm typecheck`; full check in 13.4
-- [ ] 8.3 Add `POST /api/products/[productId]/documents` (multipart, one file, session required, 401 without one, 404 for a foreign product, 413 with a message naming the 4 MB limit); verify with `curl` and a session cookie: a fixture PDF gives 201 and a 5 MB file gives 413
+- [x] 8.1 Implement `src/lib/products/service.ts`: create a product for `neckar-cap-104`, get and list owned products, update allowed fields with origin and the declared supplier profile (both Zod-validated), all filtered by `userId`; verify `pnpm typecheck`; full check in 13.4
+- [x] 8.2 Implement `src/lib/documents/service.ts`: add a pending file (MIME, 4 MB, 5 active PDFs, 2 photos, sha256), list active and pending, replace (new pending linked by `replaces_document_id`), and finalise in one transaction (pending to active, replaced to inactive) returning the active set; verify `pnpm typecheck`; full check in 13.4
+- [x] 8.3 Add `POST /api/products/[productId]/documents` (multipart, one file, session required, 401 without one, 404 for a foreign product, 413 with a message naming the 4 MB limit); verify with `curl` and a session cookie: a fixture PDF gives 201 and a 5 MB file gives 413
 
 ## 9. Assessment jobs · wave 2 · M1 · branch feat/assessment-jobs
 
@@ -83,9 +88,13 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 10. Completion email · wave 2 · M1 · branch feat/completion-email
 
-- [ ] 10.1 Implement `sendBrevoEmail({to, subject, text})` in `src/lib/notify/brevo.ts` (Brevo `POST /v3/smtp/email` over `fetch` with a 15 s timeout; group 17 reuses it) and `sendCompletionEmail(notificationId)` in `src/lib/notify/completion-email.ts` on top of it: claim by update-where, store `messageId` or the error, mark failed with "email not configured" without a key; verify `pnpm typecheck`
-- [ ] 10.2 Add the fixed template (subject "Your ExportReady assessment is ready", issue count from the findings, link `${APP_BASE_URL}/workspace/<productId>/report`, no attachments); verify by rendering it for the baseline findings: the text says three documentation issues remain
+- [x] 10.1 Implement `sendBrevoEmail({to, subject, text})` in `src/lib/notify/brevo.ts` (Brevo `POST /v3/smtp/email` over `fetch` with a 15 s timeout; group 17 reuses it) and `sendCompletionEmail(notificationId)` in `src/lib/notify/completion-email.ts` on top of it: claim by update-where, store `messageId` or the error, mark failed with "email not configured" without a key; verify `pnpm typecheck`
+  - Note: `notification_status` has no `sending` value, so the claim is `UPDATE … SET attempts = 1 WHERE status = 'pending' AND attempts = 0`. A second call does not send. Missing `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` or `APP_BASE_URL` stores "email not configured".
+- [x] 10.2 Add the fixed template (subject "Your ExportReady assessment is ready", issue count from the findings, link `${APP_BASE_URL}/workspace/<productId>/report`, no attachments); verify by rendering it for the baseline findings: the text says three documentation issues remain
+  - Note: Open issues are findings whose status is not DOCUMENTED. Baseline R2 EXPIRED, R3 MISMATCH and R4 MISSING render "three documentation issues remain". The Brevo body is `textContent` only.
 - [ ] 10.3 Live send to a team-controlled address from a local notification row; verify the inbox receives it, the link opens the report after sign-in, and the row holds the message ID. Record the address used (not the key) as a note
+  - Blocked: needs BREVO_API_KEY for the live send
+  - Note: sender and test inbox are both nam95.pn@gmail.com (`BREVO_SENDER_EMAIL`). The send stays gated on the key.
 
 ## 11. Workspace and report UI · wave 2 · M1 · branch feat/workspace-ui
 
@@ -105,7 +114,7 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 - [ ] 12.3 Owner step: create the Railway project (Next.js service from this repo, Node 22, build `pnpm build`, pre-deploy `pnpm db:migrate`, start `pnpm start`, healthcheck `/api/health`, Railway Postgres, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, env from `docs/deploy.md`) and the Vercel project (build command `node scripts/vercel-build.mjs`, previews off, `BACKEND_URL`, Railway's public `DATABASE_URL`, and the same `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`); the worker ticks this after the owner confirms; verify both projects and their env
 - [ ] 12.4 (post-merge) Smoke-test the first production deploy: sign up, sign in, open `/workspace`; verify each works, then record the URL as a note and set `APP_BASE_URL` and `BETTER_AUTH_URL` to it
 - [x] 12.5 Railway backend + Postgres deploy (railway.json, /api rewrite, health route, docs)
-  - Blocked: `BACKEND_URL` was not added to `src/env.ts` or `.env.example`, and `GEMINI_MODEL=gemini-3.6-flash` was not written into `.env.example`. Group 3 (PR #8, `feat/assessment-contract`) is mid-edit on both files. On that branch `GEMINI_MODEL=` is blank. The rewrite reads `process.env.BACKEND_URL`. After PR #8 merges, add `BACKEND_URL` and set the example model to `gemini-3.6-flash`.
+  - Note: `BACKEND_URL` is an optional URL in `src/env.ts` and `.env.example`. `.env.example` sets `GEMINI_MODEL=gemini-3.6-flash`. `next.config.ts` still reads `process.env.BACKEND_URL` for the rewrite.
 
 ## 13. End-to-end assessment · wave 3 · M2 · branch feat/assessment-integration
 
