@@ -215,7 +215,7 @@ The organisers' test pack (TC01: buyer requirements R1-R6 plus six evidence PDFs
 
 On production the TC01 assessment failed twice with Gemini "503 This model is currently experiencing high demand". Fact extraction moves to Claude through the Anthropic SDK; the output format, the coverage retry and the rules stay as they are. The workspace assistant keeps Gemini. Owns `package.json`, `pnpm-lock.yaml`, `src/env.ts`, `.env.example`, `src/lib/assessment/claude.ts`, `src/lib/assessment/extract-facts.ts` (+ test).
 
-- [x] 21.1 Add `@anthropic-ai/sdk`, `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` (default `claude-opus-5-5`), and `callClaude` with structured JSON output, streaming and SDK retries; verify `pnpm typecheck`
+- [x] 21.1 Add `@anthropic-ai/sdk`, `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` (default `claude-haiku-5-5`), and `callClaude` with structured JSON output, streaming and SDK retries; verify `pnpm typecheck`
 - [x] 21.2 Call Claude instead of Gemini for fact extraction with the same observation schema; verify `pnpm test src/lib/assessment/extract-facts.test.ts`
   - Note: no Claude key locally, so the live call is checked on production in 21.3.
 - [ ] 21.3 (post-merge) Set `ANTHROPIC_API_KEY` on Railway, rerun the TC01 product's assessment on production and confirm six DOCUMENTED findings

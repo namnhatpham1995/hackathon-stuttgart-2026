@@ -20,7 +20,7 @@ export type ClaudeResponse = {
   text: string;
 };
 
-const DEFAULT_MODEL = "claude-opus-5-5";
+const DEFAULT_MODEL = "claude-haiku-5-5";
 const MAX_TOKENS = 32_000;
 const TIMEOUT_MS = 5 * 60_000;
 const MAX_RETRIES = 3;
