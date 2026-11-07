@@ -98,8 +98,10 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 12. Production deploy · wave 2 · M1 · branch chore/production-deploy
 
-- [ ] 12.1 Add `scripts/vercel-build.mjs`: run `pnpm db:migrate` only when `VERCEL_ENV` is `production`, then `next build`; verify locally that without `VERCEL_ENV` it skips migration and builds
-- [ ] 12.2 Write `docs/deploy.md`: Vercel project, Neon from the Marketplace, build command, previews off, the env list from design.md Decision 11, rollback by Promote; verify the owner can follow it alone
+- [x] 12.1 Add `scripts/vercel-build.mjs`: run `pnpm db:migrate` only when `VERCEL_ENV` is `production`, then `next build`; verify locally that without `VERCEL_ENV` it skips migration and builds
+  - Note: a production `DATABASE_URL` whose host contains `-pooler`, or which sets `pgbouncer=true`, exits before migrating. `docs/deploy.md` tells the owner to use the direct Neon URL.
+- [x] 12.2 Write `docs/deploy.md`: Vercel project, Neon from the Marketplace, build command, previews off, the env list from design.md Decision 11, rollback by Promote; verify the owner can follow it alone
+  - Note: the env table is Decision 11 plus the task 3.2 names. `GEMINI_MODEL` and `BREVO_SENDER_EMAIL` are required for those features; `ELEVENLABS_API_KEY` is optional. Production `DATABASE_URL` is the direct `DATABASE_URL_UNPOOLED` value.
 - [ ] 12.3 Owner step: create the app's Vercel project (build command `node scripts/vercel-build.mjs`, previews off) and Neon database and set the env from `docs/deploy.md`; the worker ticks this after the owner confirms; verify the project and env exist in the Vercel dashboard
 - [ ] 12.4 (post-merge) Smoke-test the first production deploy: sign up, sign in, open `/workspace`; verify each works, then record the URL as a note and set `APP_BASE_URL` and `BETTER_AUTH_URL` to it
 
