@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { isServiceStub } from "@/components/buyer/load";
 import { fieldErrors } from "@/components/workspace/schemas";
+import { closeMyRequest } from "@/lib/buyer/service";
 import { requestEvidence } from "@/lib/connections/service";
 import { requireSession } from "@/lib/session";
 
@@ -49,6 +50,33 @@ export async function requestProductEvidence(input: unknown): Promise<EvidenceRe
     }
     if (error instanceof Error && error.name === "ConnectionRequestError") {
       return { ok: false, errors: {}, error: error.message };
+    }
+    throw error;
+  }
+}
+
+const requestIdSchema = z.string().trim().min(1).max(200);
+
+export async function closeRequest(
+  requestId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await requireSession();
+  const parsed = requestIdSchema.safeParse(requestId);
+  if (!parsed.success) return { ok: false, error: "That request reference is not valid." };
+
+  try {
+    const closed = await closeMyRequest(session.user.id, parsed.data);
+    if (!closed) {
+      return { ok: false, error: "This request is already closed, or it is not yours." };
+    }
+    revalidatePath("/buyer");
+    return { ok: true };
+  } catch (error) {
+    if (isServiceStub(error)) {
+      return {
+        ok: false,
+        error: "Closing a request needs the buyer service, which is not connected yet.",
+      };
     }
     throw error;
   }

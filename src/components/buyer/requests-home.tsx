@@ -1,3 +1,4 @@
+import { CloseRequestButton } from "@/components/buyer/close-request";
 import { ConnectionStatus } from "@/components/buyer/status-chip";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/workspace/page-chrome";
@@ -62,22 +63,29 @@ function RequestList({ requests }: { requests: BuyerRequestSummary[] }) {
       <ul className="overflow-hidden rounded-b-md border-x border-b border-line">
         {requests.map((request) => (
           <li key={request.requestId} className="px-4 py-5 md:px-5">
-            <h3 className="break-words font-medium">{request.title}</h3>
-            <p className="meta mt-1 break-words text-muted">
-              {request.buyerOrgName}
-              <span aria-hidden="true"> · </span>
-              <span className="font-mono text-ink">{request.partNumber}</span>
-              <span aria-hidden="true"> · </span>
-              {request.visibility === "direct" ? "Direct" : "On the board"}
-              <span aria-hidden="true"> · </span>
-              {request.status === "open" ? "Open" : "Closed"}
-              <span aria-hidden="true"> · </span>
-              {postedOn.format(request.createdAt)}
-            </p>
-            <p className="meta mt-1 break-words text-muted">
-              Requirement set{" "}
-              <span className="font-mono text-ink">{request.requirementSetKey}</span>
-            </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="break-words font-medium">{request.title}</h3>
+                <p className="meta mt-1 break-words text-muted">
+                  {request.buyerOrgName}
+                  <span aria-hidden="true"> · </span>
+                  <span className="font-mono text-ink">{request.partNumber}</span>
+                  <span aria-hidden="true"> · </span>
+                  {request.visibility === "direct" ? "Direct" : "On the board"}
+                  <span aria-hidden="true"> · </span>
+                  {request.status === "open" ? "Open" : "Closed"}
+                  <span aria-hidden="true"> · </span>
+                  {postedOn.format(request.createdAt)}
+                </p>
+                <p className="meta mt-1 break-words text-muted">
+                  Requirement set{" "}
+                  <span className="font-mono text-ink">{request.requirementSetKey}</span>
+                </p>
+              </div>
+              {request.status === "open" ? (
+                <CloseRequestButton requestId={request.requestId} />
+              ) : null}
+            </div>
             {request.connections.length === 0 ? (
               <p className="meta mt-4 text-muted">No supplier has responded.</p>
             ) : (
