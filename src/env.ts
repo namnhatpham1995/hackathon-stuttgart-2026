@@ -32,6 +32,8 @@ const envSchema = z.object({
   BREVO_API_KEY: optional,
   BREVO_SENDER_EMAIL: optionalEmail,
   APP_BASE_URL: optionalUrl,
+  /** Hostname Railway sets on its service (no scheme). Sign-in trusts `https://<it>` when set. */
+  RAILWAY_PUBLIC_DOMAIN: optional,
   ELEVENLABS_API_KEY: optional,
 });
 

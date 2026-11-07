@@ -26,9 +26,9 @@ export const enabledSocialProviders = Object.keys(socialProviders());
 export const auth = betterAuth({
   appName: "TradeReady",
   baseURL: env.BETTER_AUTH_URL,
-  // The public site moved from Vercel to Railway. Trust both origins so sign-in works on either
-  // URL, whichever one BETTER_AUTH_URL names.
-  trustedOrigins: ["https://exportready-production.up.railway.app", "https://tradeready-eu.vercel.app"],
+  // Railway serves the public site too, so its own domain is trusted even when BETTER_AUTH_URL
+  // names another origin.
+  trustedOrigins: env.RAILWAY_PUBLIC_DOMAIN ? [`https://${env.RAILWAY_PUBLIC_DOMAIN}`] : [],
   secret: env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, { provider: "pg", schema }),
   emailAndPassword: {
