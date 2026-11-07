@@ -222,7 +222,8 @@ The organisers' test pack (TC01: buyer requirements R1-R6 plus six evidence PDFs
 - [x] 20.4 Show the product's own checklist on the upload card and the report instead of the fixed demo list, and allow 8 active PDFs so the 7-file pack fits; verify `pnpm typecheck`
 - [x] 20.5 Rules tests from the TC01 README: the six TC01 facts give six DOCUMENTED findings; packaging revision A does not affect R6; supplier punctuation and "injection-moulded" do not mismatch; a buyer requirements page is recognised; verify `pnpm test src/lib/assessment`
   - Note: `src/lib/assessment/tc01.test.ts` reads the real TC01 PDFs from `fixtures/test-pack/tc01/`; the model step is not exercised (no Gemini key in local runs).
-- [ ] 20.6 (post-merge) On production, signed in as the owner's test supplier, create the CAP-104 product and upload the seven TC01 PDFs; confirm six DOCUMENTED findings
+- [x] 20.6 (post-merge) On production, signed in as the owner's test supplier, create the CAP-104 product and upload the seven TC01 PDFs; confirm six DOCUMENTED findings
+  - Note: product "TC01 Cover Cap CAP-104" (`03425a50-d016-4006-bbee-5885258f33cf`); six DOCUMENTED findings on 2026-11-07 with Claude Sonnet.
 
 ## 21. Claude fact extraction · wave 4 · M4 · branch fix/claude-extraction
 
@@ -231,7 +232,8 @@ On production the TC01 assessment failed twice with Gemini "503 This model is cu
 - [x] 21.1 Add `@anthropic-ai/sdk`, `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` (default `claude-haiku-5-5`), and `callClaude` with structured JSON output, streaming and SDK retries; verify `pnpm typecheck`
 - [x] 21.2 Call Claude instead of Gemini for fact extraction with the same observation schema; verify `pnpm test src/lib/assessment/extract-facts.test.ts`
   - Note: no Claude key locally, so the live call is checked on production in 21.3.
-- [ ] 21.3 (post-merge) Set `ANTHROPIC_API_KEY` on Railway, rerun the TC01 product's assessment on production and confirm six DOCUMENTED findings
+- [x] 21.3 (post-merge) Set `ANTHROPIC_API_KEY` on Railway, rerun the TC01 product's assessment on production and confirm six DOCUMENTED findings
+  - Note: Haiku returned no production lot, so R5 needed review (5 of 6). Railway now sets `ANTHROPIC_MODEL=claude-sonnet-5-5`, which gives six DOCUMENTED findings. The code default stays Haiku.
 
 ## 22. Retry a failed assessment · wave 4 · M4 · branch fix/retry-failed-assessment
 
@@ -240,14 +242,23 @@ A run that failed without a result (for example the Gemini 503 on TC01) locked i
 - [x] 22.1 Starting a snapshot whose job needs attention and has no result requeues that same job (status, stage, error, attempts and times reset) and schedules the run; a completed job stays as it is; verify `pnpm test src/lib/jobs` (real PostgreSQL)
 - [x] 22.2 Review: one `independent-pr-reviewer` pass
   - Note: PASS with no findings; the report is posted on PR #40.
-- [ ] 22.3 (post-merge) Start the TC01 product's assessment again on production and confirm it runs
+- [x] 22.3 (post-merge) Start the TC01 product's assessment again on production and confirm it runs
+  - Note: the failed run restarted and reached Claude. A completed snapshot is keyed by file content, so re-uploading an identical PDF returns the finished job.
 
 ## 23. Claude workspace header · wave 4 · M4 · branch fix/claude-workspace-id
 
 The production key is not scoped to a workspace, so Claude rejects extraction with "must include the anthropic-workspace-id header". Owns `src/env.ts`, `.env.example`, `src/lib/assessment/claude.ts`.
 
 - [x] 23.1 Add optional `ANTHROPIC_WORKSPACE_ID` and send it as the `anthropic-workspace-id` header when set; verify `pnpm typecheck`
-- [ ] 23.2 (post-merge) Set `ANTHROPIC_WORKSPACE_ID` on Railway, start the TC01 assessment again on production and confirm six DOCUMENTED findings
+- [x] 23.2 (post-merge) Set `ANTHROPIC_WORKSPACE_ID` on Railway, start the TC01 assessment again on production and confirm six DOCUMENTED findings
+  - Note: the header is accepted; six DOCUMENTED findings with Sonnet (see 21.3).
+
+## Found on production (fix proposal pending)
+
+Found while rerunning TC01 on production. A proposal and a fix are to follow.
+
+- Replace can target the wrong file. When the product has no result for its current documents, a requirement row can show another requirement's document (R5 Traceability showed `TC01_07_Packaging_Specification_CAP104.pdf`), and that row's Replace replaces it. Verify: with a new, unassessed document set, each row shows only a document of its own evidence type or "No file", and Replace on R5 replaces the traceability record.
+- After "Upload and assess" the page keeps showing the previous run's error until it is reloaded. Verify: start an assessment on a product whose last run failed; the old error disappears and the stages show the new run without a reload.
 
 ## Workflow follow-up
 
