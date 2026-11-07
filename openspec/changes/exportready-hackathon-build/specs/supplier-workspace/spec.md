@@ -10,7 +10,8 @@ without the assistant.
 
 ### Requirement: Workspace is private to the signed-in user
 Every workspace page and action SHALL require a signed-in session and SHALL read or change only
-products, documents, jobs and results owned by that user.
+products, documents, jobs and results owned by that user. The only exceptions are a listing the owner
+publishes and a result the owner shares with one buyer, as defined in buyer-supplier-connections.
 
 #### Scenario: Signed-out visitor
 - **WHEN** a visitor without a session opens `/workspace`

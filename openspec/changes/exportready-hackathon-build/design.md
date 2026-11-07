@@ -42,7 +42,7 @@ Lanes then replace stub bodies in files they own.
  wave 0  [1 hackathon-mode rules]                               alone, docs-only, ~10 min
  wave 1  [2 roadmap] [3 CONTRACT] [4 fixtures]                  parallel, 3 gates wave 2
  wave 2  [5 pdf] [6 gemini] [7 rules] [8 docs] [9 jobs] [10 email] [11 UI] [12 deploy]
- wave 3  [13 integration]                                       serial, needs 5-11
+ wave 3  [13 integration] [17 connections]                      13 needs 5-11; 17 needs 8-11
  wave 4  [14 assistant] [15 voice, optional] [16 submission]
 ```
 
@@ -68,6 +68,7 @@ points), which would slow the contract and hide work from the roadmap.
 | 14 | `feat/workspace-assistant` | `src/lib/agent/**`, `src/components/assistant/**`, `src/app/api/assistant/**` | 13 |
 | 15 | `feat/spoken-replies` | `src/components/voice/**`, `src/app/api/speech/**`, one mount line in `assistant-panel.tsx` | 14 merged |
 | 16 | `docs/submission` | `README.md`, `docs/pitch/**` | 13 |
+| 17 | `feat/buyer-supplier-connections` | `src/lib/connections/**`, `src/components/connections/**`, `src/app/connections/**` | 8-11 |
 
 Every lane also ticks its own group's lines in this change's `tasks.md`. Groups are separate sections,
 so those edits merge cleanly.
@@ -82,9 +83,13 @@ full verify run.
 
 Stub files created by group 3: `src/lib/assessment/{pdf-text,extract-facts,gemini,rules,citations,pipeline}.ts`,
 `src/lib/products/service.ts`, `src/lib/documents/service.ts`, `src/lib/jobs/service.ts`,
-`src/lib/notify/completion-email.ts`, `src/components/assistant/assistant-panel.tsx` (renders nothing
-until group 14). Group 11 renders `<AssistantPanel />` in the workspace layout from the start, so group 14
-never edits group 11's files.
+`src/lib/notify/completion-email.ts`, `src/lib/notify/brevo.ts` (`sendBrevoEmail`, filled by group 10),
+`src/lib/connections/service.ts`, and the slot components `src/components/assistant/assistant-panel.tsx`,
+`src/components/connections/connections-nav.tsx`, `product-connections.tsx` and `report-share.tsx`
+(each renders nothing until its lane fills it). Group 11 mounts every slot from the start
+(`<AssistantPanel />` and `<ConnectionsNav />` in the workspace layout, `<ProductConnections productId />`
+on the product page, `<ReportShare resultId />` on the report page), so groups 14 and 17 never edit
+group 11's files.
 
 ### 2. Data model (one migration, in group 3)
 
@@ -97,7 +102,7 @@ every other row reaches a user through `product`.
   packaging}` as `{value, origin: "user"|"assistant"|"document"}`, validated with Zod;
   `profile jsonb not null default '{}'`, holding the declared supplier profile `{companyName, country,
   productCategory, capabilities: string[], targetMarket}`, validated with Zod and never read by the
-  assessment; timestamps.
+  assessment; `listed boolean not null default false` (shown in the supplier directory); timestamps.
   Index on `user_id`.
 - **`document`**: `id text pk`; `product_id text not null references product(id) on delete cascade`;
   `filename text not null`; `mime_type text not null check in ('application/pdf','image/jpeg','image/png')`;
@@ -118,11 +123,30 @@ every other row reaches a user through `product`.
   delete cascade`; `product_id text not null references product(id) on delete cascade`;
   `assessment_date date not null`; `complete boolean not null`; `findings jsonb not null`;
   `documents jsonb not null` (id, filename, sha256 per assessed document); `created_at`.
-- **`notification`**: `id text pk`; `job_id text not null references assessment_job(id) on delete
-  cascade`; `recipient_email text not null`; `type text not null check in ('assessment_completed')`;
-  `status text not null check in ('pending','sent','failed')`; `provider_message_id text`; `error text`;
-  `attempts integer not null default 0`; `created_at`, `sent_at`. **Unique** `(job_id, recipient_email,
-  type)`.
+- **`buyer_request`**: `id text pk`; `buyer_user_id text not null references user(id) on delete cascade`;
+  `buyer_org_name text not null`; `title text not null`; `part_number text not null`;
+  `requirement_set_key text not null`; `requirement_set_version integer not null`; `message text check
+  (char_length(message) <= 1000)`; `visibility text not null check in ('open','direct')` (`direct` is
+  created by a buyer's "Request evidence" and stays off the board); `status text not null default 'open'
+  check in ('open','closed')`; `created_at`. Index on `(status, visibility)`.
+- **`request_connection`**: `id text pk`; `request_id text not null references buyer_request(id) on delete
+  cascade`; `product_id text not null references product(id) on delete cascade`; `initiated_by text not
+  null check in ('buyer','supplier')`; `status text not null check in
+  ('requested','in_progress','shared','declined')`; `message text check (char_length(message) <= 1000)`;
+  `shared_result_id text references assessment_result(id)`; `created_at`, `updated_at`. **Unique**
+  `(request_id, product_id)`. **Check** `status <> 'shared' or shared_result_id is not null`. That the
+  shared result belongs to the connected product, and that buyer and supplier are different users, is
+  checked in the service, since a check constraint cannot read other rows.
+- **`notification`**: `id text pk`; `job_id text references assessment_job(id) on delete cascade`;
+  `connection_id text references request_connection(id) on delete cascade`; `recipient_user_id text not
+  null references user(id) on delete cascade`; `recipient_email text not null`; `type text not null check
+  in ('assessment_completed','request_received','report_shared')`; `title text not null` (the inbox line);
+  `read_at timestamptz`; `status text not null check in ('pending','sent','failed')`;
+  `provider_message_id text`; `error text`; `attempts integer not null default 0`; `created_at`, `sent_at`.
+  **Check** that `assessment_completed` has a `job_id` and no `connection_id`, and the two connection
+  types have a `connection_id` and no `job_id`. **Unique** `(job_id, recipient_email, type)`; a re-share
+  is a new notice, so connection notices are not unique per connection. Index on
+  `(recipient_user_id, created_at)` for the inbox.
 
 The job and result tables reference each other (`assessment_job.result_id` and
 `assessment_result.job_id`). Both columns are nullable or inserted in order inside one transaction:
@@ -145,7 +169,12 @@ Pages `/workspace`, `/workspace/[productId]` and `/workspace/[productId]/report`
 `requireSession()`. Route handlers `POST /api/products/[productId]/documents`, `GET /api/jobs/[jobId]`
 and `POST /api/assistant` call `auth.api.getSession()` and return 401 without one. Every server action
 and service function takes the session's `userId` and filters by `product.user_id`; a mismatch returns
-404. `src/proxy.ts` adds `/workspace` to its matcher as a fast pre-check only.
+404. `src/proxy.ts` adds `/workspace` and `/connections` to its matcher as a fast pre-check only.
+
+The connection pages under `/connections` also call `requireSession()`. Board and directory reads are
+open to any signed-in user but select only the listed columns (never documents, results or emails). A
+connection, its messages and its shared result are readable only when the session user is the request's
+buyer or the product's owner; anyone else gets 404.
 
 ### 4. Evidence pipeline
 
@@ -181,9 +210,10 @@ and service function takes the session's `userId` and filters by `product.user_i
   with no extra model call. The same findings therefore always give the same plan, and the assistant
   can quote it.
 - Ideas from `docs/exportready-passport-idea.md` that are left out: numeric readiness scores (the spec
-  forbids a score), public shareable passports (reports are private; an expiring share link would need
-  a new table and a security review), buyer-entered requirements (no editor today), compliance
-  conclusions, and Supabase (the stack is Postgres with Drizzle and Neon).
+  forbids a score), public signed-out passports (a report is shared only with one signed-in buyer
+  through a connection, Decision 16), buyer-entered requirements (buyers pick a fixed requirement set;
+  there is no editor), free-form message threads, compliance conclusions, and Supabase (the stack is
+  Postgres with Drizzle and Neon).
 - Alternative considered: let Gemini output statuses. Rejected because R2 and R3 are what the demo
   shows, and code makes them deterministic and testable without an API key.
 
@@ -223,7 +253,9 @@ A notification row is inserted in the same transaction that completes the job. A
 `POST https://api.brevo.com/v3/smtp/email` with `api-key: BREVO_API_KEY`, sender
 `BREVO_SENDER_EMAIL`, the fixed template and the link `${APP_BASE_URL}/workspace/<productId>/report`.
 It then stores `messageId` or the error. Without a configured key it marks the notification failed
-with "email not configured" and the report is unaffected.
+with "email not configured" and the report is unaffected. The HTTP call itself lives in
+`src/lib/notify/brevo.ts` (`sendBrevoEmail({to, subject, text})`), which group 17 reuses for connection
+notices.
 
 ### 9. Assistant: server-side function calling plus client directives
 
@@ -293,7 +325,7 @@ History lives in the panel's state only. The source of truth is the database.
 
 - **No planner.** This design and the group's tasks are the plan; `full-feature-develop`'s planner
   step is skipped.
-- **Review.** One `independent-pr-reviewer` pass (Opus) only for groups 3, 7, 9 and 13. It covers the
+- **Review.** One `independent-pr-reviewer` pass (Opus) only for groups 3, 7, 9, 13 and 17. It covers the
   code and the tests that group adds, with at most one fix round. Other groups get the controller's
   diff read.
 - **Merge.** Merge on a green local pre-push hook. Do not wait for GitHub CI. Before asking for the
@@ -331,6 +363,7 @@ History lives in the panel's state only. The source of truth is the database.
 | Another user's job returns 404 | 9 | real PG |
 | Roadmap parser: ticks, Blocked notes, heading metadata, status rules | 2 | pure |
 | Report summary: dimension counts and action plan for the baseline and the corrected findings | 11 | pure |
+| Connections: the buyer sees only the shared result; a third user gets 404; a duplicate connection and a shared status without a result are rejected by the database | 17 | real PG |
 | Golden baseline: documents 01-04 match the answer key | 13 | live Gemini, `pnpm test:golden` |
 | Golden correction: replacing 03 with 05 flips only R3 | 13 | live Gemini, `pnpm test:golden` |
 
@@ -357,11 +390,47 @@ has run and `pnpm db:up` is running, even for pure lanes.
 | Docs only (hook skips) | 1, 16 | any agent, including Cursor cloud agents |
 | Node, no database in the code itself | 2, 4, 5, 7, 11 | [D] / [O-x] workers, or a Cursor agent on a set-up machine |
 | Gemini key in `.env` | 6, 13, 14 | a worker whose `.env` has `GEMINI_API_KEY` |
-| PostgreSQL used by the code | 3, 8, 9, 10, 13 | [D] / [O-x] workers |
+| PostgreSQL used by the code | 3, 8, 9, 10, 13, 17 | [D] / [O-x] workers |
 | Owner's dashboards (Vercel, Neon, Brevo, GitHub token) | 2, 12 | worker prepares; owner clicks |
 
 A Cursor cloud agent may write code for a pure lane, but its branch is then pushed by a [D] or
 [O-x] worker that merges `origin/main` and lets the hook run. Never `--no-verify`.
+
+### 16. Buyer-supplier connections (group 17)
+
+```
+ buyer: /connections/requests/new --> buyer_request (open)  --> board /connections/requests
+ supplier: "Respond" with an existing or new product ------------+
+                                                                  v
+                                                       request_connection (initiated_by)
+                                                                  ^
+ buyer: "Request evidence" on a listing in /connections/suppliers  (creates a direct request)
+                                                                  |
+ supplier: <ReportShare /> on a completed result --> status shared, shared_result_id
+                                                                  |
+ buyer: /connections/[connectionId] renders that one result with the workspace report components
+ both: notices in /connections/inbox, plus one Brevo email each to the recipient's own address
+```
+
+- All writes go through `src/lib/connections/service.ts`, which takes the session's `userId` and checks
+  the caller's side before every change: only the request's buyer closes a request or asks for evidence
+  on a listing, only the product's owner responds, lists a product or shares a result.
+- Responding with a new product creates it through group 8's `createProduct` with the request's
+  requirement set, then links it. The supplier then uploads and assesses as usual.
+- Sharing stores the result ID on the connection. The buyer's page loads exactly that result by joining
+  through the connection, so a later assessment stays invisible until it is shared again. Documents are
+  never served to the buyer: the report shows filenames, pages and quotes from the stored findings only.
+- The buyer view reuses group 11's report components read-only. If they need a prop to hide the
+  supplier's actions, group 17 adds a `Blocked:` note and the controller dispatches a one-line follow-up,
+  rather than group 17 editing group 11's files.
+- Notices are inserted in the same transaction as the connection or the share. The Brevo call runs after
+  commit, and its failure only marks the notice failed. Neither notice names the sender's email address;
+  it names the organisation (buyer) or the supplier profile's company name.
+- Cut order if time runs short: the supplier directory and "Request evidence" go first; the board,
+  respond, share and inbox are the demo path and stay.
+- Alternative considered: public share links for reports. Rejected because they leak documents' quotes to
+  anyone with the URL and need expiry and revocation; a connection scopes the share to one signed-in
+  buyer.
 
 ## Risks / Trade-offs
 
@@ -382,7 +451,7 @@ A Cursor cloud agent may write code for a pure lane, but its branch is then push
 - [Roadmap GitHub token missing or rate-limited] → It falls back to `main`-only data with a visible
   notice. The GraphQL call is one request per 20 s cache window.
 - [Hackathon mode skips reviews on most lanes] → The critical lanes (contract, rules, jobs and access,
-  integration) keep one Opus review, and session checks are never skipped.
+  integration, buyer connections) keep one Opus review, and session checks are never skipped.
 - [Lane runs on a machine without PostgreSQL] → Section 15 assigns lanes by need.
 
 ## Migration Plan
@@ -393,7 +462,8 @@ A Cursor cloud agent may write code for a pure lane, but its branch is then push
    group 2 asks.
 4. After group 3 merges: start groups 5-12 in parallel. Group 12 puts the app on Vercel; from then on
    every merge to `main` deploys production.
-5. After groups 5-11 merge: group 13, then the golden tests.
+5. After groups 5-11 merge: group 13, then the golden tests. Group 17 starts as soon as 8-11 merge,
+   in parallel with 13.
 6. Then groups 14, 16 and optionally 15. Feature freeze at 15:15.
 7. Rollback: promote the previous Vercel deployment. The schema is additive, so no down-migration is
    needed.

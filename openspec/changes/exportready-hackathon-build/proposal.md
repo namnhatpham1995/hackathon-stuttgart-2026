@@ -43,8 +43,15 @@ also production, so the plan has to keep every merge point green.
     unresolved findings,
   - submission content: a 6-slide deck, tagline, business model, README with screenshots, demo URL
     and team contributions, and customer-discovery notes.
-- **Kept out from the idea**: numeric readiness scores, public shareable passports, buyer-entered
-  requirements, compliance conclusions and Supabase.
+- **Buyer-supplier connections**, two-sided, for the demo:
+  - buyers post sourcing requests on a board,
+  - suppliers list products in a directory that shows only the declared profile,
+  - either side starts contact (a supplier responds, or a buyer asks a listed supplier for evidence),
+  - the supplier answers with a new or existing product and shares one result with that one buyer,
+  - each side is notified in an in-app inbox and by email to their own account address.
+- **Kept out from the idea**: numeric readiness scores, public (signed-out) passports, buyer-defined
+  checklists (buyers pick from the fixed requirement sets), free-form messaging threads, compliance
+  conclusions and Supabase.
 - **Production deploy from `main`**: a Vercel project for the app with managed Postgres; migrations
   run only on production builds.
 
@@ -63,6 +70,8 @@ also production, so the plan has to keep every merge point green.
   stage status, failure states and owner-only access.
 - `completion-email`: one transactional email per completed job to the user's account address,
   sent after the result is stored and never blocking the report.
+- `buyer-supplier-connections`: buyer requests, supplier listings, contact in either direction,
+  per-buyer report sharing and notices to the other party.
 - `workspace-assistant`: a text assistant that performs only approved workspace actions for the
   signed-in user and reports their actual outcome.
 
@@ -74,9 +83,10 @@ None. `openspec/specs/` is empty.
 
 - **New code**: `src/lib/assessment/`, `src/lib/documents/`, `src/lib/jobs/`, `src/lib/notify/`,
   `src/lib/agent/`, `src/app/workspace/`, `src/components/workspace/`, `src/components/assistant/`,
-  `src/app/api/jobs/`, `src/app/api/assistant/`, `fixtures/exportready/`, `roadmap/`.
-- **Schema**: six new tables and one migration (see design.md). `src/proxy.ts` also guards
-  `/workspace`.
+  `src/app/api/jobs/`, `src/app/api/assistant/`, `src/lib/connections/`, `src/components/connections/`,
+  `src/app/connections/`, `fixtures/exportready/`, `roadmap/`.
+- **Schema**: seven new tables and one migration, all in the contract group (see design.md). `src/proxy.ts` also guards
+  `/workspace` and `/connections`.
 - **Dependencies**: `@google/genai` (Gemini), `unpdf` (PDF text). Brevo and ElevenLabs are called
   over `fetch`, with no SDK.
 - **Environment**: `GEMINI_API_KEY`, `GEMINI_MODEL`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`,
