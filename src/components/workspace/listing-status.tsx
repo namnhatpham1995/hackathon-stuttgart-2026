@@ -35,7 +35,7 @@ export function ListingStatus({
       <form action={action} className="flex flex-wrap items-center justify-between gap-3">
         <input type="hidden" name="productId" value={productId} />
         <input type="hidden" name="listed" value={listed ? "false" : "true"} />
-        <div className="min-w-0 flex-1 space-y-1">
+        <div className="min-w-[14rem] flex-1 space-y-1">
           <p className="text-sm font-medium">
             {listed ? "Listed for buyers" : "Buyers can't see this product yet"}
           </p>
