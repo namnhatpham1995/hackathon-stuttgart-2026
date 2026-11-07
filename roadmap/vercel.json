@@ -1,0 +1,4 @@
+{
+  "framework": null,
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./"
+}
