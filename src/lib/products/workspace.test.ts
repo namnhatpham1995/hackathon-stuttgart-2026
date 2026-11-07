@@ -181,7 +181,7 @@ test("a UI-created product, draft and report use owned database state", async ()
         "content-type": "application/json",
       }),
       body: JSON.stringify({
-        productId: created.id,
+        page: { path: `/workspace/${created.id}`, productId: created.id },
         messages: [{ role: "user", text: "Why did R3 fail?" }],
       }),
     }),

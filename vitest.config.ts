@@ -28,6 +28,7 @@ export default defineConfig({
       GOOGLE_CLIENT_SECRET: "",
       GITHUB_CLIENT_ID: "",
       GITHUB_CLIENT_SECRET: "",
+      ANTHROPIC_API_KEY: "",
     },
   },
 });

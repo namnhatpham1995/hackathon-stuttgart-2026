@@ -14,14 +14,31 @@ import {
   workspaceDirectiveSchema,
   workspaceViews,
 } from "@/lib/assessment/types";
+import { ConnectionRequestError } from "@/lib/connections/service";
 import { DocumentRequestError, listDocuments } from "@/lib/documents/service";
 import { getJob, type JobRecord, NotFoundError, startAssessment } from "@/lib/jobs/service";
 import {
   getProduct,
+  listProducts,
   type ProductRecord,
   ProductRequestError,
   updateProduct,
 } from "@/lib/products/service";
+import type { ConfirmDirective } from "./confirm-action";
+import {
+  type ConnectionToolName,
+  connectionDeclarations,
+  connectionNotFound,
+  connectionToolNames,
+  runConnectionTool,
+} from "./connection-tools";
+import {
+  type SiteDirective,
+  siteDirectiveSchema,
+  siteRouteLabels,
+  siteRouteSchema,
+  siteRoutes,
+} from "./site-map";
 
 /**
  * The eight actions from the working plan, section 6. Names are the model's
@@ -38,13 +55,16 @@ export const agentToolNames = [
   "get_assessment_status",
   "show_report",
   "request_replacement",
+  "navigate_site",
+  "list_products",
+  ...connectionToolNames,
 ] as const;
 
 export type AgentToolName = (typeof agentToolNames)[number];
 
 export type AgentToolResult = {
   output: Record<string, unknown>;
-  directive?: WorkspaceDirective;
+  directive?: WorkspaceDirective | SiteDirective | ConfirmDirective;
 };
 
 const idSchema = z.string().trim().min(1).max(200);
@@ -76,6 +96,7 @@ const reportArgs = z.object({
   productId: productIdField,
   resultId: idSchema.optional(),
 });
+const siteArgs = z.object({ route: siteRouteSchema });
 const replacementArgs = z.object({
   productId: productIdField,
   documentId: idSchema,
@@ -100,7 +121,7 @@ function parameters(
   };
 }
 
-const declarations: Record<AgentToolName, FunctionDeclaration> = {
+const declarations: Record<Exclude<AgentToolName, ConnectionToolName>, FunctionDeclaration> = {
   get_workflow_state: {
     name: "get_workflow_state",
     description:
@@ -189,11 +210,40 @@ const declarations: Record<AgentToolName, FunctionDeclaration> = {
       ["documentId"],
     ),
   },
+  navigate_site: {
+    name: "navigate_site",
+    description: `Open one page of the site. Only these routes exist: ${siteRoutes
+      .map((route) => `${route} (${siteRouteLabels[route]})`)
+      .join("; ")}. A product's own pages are opened with navigate_workspace.`,
+    parameters: parameters(
+      "Site navigation.",
+      {
+        route: {
+          type: Type.STRING,
+          format: "enum",
+          enum: [...siteRoutes],
+          description: "One route from the list.",
+        },
+      },
+      ["route"],
+    ),
+  },
+  list_products: {
+    name: "list_products",
+    description:
+      "List the signed-in user's own products (id, part number, supplier name). Changes nothing.",
+    parameters: parameters("Product list.", {}),
+  },
 };
 
 /** Passed to callGemini as the tool list. Automatic function calling stays off. */
 export const agentTools = [
-  { functionDeclarations: agentToolNames.map((name) => declarations[name]) },
+  {
+    functionDeclarations: [
+      ...(Object.values(declarations) as FunctionDeclaration[]),
+      ...connectionDeclarations,
+    ],
+  },
 ];
 
 function failed(error: string, recovery: string, message?: string): AgentToolResult {
@@ -235,14 +285,23 @@ function isParsed<T>(value: T | AgentToolResult): value is T {
   return typeof value !== "object" || value === null || !("output" in value);
 }
 
-function productIdFrom(args: { productId?: string }, contextProductId: string): string {
-  return args.productId ?? contextProductId;
+function productIdFrom(
+  args: { productId?: string },
+  contextProductId: string | null,
+): string | undefined {
+  return args.productId ?? contextProductId ?? undefined;
+}
+
+/** No empty id ever reaches a service: without a product the tool asks for one. */
+function openProductFirst(): AgentToolResult {
+  return failed("No product is open.", "Open a product first.", "Open a product first.");
 }
 
 async function requireOwned(
   userId: string,
-  productId: string,
+  productId: string | undefined,
 ): Promise<ProductRecord | AgentToolResult> {
+  if (!productId) return openProductFirst();
   const found = await getProduct(userId, productId);
   if (!found) return notFound();
   return found;
@@ -265,6 +324,10 @@ function knownFailure(error: unknown): AgentToolResult | null {
     if (error.status === 404) return notFound();
     return failed(error.message, "Correct the value and try again, or use the form on the page.");
   }
+  if (error instanceof ConnectionRequestError) {
+    if (error.status === 404) return connectionNotFound();
+    return failed(error.message, "Correct the value and try again, or use the form on the page.");
+  }
   if (error instanceof ZodError) {
     return failed(
       "Invalid arguments",
@@ -278,6 +341,10 @@ function knownFailure(error: unknown): AgentToolResult | null {
     );
   }
   return null;
+}
+
+function isConnectionTool(name: AgentToolName): name is ConnectionToolName {
+  return (connectionToolNames as readonly string[]).includes(name);
 }
 
 function isAgentToolName(name: string): name is AgentToolName {
@@ -333,7 +400,7 @@ function jobSummary(job: JobRecord): Record<string, unknown> {
 
 async function getWorkflowState(
   userId: string,
-  contextProductId: string,
+  contextProductId: string | null,
   args: unknown,
 ): Promise<AgentToolResult> {
   const parsed = parseArgs(workflowArgs, args);
@@ -390,7 +457,7 @@ async function getWorkflowState(
 
 async function navigateWorkspace(
   userId: string,
-  contextProductId: string,
+  contextProductId: string | null,
   args: unknown,
 ): Promise<AgentToolResult> {
   const parsed = parseArgs(navigateArgs, args);
@@ -402,7 +469,7 @@ async function navigateWorkspace(
 
 async function updateProductDraft(
   userId: string,
-  contextProductId: string,
+  contextProductId: string | null,
   args: unknown,
 ): Promise<AgentToolResult> {
   const parsed = parseArgs(draftArgs, args);
@@ -433,7 +500,7 @@ async function updateProductDraft(
 
 async function showUploadCard(
   userId: string,
-  contextProductId: string,
+  contextProductId: string | null,
   args: unknown,
 ): Promise<AgentToolResult> {
   const parsed = parseArgs(uploadArgs, args);
@@ -445,7 +512,7 @@ async function showUploadCard(
 
 async function startAssessmentTool(
   userId: string,
-  contextProductId: string,
+  contextProductId: string | null,
   args: unknown,
 ): Promise<AgentToolResult> {
   const parsed = parseArgs(startArgs, args);
@@ -482,7 +549,7 @@ async function startAssessmentTool(
 
 async function assessmentStatus(
   userId: string,
-  contextProductId: string,
+  contextProductId: string | null,
   args: unknown,
 ): Promise<AgentToolResult> {
   const parsed = parseArgs(statusArgs, args);
@@ -528,7 +595,7 @@ async function assessmentStatus(
 
 async function showReport(
   userId: string,
-  contextProductId: string,
+  contextProductId: string | null,
   args: unknown,
 ): Promise<AgentToolResult> {
   const parsed = parseArgs(reportArgs, args);
@@ -565,7 +632,7 @@ async function showReport(
 
 async function requestReplacement(
   userId: string,
-  contextProductId: string,
+  contextProductId: string | null,
   args: unknown,
 ): Promise<AgentToolResult> {
   const parsed = parseArgs(replacementArgs, args);
@@ -592,9 +659,35 @@ async function requestReplacement(
   );
 }
 
+async function navigateSite(
+  _userId: string,
+  _contextProductId: string | null,
+  args: unknown,
+): Promise<AgentToolResult> {
+  const parsed = parseArgs(siteArgs, args);
+  if (!isParsed(parsed)) return parsed;
+  const directive = siteDirectiveSchema.parse({ type: "navigate_site", route: parsed.route });
+  return { output: { ok: true, route: parsed.route }, directive };
+}
+
+async function listOwnProducts(userId: string): Promise<AgentToolResult> {
+  const rows = await listProducts(userId);
+  return {
+    output: {
+      ok: true,
+      products: rows.slice(0, 50).map((row) => ({
+        id: row.id,
+        name: row.name,
+        partNumber: row.fields?.partNumber?.value ?? null,
+        supplierName: row.fields?.supplierName?.value ?? null,
+      })),
+    },
+  };
+}
+
 const handlers: Record<
-  AgentToolName,
-  (userId: string, contextProductId: string, args: unknown) => Promise<AgentToolResult>
+  Exclude<AgentToolName, ConnectionToolName>,
+  (userId: string, contextProductId: string | null, args: unknown) => Promise<AgentToolResult>
 > = {
   get_workflow_state: getWorkflowState,
   navigate_workspace: navigateWorkspace,
@@ -604,11 +697,13 @@ const handlers: Record<
   get_assessment_status: assessmentStatus,
   show_report: showReport,
   request_replacement: requestReplacement,
+  navigate_site: navigateSite,
+  list_products: (userId) => listOwnProducts(userId),
 };
 
 export async function executeAgentTool(
   userId: string,
-  contextProductId: string,
+  contextProductId: string | null,
   call: { name?: string; args?: unknown },
 ): Promise<AgentToolResult> {
   const name = call.name ?? "";
@@ -619,10 +714,16 @@ export async function executeAgentTool(
     );
   }
   try {
-    const result = await handlers[name](userId, contextProductId, call.args);
-    if (result.directive) {
+    const result = isConnectionTool(name)
+      ? await runConnectionTool(name, userId, contextProductId, call.args)
+      : await handlers[name](userId, contextProductId, call.args);
+    if (
+      result.directive &&
+      result.directive.type !== "navigate_site" &&
+      result.directive.type !== "confirm_action"
+    ) {
       const targetId = workflowArgs.parse(call.args ?? {}).productId ?? contextProductId;
-      if (targetId !== contextProductId)
+      if (targetId && targetId !== contextProductId)
         result.directive = { ...result.directive, productId: targetId };
     }
     return result;

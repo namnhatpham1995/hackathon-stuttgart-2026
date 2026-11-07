@@ -47,9 +47,9 @@ async function ownedProduct(userId: string, name: string) {
   });
 }
 
-function turn(productId: string, text: string) {
+function turn(productId: string | undefined, text: string, path = "/workspace/p") {
   return {
-    productId,
+    page: { path, ...(productId ? { productId } : {}) },
     messages: [{ role: "user" as const, text }],
   };
 }
@@ -83,7 +83,7 @@ beforeEach(() => {
 });
 
 describe("workspace assistant", () => {
-  test("only the eight approved actions are declared", () => {
+  test("only the approved actions are declared", () => {
     expect(agentToolNames).toEqual([
       "get_workflow_state",
       "navigate_workspace",
@@ -93,7 +93,71 @@ describe("workspace assistant", () => {
       "get_assessment_status",
       "show_report",
       "request_replacement",
+      "navigate_site",
+      "list_products",
+      "search_catalog",
+      "list_my_requests",
+      "list_board",
+      "read_inbox",
+      "close_request",
+      "list_product_connections",
+      "request_evidence",
+      "create_board_request",
+      "respond_to_request",
+      "share_result",
     ]);
+  });
+
+  test("without a product the route answers and a product tool says to open one", async () => {
+    const user = await createUser("Noproduct");
+    vi.mocked(callGemini)
+      .mockResolvedValueOnce(toolCall("get_workflow_state", {}, "c1"))
+      .mockResolvedValueOnce({
+        text: "",
+        functionCalls: [],
+        content: { role: "model", parts: [{ text: "" }] },
+      });
+
+    const response = await post(user.email, turn(undefined, "What is the state?", "/buyer"));
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.reply).toBe("Open a product first.");
+    expect(body.directives).toEqual([]);
+    const instruction = vi.mocked(callGemini).mock.calls[0]?.[0].systemInstruction;
+    expect(instruction).toContain("The user is on the buyer's Overview.");
+    expect(instruction).toContain("No product is open.");
+  });
+
+  test("navigate_site returns a directive for a listed route and rejects any other", async () => {
+    const user = await createUser("Navigator");
+    vi.mocked(callGemini)
+      .mockResolvedValueOnce(toolCall("navigate_site", { route: "/connections/inbox" }, "c1"))
+      .mockResolvedValueOnce(toolCall("navigate_site", { route: "https://evil.example/" }, "c2"))
+      .mockResolvedValueOnce(toolCall("navigate_site", { route: "/workspace/other-id" }, "c3"))
+      .mockResolvedValueOnce({
+        text: "Done.",
+        functionCalls: [],
+        content: { role: "model", parts: [{ text: "Done." }] },
+      });
+
+    const response = await post(user.email, turn(undefined, "Open pages", "/dashboard"));
+
+    const body = await response.json();
+    expect(body.directives).toEqual([{ type: "navigate_site", route: "/connections/inbox" }]);
+    const outputs = vi
+      .mocked(callGemini)
+      .mock.calls.slice(1)
+      .map(([input]) => JSON.stringify(input.contents.at(-1)));
+    expect(outputs[1]).toContain('"ok":false');
+    expect(outputs[2]).toContain('"ok":false');
+  });
+
+  test("a page path outside the known routes is rejected", async () => {
+    const user = await createUser("Badpath");
+    const response = await post(user.email, turn(undefined, "Hi", "/admin/secret"));
+    expect(response.status).toBe(400);
+    expect(callGemini).not.toHaveBeenCalled();
   });
 
   test("a visitor without a session is asked to sign in", async () => {

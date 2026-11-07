@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { clearAssistantHistory } from "@/components/assistant/assistant-history";
 import { signOut } from "@/lib/auth-client";
 
 export function SignOutButton() {
@@ -16,6 +17,7 @@ export function SignOutButton() {
       disabled={pending}
       onClick={async () => {
         setPending(true);
+        clearAssistantHistory();
         await signOut();
         router.push("/");
         router.refresh();
