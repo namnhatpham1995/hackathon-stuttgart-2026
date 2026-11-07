@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SpeakerIcon } from "@/components/workspace/icons";
 
-export const MUTE_KEY = "exportready-speech-muted";
+export const MUTE_KEY = "tradeready-speech-muted";
 
 /**
  * Asks the server to speak `text`. Returns null when speech is off, the key

@@ -26,7 +26,7 @@ async function requestLink(email: string) {
   expect(sendBrevoEmail).toHaveBeenCalledTimes(1);
   const sent = vi.mocked(sendBrevoEmail).mock.calls[0]?.[0];
   expect(sent?.to).toBe(email);
-  expect(sent?.subject).toBe("Your ExportReady sign-in link");
+  expect(sent?.subject).toBe("Your TradeReady sign-in link");
   const url = new URL(sent?.text.match(/https?:\/\/\S+/)?.[0] ?? "");
   expect(url.origin).toBe(origin);
   expect(url.pathname).toBe("/api/auth/magic-link/verify");

@@ -15,7 +15,7 @@ let root: Root;
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   sessionStorage.clear();
-  sessionStorage.setItem("exportready-speech-muted", "1");
+  sessionStorage.setItem("tradeready-speech-muted", "1");
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);

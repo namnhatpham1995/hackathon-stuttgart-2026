@@ -1,4 +1,4 @@
-// ExportReady tables. The rules in design.md Decision 2 are PostgreSQL constraints.
+// TradeReady tables. The rules in design.md Decision 2 are PostgreSQL constraints.
 import { sql } from "drizzle-orm";
 import {
   type AnyPgColumn,

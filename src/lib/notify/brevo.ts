@@ -33,7 +33,7 @@ export async function sendBrevoEmail(input: {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        sender: { email: sender, name: "ExportReady" },
+        sender: { email: sender, name: "TradeReady" },
         to: [{ email: input.to }],
         subject: input.subject,
         textContent: input.text,
