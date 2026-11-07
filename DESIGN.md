@@ -8,9 +8,10 @@ This is an Operate surface. People scan a product, add documents, and read an ev
 
 - Vanta and Drata page structure, ExportReady colours. White cards, a 1px border, a 4–6px radius. No decorative shadow.
 - One sans-serif (Inter). Body 14px, meta and labels 13px, page title 26px semibold. Weights 400, 500 and 600. Letter-spacing stays at 0. Near-black text, grey secondary text. Monospace only for part numbers, revisions, and quoted evidence.
-- Medium density. Breadcrumbs, a metadata strip, a summary panel beside an evidence card, checklist rows, a right-hand info sidebar, and the assistant docked on the left. No KPI tiles, charts, gauges, or progress rings.
+- Medium density, progressive disclosure. A page shows a header and one working list. Requirement rows and findings are one line until opened. The report uses tabs for Findings, the action plan, and the request draft. The assistant stays closed until asked for. No KPI tiles, charts, gauges, or progress rings.
 - Status is a chip: a soft tint, dark text, an icon, and a label. Counts read "1 documented · 0 open".
 - Hard rule: no score, percentage, readiness rating, "verified" badge, or "Compliant" badge. The report is not a certification.
+- Forbidden as decoration: gradients, glass, glow or coloured shadows, radii above 8px, emoji, sparkles, blobs, illustrations, purple-to-blue accents, icon-in-a-coloured-circle tiles, hero headings inside the app, marketing slogans, centred layouts, KPI tiles, and badges that are not a status lozenge.
 
 ## Colour
 
@@ -33,7 +34,7 @@ Light is the default scene: a desk, a long reading session, paper behind the wor
 
 Status chips keep the same light tint and dark text in both themes, so a status does not change colour when the page theme changes.
 
-The expired and processing-incomplete banners use an amber left border. That border is reserved for those banners.
+Expired certificates and incomplete processing use an amber section message: the existing amber fill and dark text, with a 1px border. No thick side stripe.
 
 ## Type
 
@@ -46,7 +47,7 @@ The expired and processing-incomplete banners use an amber left border. That bor
 
 - 4px base. Related items sit 8–12px apart. Sections sit 40px apart. A heading has more space above it than below it.
 - Cards use a 1px `line` border and a 6px radius. No shadow.
-- From 1280px the assistant is a 300px column on the left of the work. The product and report pages add a 240px info sidebar on the right. Below that, both stack. The top bar holds Products, the current product, and Report.
+- The assistant is closed by default. When opened it is a 280px column. Product and report content sit in one column, about 48rem wide. Hairline dividers separate rows. Radius stays at 6px or below.
 - Report and form copy stay in a column of about 65–75 characters.
 
 ## Components
@@ -71,17 +72,12 @@ Workspace components:
 ## Layout
 
 ```text
-Top bar: ExportReady · Products · Product · Report          Assistant · theme · account
-Connections strip
-+------------------+----------------------------------+------------------+
-| Assistant        | Breadcrumb                       | Requested by     |
-| (Drata panel)    | Title, metadata, actions         | Date             |
-|                  | Summary        | Evidence        | 2 of 5 documented|
-|                  | Requirement checklist R1–R5      |                  |
-+------------------+----------------------------------+------------------+
+Top bar: ExportReady · Products · Product · Report     Assistant · theme · account
+Page header: breadcrumb, title, one metadata line, one primary action
+One list: compact rows. Detail opens in the row.
 ```
 
-At 375px the assistant is closed until Assistant is pressed, and the info sidebar sits under the work. At 1280px and 1440px the three regions show.
+The assistant is closed until Assistant is pressed. At 375px the list is the whole page.
 
 ## Voice
 

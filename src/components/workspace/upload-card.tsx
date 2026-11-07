@@ -4,7 +4,7 @@ import { type RefObject, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-import { FILE_LIMITS, type Finding, type FindingStatus, type ProductDocument } from "./contract";
+import { FILE_LIMITS, type Finding, type ProductDocument } from "./contract";
 import { evidenceSlots, formatBytes, photoSlots } from "./documents";
 import { requirementSet } from "./fixtures";
 import { StatusChip } from "./status-chip";
@@ -45,7 +45,7 @@ export function UploadCard({
   inputRef: RefObject<HTMLInputElement | null>;
 }) {
   const [dragOver, setDragOver] = useState(false);
-  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [openRow, setOpenRow] = useState<string | null>(null);
   const [skipped, setSkipped] = useState<Record<string, boolean>>({});
   const fileInput = inputRef;
   const pdfs = evidenceSlots(documents);
@@ -53,7 +53,6 @@ export function UploadCard({
   const pendingDocs = documents.filter((document) => document.state === "pending");
   const pdfsFull = pdfs >= FILE_LIMITS.maxEvidence;
   const photosFull = photos >= FILE_LIMITS.maxPhotos;
-  const documented = findings?.filter((finding) => finding.status === "DOCUMENTED").length ?? 0;
 
   function take(files: FileList | File[] | null) {
     if (!files || files.length === 0) return;
@@ -83,24 +82,10 @@ export function UploadCard({
         take(event.dataTransfer.files);
       }}
     >
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-4 py-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <span
-            className="grid size-8 place-items-center rounded border border-line text-accent"
-            aria-hidden="true"
-          >
-            <UploadIcon />
-          </span>
-          <div>
-            <h2 className="section-title">Upload documents</h2>
-            <p className="meta mt-0.5 text-muted">
-              You don’t have to submit every file in one session. Up to 5 PDFs and 2 photos, 4 MB
-              each. Photos are not evidence.
-            </p>
-          </div>
-        </div>
-        <p className="meta text-muted">
-          {findings ? `${documented} of 5 documented` : `${pdfs} of 5 PDFs`}
+      <div className="border-b border-line px-4 py-3">
+        <h2 className="section-title">Documents for this buyer</h2>
+        <p className="meta mt-1 text-muted">
+          One file per requirement. Up to 5 PDFs and 2 photos, 4 MB each. Photos are not evidence.
         </p>
       </div>
 
@@ -109,92 +94,64 @@ export function UploadCard({
           const finding = findings?.find((item) => item.requirementId === requirement.id);
           const linked = linkedDocument(requirement.id, documents);
           return (
-            <li key={requirement.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-              <RowMark status={finding?.status} />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">
-                  {shortNames[requirement.id] ?? requirement.id}
-                </p>
-                {linked ? (
-                  <p className="meta truncate font-mono text-muted">{linked.filename}</p>
-                ) : (
-                  <p className="meta text-muted">{requirement.id}</p>
-                )}
-                {skipped[requirement.id] ? (
-                  <p className="meta mt-1 text-muted">
-                    {finding?.nextAction ||
-                      "No file will be attached for this row. The batch is unchanged."}
-                  </p>
-                ) : null}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {finding ? <StatusChip status={finding.status} /> : null}
+            <li key={requirement.id}>
+              <div className="flex min-h-12 items-center gap-3 px-3">
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 items-center gap-3 rounded-sm py-2 text-left hover:bg-paper"
+                  aria-expanded={openRow === requirement.id}
+                  data-expand={requirement.id}
+                  onClick={() =>
+                    setOpenRow((current) => (current === requirement.id ? null : requirement.id))
+                  }
+                >
+                  {finding ? <StatusChip status={finding.status} /> : null}
+                  <span className="shrink-0 text-sm font-medium">
+                    {shortNames[requirement.id] ?? requirement.id}
+                  </span>
+                  <span className="meta min-w-0 truncate font-mono text-muted">
+                    {linked ? linked.filename : "No file"}
+                  </span>
+                </button>
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
-                  onClick={() =>
-                    setSkipped((current) => ({
-                      ...current,
-                      [requirement.id]: !current[requirement.id],
-                    }))
-                  }
+                  onClick={() => pick(linked?.id ?? null)}
                 >
-                  I don’t have this
+                  {linked ? "Replace" : "Upload file"}
                 </Button>
-                <div className="relative">
-                  <div className="inline-flex">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="rounded-r-none"
-                      onClick={() => pick(linked?.id ?? null)}
-                    >
-                      {linked ? "Replace" : "Upload file"}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="rounded-l-none border-l-0 px-2"
-                      aria-label={`More upload actions for ${requirement.id}`}
-                      aria-expanded={menuFor === requirement.id}
-                      onClick={() =>
-                        setMenuFor((current) =>
-                          current === requirement.id ? null : requirement.id,
-                        )
-                      }
-                    >
-                      ▾
-                    </Button>
-                  </div>
-                  {menuFor === requirement.id ? (
-                    <div className="absolute right-0 z-10 mt-1 min-w-40 rounded-md border border-line bg-card py-1">
-                      <button
-                        type="button"
-                        className="block w-full px-3 py-2 text-left text-sm hover:bg-paper"
-                        onClick={() => {
-                          setMenuFor(null);
-                          pick(linked?.id ?? null);
-                        }}
-                      >
-                        {linked ? "Replace current file" : "Choose a file"}
-                      </button>
-                      <button
-                        type="button"
-                        className="block w-full px-3 py-2 text-left text-sm hover:bg-paper"
-                        onClick={() => {
-                          setMenuFor(null);
-                          pick(null);
-                        }}
-                      >
-                        Add another file
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
               </div>
+              {openRow === requirement.id ? (
+                <div className="space-y-2 border-t border-line bg-paper px-3 py-3">
+                  <p className="meta text-muted">
+                    {finding?.evidenceType ?? "No evidence type yet"}
+                  </p>
+                  <p className="text-sm">
+                    {finding?.reason ??
+                      "This file is not part of a stored report yet. Choose Upload and assess when the batch is ready."}
+                  </p>
+                  {finding?.nextAction ? <p className="text-sm">{finding.nextAction}</p> : null}
+                  {skipped[requirement.id] ? (
+                    <p className="meta text-muted">
+                      No file will be attached for this row. The batch is unchanged.
+                    </p>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setSkipped((current) => ({
+                        ...current,
+                        [requirement.id]: !current[requirement.id],
+                      }))
+                    }
+                  >
+                    I don’t have this
+                  </Button>
+                </div>
+              ) : null}
             </li>
           );
         })}
@@ -312,41 +269,4 @@ function matchesRequirement(requirementId: string, document: ProductDocument) {
   if (requirementId === "R5")
     return document.id === "doc-packaging" || name.includes("packaging") || name.startsWith("04_");
   return false;
-}
-
-function RowMark({ status }: { status?: FindingStatus }) {
-  const tone =
-    status === "DOCUMENTED"
-      ? "border-documented-ink bg-documented"
-      : status === "MISSING"
-        ? "border-missing-ink bg-missing"
-        : status === "MISMATCH"
-          ? "border-mismatch-ink bg-mismatch"
-          : status === "EXPIRED"
-            ? "border-expired-ink bg-expired"
-            : status === "NEEDS_REVIEW"
-              ? "border-review-ink bg-review"
-              : "border-line bg-card";
-  return (
-    <span
-      aria-hidden="true"
-      className={`size-4 shrink-0 rounded-full border border-dashed ${tone}`}
-    />
-  );
-}
-
-function UploadIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      className="size-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden="true"
-    >
-      <path d="M8 11V4M5.5 6.5 8 4l2.5 2.5" />
-      <path d="M3.5 12.5h9" />
-    </svg>
-  );
 }

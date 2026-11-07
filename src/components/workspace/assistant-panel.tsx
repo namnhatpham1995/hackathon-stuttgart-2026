@@ -6,14 +6,6 @@ import { Button } from "@/components/ui/button";
 
 type Note = { id: string; role: "user" | "result"; text: string; at: string };
 
-const steps = [
-  "Open the product",
-  "Check the draft",
-  "Add documents",
-  "Upload and assess",
-  "Read the evidence report",
-];
-
 /**
  * Assistant column. Group 14 owns `src/components/assistant/assistant-panel.tsx`.
  * Swap the import in `shell.tsx` when that file exists.
@@ -53,7 +45,7 @@ export function AssistantPanel({ onCollapse }: { onCollapse?: () => void }) {
   }
 
   return (
-    <section className="flex h-full min-h-80 flex-col border-accent bg-card xl:min-h-[calc(100dvh-3.25rem)] xl:border-l-2">
+    <section className="flex h-full min-h-80 flex-col border-line bg-card xl:min-h-[calc(100dvh-3.25rem)] xl:border-r">
       <header className="flex items-center gap-2 border-b border-line px-3 py-2">
         <h2 className="min-w-0 flex-1 text-sm font-semibold tracking-normal">Assistant</h2>
         <IconButton label="History is not stored" disabled>
@@ -125,20 +117,6 @@ export function AssistantPanel({ onCollapse }: { onCollapse?: () => void }) {
             ),
           )
         )}
-
-        <div className="rounded-md border border-line">
-          <p className="meta border-b border-line px-3 py-2 font-medium">
-            0 of {steps.length} run from this panel
-          </p>
-          <ul className="space-y-2 px-3 py-2">
-            {steps.map((step) => (
-              <li key={step} className="meta flex items-center gap-2 text-ink">
-                <span aria-hidden="true" className="size-3.5 rounded-full border border-line" />
-                {step}
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
 
       <form

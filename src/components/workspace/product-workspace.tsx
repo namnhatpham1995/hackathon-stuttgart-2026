@@ -8,7 +8,7 @@ import type { ProductDocument, WorkspaceProduct } from "./contract";
 import { classifyFile, packFromFilenames, rejectionForFile } from "./documents";
 import { DraftForm } from "./draft-form";
 import { buildResult, type EvidencePack } from "./fixtures";
-import { askAssistant, MetaItem, OverflowMenu, PageHeader, WorkFrame } from "./page-chrome";
+import { askAssistant, MetaItem, OverflowMenu, PageHeader } from "./page-chrome";
 import { ProductConnections } from "./product-connections";
 import { ProgressView } from "./progress-view";
 import { readProduct, writeProduct } from "./store";
@@ -184,27 +184,22 @@ export function ProductWorkspace({
 
   const replacing = product.documents.find((document) => document.id === replacingId) ?? null;
 
-  const documented = product.result?.findings.filter(
-    (finding) => finding.status === "DOCUMENTED",
-  ).length;
   const open = product.result?.findings.filter((finding) => finding.status !== "DOCUMENTED").length;
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader
         crumbs={[{ href: "/workspace", label: "Products" }, { label: product.name }]}
         title={product.name}
         meta={
           <>
+            <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[13px] font-medium">
+              {product.result ? "Report stored" : "In progress"}
+            </span>
             <MetaItem>
-              <span className="rounded-full bg-paper px-2 py-0.5 text-[13px] font-medium">
-                {product.result ? "Report stored" : "In progress"}
+              <span className="font-mono">
+                {product.fields.partNumber?.value ?? "No part number"}
               </span>
-            </MetaItem>
-            <MetaItem>{product.requirementSetKey}</MetaItem>
-            <MetaItem>{product.profile.companyName}</MetaItem>
-            <MetaItem>
-              {product.result ? `Assessed ${product.result.assessmentDate}` : "No assessment yet"}
             </MetaItem>
             {open !== undefined ? (
               <MetaItem>{open === 1 ? "1 open" : `${open} open`}</MetaItem>
@@ -214,188 +209,60 @@ export function ProductWorkspace({
         actions={
           <>
             <OverflowMenu
-              items={[
-                { label: "Evidence report", href: `/workspace/${product.id}/report` },
-                { label: "Documents", href: `/workspace/${product.id}#upload-card` },
-              ]}
+              items={[{ label: "Evidence report", href: `/workspace/${product.id}/report` }]}
             />
             <Button type="button" variant="secondary" size="sm" onClick={askAssistant}>
               Ask assistant
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              pending={assessing}
-              onClick={() => {
-                if (product.documents.some((document) => document.state === "pending")) {
-                  void assess();
-                  return;
-                }
-                document.getElementById("upload-card")?.scrollIntoView({ block: "start" });
-              }}
-            >
-              Upload and assess
-            </Button>
           </>
         }
       />
-      <p className="meta max-w-3xl text-muted">
-        {product.requirementSetKey} version {product.requirementSetVersion}. Declared profile values
-        are not evidence. You don’t have to submit every file in one session.
-      </p>
-
-      <WorkFrame
-        main={
-          <>
-            <div className="grid items-start gap-4 lg:grid-cols-2">
-              <section className="rounded-md bg-paper p-4">
-                <h2 className="section-title">Summary</h2>
-                <p className="meta mt-1 text-muted">
-                  Declared by supplier. The assessment does not use this as evidence.
-                </p>
-                <ProfileSummary product={product} />
-                <div className="mt-4">
-                  <DraftForm product={product} onSaved={update} />
-                </div>
-              </section>
-              <EvidenceCard
-                product={product}
-                documented={documented}
-                onAdd={() => inputRef.current?.click()}
-              />
-            </div>
-            <UploadCard
-              documents={product.documents}
-              replacing={replacing}
-              highlighted={highlighted}
-              pending={assessing}
-              error={uploadError}
-              onAdd={addFiles}
-              findings={product.result?.findings}
-              onStartReplace={(id) => {
-                setReplacingId(id);
-                setHighlighted(true);
-                requestAnimationFrame(() => inputRef.current?.click());
-              }}
-              onCancelReplace={() => setReplacingId(null)}
-              onRemovePending={(id) => {
-                files.current.delete(id);
-                update({
-                  ...product,
-                  documents: product.documents.filter((document) => document.id !== id),
-                });
-              }}
-              onAssess={() => void assess()}
-              inputRef={inputRef}
-            />
-            {job ? (
-              <ProgressView
-                jobId={job.id}
-                startedAt={job.startedAt}
-                onComplete={() => {
-                  const withResult = { ...product, result: buildResult(product.id, job.pack) };
-                  update(withResult);
-                  clearJob(productId);
-                  router.push(reportHref(productId, job.pack));
-                }}
-              />
-            ) : null}
-          </>
-        }
-        side={
-          <>
-            <SidebarFact label="Requested by" value="Neckar Maschinenbau GmbH" />
-            <SidebarFact label="Supplier" value={product.profile.companyName} />
-            <SidebarFact
-              label="Assessment"
-              value={product.result ? product.result.assessmentDate : "Not started"}
-            />
-            <SidebarFact
-              label="Documents"
-              value={`${product.documents.filter((document) => document.kind === "evidence" && document.state === "active").length} of 5 PDFs`}
-            />
-            <SidebarFact
-              label="Documented"
-              value={documented === undefined ? "No report yet" : `${documented} of 5`}
-            />
-            <ProductConnections productId={product.id} />
-          </>
-        }
+      <UploadCard
+        documents={product.documents}
+        replacing={replacing}
+        highlighted={highlighted}
+        pending={assessing}
+        error={uploadError}
+        onAdd={addFiles}
+        findings={product.result?.findings}
+        onStartReplace={(id) => {
+          setReplacingId(id);
+          setHighlighted(true);
+          requestAnimationFrame(() => inputRef.current?.click());
+        }}
+        onCancelReplace={() => setReplacingId(null)}
+        onRemovePending={(id) => {
+          files.current.delete(id);
+          update({
+            ...product,
+            documents: product.documents.filter((document) => document.id !== id),
+          });
+        }}
+        onAssess={() => void assess()}
+        inputRef={inputRef}
       />
-    </div>
-  );
-}
-
-function EvidenceCard({
-  product,
-  documented,
-  onAdd,
-}: {
-  product: WorkspaceProduct;
-  documented: number | undefined;
-  onAdd: () => void;
-}) {
-  const active = product.documents.filter((document) => document.state === "active");
-  const [notice, setNotice] = useState(true);
-  return (
-    <section className="rounded-md border border-line bg-card">
-      <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
-        <h2 className="section-title">Evidence</h2>
-        <Button type="button" variant="secondary" size="sm" onClick={onAdd}>
-          Add evidence
-        </Button>
-      </div>
-      {notice ? (
-        <p className="meta flex items-start justify-between gap-2 border-b border-line bg-paper px-4 py-2 text-muted">
-          <span>Files are assessed together when you choose Upload and assess.</span>
-          <button
-            type="button"
-            className="shrink-0 font-medium text-ink"
-            onClick={() => setNotice(false)}
-          >
-            Dismiss
-          </button>
-        </p>
+      {job ? (
+        <ProgressView
+          jobId={job.id}
+          startedAt={job.startedAt}
+          onComplete={() => {
+            const withResult = { ...product, result: buildResult(product.id, job.pack) };
+            update(withResult);
+            clearJob(productId);
+            router.push(reportHref(productId, job.pack));
+          }}
+        />
       ) : null}
-      {active.length === 0 ? (
-        <div className="px-4 py-8 text-center">
-          <p className="text-sm font-medium">No evidence chosen</p>
-          <p className="meta mt-1 text-muted">Add the buyer’s PDFs for this product.</p>
-          <div className="mt-3">
-            <Button type="button" variant="secondary" size="sm" onClick={onAdd}>
-              Add evidence
-            </Button>
-          </div>
+      <details className="rounded-md border border-line bg-card px-4 py-3">
+        <summary className="cursor-pointer text-sm font-medium">
+          Product details, declared by supplier
+        </summary>
+        <div className="mt-4 space-y-4">
+          <ProfileSummary product={product} />
+          <DraftForm product={product} onSaved={update} />
+          <ProductConnections productId={product.id} />
         </div>
-      ) : (
-        <ul className="divide-y divide-line">
-          {active.map((document) => (
-            <li key={document.id} className="px-4 py-2 font-mono text-[13px] break-all">
-              {document.filename}
-              <span className="meta ml-2 font-sans text-muted">
-                {document.kind === "photo" ? "Photo · not evidence" : "PDF"}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="flex items-center justify-between gap-2 border-t border-line px-4 py-2">
-        <p className="meta text-muted">
-          {documented === undefined ? `${active.length} files` : `${documented} of 5 documented`}
-        </p>
-        <Button type="button" variant="ghost" size="sm" onClick={onAdd}>
-          Add
-        </Button>
-      </div>
-    </section>
-  );
-}
-
-function SidebarFact({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="meta text-muted">{label}</p>
-      <p className="text-sm break-words">{value}</p>
+      </details>
     </div>
   );
 }

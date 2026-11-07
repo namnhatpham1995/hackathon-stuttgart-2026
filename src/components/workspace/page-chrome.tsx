@@ -33,19 +33,11 @@ export function PageHeader({
         ))}
       </nav>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <span
-            aria-hidden="true"
-            className="mt-0.5 grid size-8 shrink-0 place-items-center rounded border border-line bg-card text-[13px] font-semibold text-accent"
-          >
-            ER
-          </span>
-          <div className="min-w-0">
-            <h1 className="page-title text-balance">{title}</h1>
-            {meta ? (
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">{meta}</div>
-            ) : null}
-          </div>
+        <div className="min-w-0">
+          <h1 className="page-title text-balance">{title}</h1>
+          {meta ? (
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">{meta}</div>
+          ) : null}
         </div>
         {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
@@ -59,15 +51,6 @@ export function MetaItem({ icon, children }: { icon?: ReactNode; children: React
       {icon}
       <span className="text-ink">{children}</span>
     </span>
-  );
-}
-
-export function WorkFrame({ main, side }: { main: ReactNode; side: ReactNode }) {
-  return (
-    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_240px]">
-      <div className="min-w-0 space-y-4">{main}</div>
-      <aside className="min-w-0 space-y-4 rounded-md border border-line bg-paper p-4">{side}</aside>
-    </div>
   );
 }
 

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AttentionBanner } from "./attention-banner";
 import type { AssessmentResult, SupplierProfile, WorkspaceProduct } from "./contract";
 import { requirementSet } from "./fixtures";
-import { askAssistant, MetaItem, OverflowMenu, PageHeader, WorkFrame } from "./page-chrome";
+import { askAssistant, MetaItem, OverflowMenu, PageHeader } from "./page-chrome";
 import {
   actionPlan,
   coveragePhrase,
@@ -81,8 +81,8 @@ function ReportBody({
     findings: result.findings,
   });
 
-  const documented = summary.reduce((sum, count) => sum + count.documented, 0);
   const open = summary.reduce((sum, count) => sum + count.open, 0);
+  const [tab, setTab] = useState<"findings" | "plan" | "request">("findings");
 
   return (
     <article className="space-y-4">
@@ -141,120 +141,103 @@ function ReportBody({
         </AttentionBanner>
       ) : null}
 
-      <WorkFrame
-        main={
-          <>
-            <div className="grid items-start gap-4 lg:grid-cols-2">
-              <section className="rounded-md bg-paper p-4">
-                <h2 className="section-title">Summary</h2>
-                <div className="mt-2 divide-y divide-line">
-                  {summary.map((count) => (
-                    <div
-                      key={count.dimension}
-                      className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2"
-                    >
-                      <h3 className="text-sm font-medium">{count.label}</h3>
-                      <p className="meta text-muted">
-                        {coveragePhrase(count.documented, count.open)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </section>
+      <div className="mx-auto max-w-3xl">
+        <div
+          role="tablist"
+          aria-label="Report sections"
+          className="flex gap-1 border-b border-line"
+        >
+          {(
+            [
+              ["findings", "Findings"],
+              ["plan", "Action plan"],
+              ["request", "Request draft"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={tab === id}
+              className={`min-h-10 border-b-2 px-3 text-sm font-medium ${
+                tab === id
+                  ? "border-accent text-ink"
+                  : "border-transparent text-muted hover:text-ink"
+              }`}
+              onClick={() => setTab(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-              <section className="rounded-md border border-line bg-card">
-                <h2 className="section-title border-b border-line px-4 py-3">Evidence</h2>
-                <ul className="divide-y divide-line">
-                  {result.documents.map((document) => (
-                    <li key={document.id} className="px-4 py-2 font-mono text-[13px] break-all">
-                      {document.filename}
-                    </li>
-                  ))}
-                </ul>
-                <p className="meta border-t border-line px-4 py-2 text-muted">
-                  {documented} of 5 documented
-                </p>
-              </section>
-            </div>
+        {tab === "findings" ? (
+          <div className="mt-2">
+            {summary.map((count) => {
+              const requirements = requirementSet.requirements.filter(
+                (requirement) => requirement.dimension === count.dimension,
+              );
+              return (
+                <section key={count.dimension}>
+                  <h2 className="meta flex items-baseline justify-between gap-4 px-3 pt-4 pb-1 font-medium text-muted">
+                    <span>{count.label}</span>
+                    <span>{coveragePhrase(count.documented, count.open)}</span>
+                  </h2>
+                  <div className="divide-y divide-line border-y border-line">
+                    {requirements.map((requirement) => {
+                      const finding = result.findings.find(
+                        (item) => item.requirementId === requirement.id,
+                      );
+                      if (!finding) return null;
+                      return (
+                        <FindingRow
+                          key={requirement.id}
+                          productId={product.id}
+                          title={requirement.title}
+                          finding={finding}
+                          readOnly={readOnly}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        ) : null}
 
-            <section className="space-y-4 rounded-md border border-line bg-card p-4">
-              <h2 className="section-title">Findings</h2>
-              {summary.map((count) => {
-                const requirements = requirementSet.requirements.filter(
-                  (requirement) => requirement.dimension === count.dimension,
-                );
-                return (
-                  <section key={count.dimension} className="space-y-1">
-                    <div className="flex flex-wrap items-baseline justify-between gap-3">
-                      <h3 className="text-sm font-medium">{count.label}</h3>
-                      <p className="meta text-muted">
-                        {coveragePhrase(count.documented, count.open)}
-                      </p>
-                    </div>
-                    <div className="divide-y divide-line border-t border-line">
-                      {requirements.map((requirement) => {
-                        const finding = result.findings.find(
-                          (item) => item.requirementId === requirement.id,
-                        );
-                        if (!finding) return null;
-                        return (
-                          <FindingRow
-                            key={requirement.id}
-                            productId={product.id}
-                            title={requirement.title}
-                            finding={finding}
-                            readOnly={readOnly}
-                          />
-                        );
-                      })}
-                    </div>
-                  </section>
-                );
-              })}
-            </section>
+        {tab === "plan" ? (
+          <div className="px-3 py-4">
+            {actions.length === 0 ? (
+              <p className="text-sm text-muted">Every requirement in this report is documented.</p>
+            ) : (
+              <ol className="list-decimal space-y-4 pl-5">
+                {actions.map((action) => (
+                  <li key={action.requirementId}>
+                    <p className="text-sm">{action.nextAction}</p>
+                    <p className="meta mt-1 font-mono text-muted">{action.requirementId}</p>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        ) : null}
 
-            <section className="space-y-3 rounded-md border border-line bg-card p-4">
-              <h2 className="section-title">What to provide next</h2>
-              {actions.length === 0 ? (
-                <p className="text-muted">Every requirement in this report is documented.</p>
-              ) : (
-                <ol className="list-decimal space-y-4 pl-5">
-                  {actions.map((action) => (
-                    <li key={action.requirementId} className="ps-1">
-                      <p>{action.nextAction}</p>
-                      <p className="mt-1 font-mono text-sm text-muted">{action.requirementId}</p>
-                    </li>
-                  ))}
-                </ol>
-              )}
-            </section>
-
+        {tab === "request" ? (
+          <div className="px-3 py-4">
             <RequestDraft draft={draft} />
+          </div>
+        ) : null}
 
+        <details className="mt-6 border-t border-line pt-3">
+          <summary className="cursor-pointer text-sm font-medium">
+            Supplier profile, declared by supplier
+          </summary>
+          <div className="pt-3">
             <ProfileBlock profile={product.profile} />
-          </>
-        }
-        side={
-          <>
-            <div>
-              <p className="meta text-muted">Documented</p>
-              <p className="text-sm">{documented} of 5</p>
-            </div>
-            <div>
-              <p className="meta text-muted">Open</p>
-              <p className="text-sm">{open === 1 ? "1 open" : `${open} open`}</p>
-            </div>
-            <div>
-              <p className="meta text-muted">Assessment date</p>
-              <p className="text-sm">{formatDate(result.assessmentDate)}</p>
-            </div>
-            <div>
-              <p className="meta text-muted">Requested by</p>
-              <p className="text-sm">Neckar Maschinenbau GmbH</p>
-            </div>
-          </>
-        }
-      />
+          </div>
+        </details>
+      </div>
     </article>
   );
 }
@@ -270,52 +253,53 @@ function FindingRow({
   finding: AssessmentResult["findings"][number];
   readOnly: boolean;
 }) {
-  const open = finding.status !== "DOCUMENTED";
+  const [expanded, setExpanded] = useState(false);
+  const unresolved = finding.status !== "DOCUMENTED";
   const citation = finding.evidence[0];
   return (
-    <div className="space-y-3 py-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <h4 className="min-w-0 text-base font-medium text-balance">
-          <span className="font-mono">{finding.requirementId}</span>
-          <span className="text-muted"> · </span>
-          {title}
-        </h4>
-        <StatusChip status={finding.status} />
-      </div>
-      <p className="text-sm text-muted">
-        {finding.evidenceType ? evidenceLabels[finding.evidenceType] : "No evidence submitted"}
-      </p>
-      <p className="max-w-prose text-sm">{finding.reason}</p>
-      {open && finding.nextAction ? (
-        <p className="max-w-prose text-sm">
-          <span className="font-medium">Next: </span>
-          {finding.nextAction}
-        </p>
-      ) : null}
-      {citation ? (
-        <figure className="space-y-1 rounded-md bg-paper px-3 py-3">
-          <figcaption className="font-mono text-sm break-all">
-            {citation.filename} · page {citation.page}
-          </figcaption>
-          <blockquote className="font-mono text-sm text-pretty">“{citation.quote}”</blockquote>
-        </figure>
-      ) : (
-        <p className="text-sm text-muted">
-          No citation. Nothing was invented for a missing record.
-        </p>
-      )}
-      {readOnly || !open ? null : (
-        <Button
-          href={
-            citation
-              ? `/workspace/${productId}?replace=${citation.documentId}#upload-card`
-              : `/workspace/${productId}#upload-card`
-          }
-          variant="secondary"
+    <div>
+      <div className="flex min-h-12 items-center gap-3 px-3">
+        <button
+          type="button"
+          className="flex min-w-0 flex-1 items-center gap-3 py-2 text-left hover:bg-paper"
+          aria-expanded={expanded}
+          data-expand={finding.requirementId}
+          onClick={() => setExpanded((value) => !value)}
         >
-          {citation ? "Replace this document" : "Add the missing document"}
-        </Button>
-      )}
+          <StatusChip status={finding.status} />
+          <span className="shrink-0 font-mono text-sm">{finding.requirementId}</span>
+          <span className="min-w-0 truncate text-sm">{title}</span>
+        </button>
+        {readOnly || !unresolved ? null : (
+          <Button
+            href={
+              citation
+                ? `/workspace/${productId}?replace=${citation.documentId}#upload-card`
+                : `/workspace/${productId}#upload-card`
+            }
+            variant="secondary"
+            size="sm"
+          >
+            {citation ? "Replace" : "Add file"}
+          </Button>
+        )}
+      </div>
+      {expanded ? (
+        <div className="space-y-2 border-t border-line bg-paper px-3 py-3 text-sm">
+          <p className="meta text-muted">
+            {finding.evidenceType ? evidenceLabels[finding.evidenceType] : "No evidence submitted"}
+          </p>
+          <p>{finding.reason}</p>
+          {unresolved && finding.nextAction ? <p>{finding.nextAction}</p> : null}
+          {citation ? (
+            <p className="font-mono text-[13px] break-all">
+              {citation.filename}, page {citation.page}. “{citation.quote}”
+            </p>
+          ) : (
+            <p className="text-muted">No citation. Nothing was invented for a missing record.</p>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

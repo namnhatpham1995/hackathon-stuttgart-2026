@@ -58,3 +58,37 @@ export function ReviewIcon() {
     </Icon>
   );
 }
+
+export function ChevronIcon() {
+  return (
+    <Icon>
+      <path d="M4.5 6.5 8 10l3.5-3.5" />
+    </Icon>
+  );
+}
+
+export function UploadIcon() {
+  return (
+    <Icon>
+      <path d="M8 11V4" />
+      <path d="M5.5 6.5 8 4l2.5 2.5" />
+      <path d="M3.5 12.5h9" />
+    </Icon>
+  );
+}
+
+export function PlusIcon() {
+  return (
+    <Icon>
+      <path d="M8 3.5v9M3.5 8h9" />
+    </Icon>
+  );
+}
+
+export function CollapseIcon() {
+  return (
+    <Icon>
+      <path d="M10 3.5 6.5 8 10 12.5" />
+    </Icon>
+  );
+}

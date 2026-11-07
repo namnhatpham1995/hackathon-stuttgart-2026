@@ -24,8 +24,6 @@ export function WorkspaceShell({
     productSegment && productSegment !== "states" ? decodeURIComponent(productSegment) : null;
 
   useEffect(() => {
-    const wide = window.matchMedia("(min-width: 1280px)");
-    setAssistantOpen(wide.matches);
     function onFocus() {
       setAssistantOpen(true);
     }
@@ -73,7 +71,7 @@ export function WorkspaceShell({
         </div>
       </header>
       <ConnectionsNav />
-      <div className="xl:grid xl:grid-cols-[300px_minmax(0,1fr)]">
+      <div className={assistantOpen ? "xl:grid xl:grid-cols-[280px_minmax(0,1fr)]" : undefined}>
         {assistantOpen ? (
           <aside
             aria-label="Assistant"
