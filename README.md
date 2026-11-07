@@ -6,7 +6,7 @@
 
 TradeReady is a supplier and buyer workspace for one checklist. A supplier uploads documents. The app reads the text, keeps exact quotes, and applies deterministic rules. The buyer sees the shared report: what is documented, what is still open, and what to provide next. The model does not decide a status, and the report has no score.
 
-This is the Stuttgart hackathon build for 2026-11-07. The description below matches `main` at `218f79f`.
+This is the Stuttgart hackathon build for 2026-11-07. The description below matches `main` at `535a091`. App code is the same as the test run on `218f79f`. `535a091` only renames the public Railway host in the docs.
 
 ## What it does
 
@@ -33,17 +33,17 @@ Sign-in is email and password. "Email me a sign-in link" sends mail through Brev
 ```mermaid
 flowchart LR
   browser[Browser]
+  railway["Railway Next.js<br/>tradeready-production.up.railway.app"]
   vercel["Vercel pages<br/>tradeready-eu.vercel.app"]
-  railway["Railway Next.js<br/>API, jobs, Postgres"]
   postgres[(PostgreSQL)]
   claude["Claude<br/>fact extraction and assistant"]
   gemini["Gemini<br/>assistant fallback"]
   brevo[Brevo]
   eleven[ElevenLabs]
 
-  browser --> vercel
-  vercel -->|"/api/* when BACKEND_URL is set"| railway
-  vercel --> postgres
+  browser --> railway
+  browser -.-> vercel
+  vercel -.->|"/api/* when BACKEND_URL is set"| railway
   railway --> postgres
   railway --> claude
   railway --> gemini
@@ -51,19 +51,21 @@ flowchart LR
   railway --> eleven
 ```
 
-Vercel serves pages. When `BACKEND_URL` is set, `next.config.ts` rewrites `/api/*` to Railway before the app's own API routes. Railway runs the Next.js server, `after()` job runner, and Postgres, and runs `pnpm db:migrate` before start. Locally `BACKEND_URL` is unset, so the dev server handles `/api/*` itself.
+The public site is Railway. It serves pages and `/api`, runs the `after()` job runner and Postgres, and runs `pnpm db:migrate` before start. `docs/deploy.md` sets `BETTER_AUTH_URL` and `APP_BASE_URL` to that origin. When `BACKEND_URL` is set, `next.config.ts` rewrites `/api/*` to Railway before the app's own API routes. On this check the Vercel origin's `/api/health` did not reach the new Railway host. Locally `BACKEND_URL` is unset, so the dev server handles `/api/*` itself.
 
 Fact extraction calls Claude (`ANTHROPIC_MODEL`, default `claude-haiku-5-5`). The assistant prefers Claude and falls back to Gemini (`GEMINI_MODEL`, production value in `.env.example` is `gemini-3.6-flash`). Brevo sends the assessment-ready mail, connection notices, and magic-link mail. ElevenLabs is optional text-to-speech (stock voice, server-side key).
 
 ## Demo
 
-Checked on 2026-11-07:
+Public app: <https://tradeready-production.up.railway.app>.
 
-- <https://tradeready-eu.vercel.app> returned HTTP 200. The home page title is TradeReady, with the current text ("Add the documents a buyer asked for…") and the line "The report is an evidence review. It is not a certification." Signed-out `/workspace` redirected to `/sign-in?next=%2Fworkspace`. The sign-in page offers a password and "Email me a sign-in link".
-- <https://exportready.vercel.app> redirects to that host.
-- <https://exportready-production.up.railway.app> returned HTTP 404, body `{"status":"error","code":404,"message":"Application not found"}`. `GET /api/health` on the Vercel origin is rewritten to Railway and returned the same 404 (`x-railway-fallback: true`). The API was not up on that host at the time of this check.
+Checked on 2026-11-07, after the hostname change on `main`:
 
-The roadmap page is a separate Vercel project: <https://exportready-roadmap.vercel.app> (HTTP 200).
+- That URL returned HTTP 200. The home page title is TradeReady, with the current text ("Add the documents a buyer asked for…") and the line "The report is an evidence review. It is not a certification." Signed-out `/workspace` redirected to `/sign-in?next=%2Fworkspace`. The sign-in page offers a password and "Email me a sign-in link". `GET /api/health` returned `{"ok":true}`.
+- The previous hostname, <https://exportready-production.up.railway.app>, returned HTTP 404 `{"status":"error","code":404,"message":"Application not found"}`.
+- <https://tradeready-eu.vercel.app> still returned HTTP 200 for the home page. `GET /api/health` on that origin returned the same 404 (`x-railway-fallback: true`). <https://exportready.vercel.app> redirects there. This check did not submit a sign-in on Vercel. `docs/deploy.md` says sign-in is configured for the Railway origin.
+
+The roadmap is a separate Vercel project: <https://exportready-roadmap.vercel.app>.
 
 ## Tech stack
 
@@ -79,7 +81,7 @@ The roadmap page is a separate Vercel project: <https://exportready-roadmap.verc
 | Voice | ElevenLabs text-to-speech when `ELEVENLABS_API_KEY` is set |
 | Quality | TypeScript, Biome, Vitest against PostgreSQL |
 | Package manager | pnpm 11.6. Node 22.12 or newer |
-| Hosts | Vercel (pages), Railway (server, jobs, Postgres) |
+| Hosts | Railway (public site, API, jobs, Postgres). Vercel still serves a page deploy |
 
 Versions are the ranges in `package.json`.
 
@@ -130,10 +132,8 @@ Optional variables, all blank until that feature is used:
 
 Two projects, both from `main`. Steps, env placement, and rollback are in [docs/deploy.md](docs/deploy.md).
 
-- **Railway** (`railway.json`): Node 22, build `pnpm build`, pre-deploy `pnpm db:migrate`, start `pnpm start`, healthcheck `GET /api/health`. Private `DATABASE_URL`. Model, Brevo, and ElevenLabs keys live here. `BACKEND_URL` stays unset.
-- **Vercel**: build `node scripts/vercel-build.mjs` (build only, no migrate). `BACKEND_URL` is the Railway origin. `DATABASE_URL` is Railway's public Postgres URL. `BETTER_AUTH_SECRET` matches Railway.
-
-The page host that answered on 2026-11-07 is <https://tradeready-eu.vercel.app>. The Railway hostname in `docs/deploy.md` did not (see [Demo](#demo)).
+- **Railway** (`tradeready-production.up.railway.app`, the public URL; `railway.json`): Node 22, build `pnpm build`, pre-deploy `pnpm db:migrate`, start `pnpm start`, healthcheck `GET /api/health`. Private `DATABASE_URL`. Model, Brevo, and ElevenLabs keys live here. `BACKEND_URL` stays unset. `BETTER_AUTH_URL` and `APP_BASE_URL` are this origin.
+- **Vercel** (`tradeready-eu.vercel.app`): build `node scripts/vercel-build.mjs` (build only, no migrate). `BACKEND_URL` is the Railway origin. `DATABASE_URL` is Railway's public Postgres URL. `BETTER_AUTH_SECRET` matches Railway. Its free plan stopped new deploys. On this check its `/api/health` did not reach the renamed Railway host (see [Demo](#demo)).
 
 ## Fixtures
 
@@ -185,4 +185,4 @@ From `docs/exportready-passport-idea.md` and `git shortlog` on this repository. 
 - **No score.** Status, reason, and next action per requirement. No percentage and no pass mark.
 - **Sharing.** One completed result goes to the signed-in buyer on that connection. There is no public passport link. Rejecting a supplier connecting their own product to their own request, and keeping a shared result on that product, is done in `src/lib/connections/service.ts`. Those two rules are not PostgreSQL constraints yet (`docs/security-accepted-risks.md`).
 - **Same file bytes.** The job is keyed by a hash of the file contents. Uploading an identical PDF again returns the finished job.
-- **Not confirmed on this check.** The Railway host returned "Application not found", so this pass did not call the live API, run an assessment, or confirm mail delivery. Closing the browser during processing and reopening the stored report was not re-checked. Replacing one document in a new unassessed set on production was not re-checked. The live golden run against Claude was not repeated. Inbox delivery of the completion email was not confirmed. No customer interviews are recorded.
+- **Not confirmed on this check.** `GET /api/health` on <https://tradeready-production.up.railway.app> returned `{"ok":true}`. This pass did not run an assessment, confirm mail delivery, close the browser during processing, or replace a document in a new unassessed set on production. The live golden run against Claude was not repeated. Inbox delivery of the completion email was not confirmed. No customer interviews are recorded. The old hostname <https://exportready-production.up.railway.app> returns 404.
