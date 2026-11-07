@@ -26,15 +26,19 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 3. Assessment contract · wave 1 · M0 · branch feat/assessment-contract
 
-- [ ] 3.1 Add `@google/genai` and `unpdf` with `pnpm add`; verify `pnpm install --frozen-lockfile` and `pnpm typecheck` pass
-- [ ] 3.2 Add `GEMINI_API_KEY`, `GEMINI_MODEL`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `APP_BASE_URL`, `ELEVENLABS_API_KEY` to `src/env.ts` as optional, plus a `requireEnv(name)` helper that throws a clear message when a feature needs a missing one, and placeholders to `.env.example`; verify `pnpm dev` starts with none of them set
-- [ ] 3.3 Add `src/db/schema/exportready.ts` with the seven tables (including `buyer_request`, `request_connection`, `product.listed` and the widened `notification`), checks, unique indexes and foreign keys exactly as design.md Decision 2, export it from `index.ts`, and run `pnpm db:generate` once; verify `pnpm db:migrate` applies cleanly on a fresh database
-- [ ] 3.4 Add a real-PostgreSQL test that updating a job to COMPLETED without `result_id` is rejected by the check constraint; verify it fails when the check is removed from the schema, then restore it
-- [ ] 3.5 Add `src/lib/assessment/types.ts` (RequirementSet, Requirement, PageText, Observation, Citation, Finding, FindingStatus, AssessmentResult, JobStatus, JobStage, FieldOrigin, WorkspaceDirective, ReadinessDimension, SupplierProfile) and `requirement-sets.ts` with `neckar-cap-104` v1, R1-R5, each with its dimension (design.md Decision 2) and expected values from the working plan, section 3; verify `pnpm typecheck` and that R1-R5 map to the dimensions in the evidence-assessment spec
-- [ ] 3.6 Add every stub file listed in design.md Decision 1 with its final exported signature and a body that throws `not implemented: <name>`, and the four slot components (`assistant-panel.tsx`, `connections-nav.tsx`, `product-connections.tsx`, `report-share.tsx`) rendering nothing; verify `pnpm typecheck` passes and a grep for `not implemented:` lists one stub per lane function
-- [ ] 3.7 Add `/workspace` and `/connections` to the `src/proxy.ts` matcher; verify a signed-out request to either redirects to `/sign-in`
-- [ ] 3.8 Add `vitest.golden.config.ts` (includes `src/**/*.golden.ts`, loads `.env`, `passWithNoTests`) and a `test:golden` script; add `unpdf` to `serverExternalPackages` in `next.config.ts` only if `next build` needs it; verify `pnpm test:golden` exits 0 and `pnpm build` passes
-- [ ] 3.9 Get one `independent-pr-reviewer` pass (Opus) and fix its blocking findings in one round; verify the review report says PASS for the final head
+- [x] 3.1 Add `@google/genai` and `unpdf` with `pnpm add`; verify `pnpm install --frozen-lockfile` and `pnpm typecheck` pass
+  - Note: `@google/genai` 3.0.0 and `unpdf` 2.1.0. `pnpm-workspace.yaml` sets `protobufjs: false` so `pnpm install` does not stop on its postinstall; the client ships generated code.
+- [x] 3.2 Add `GEMINI_API_KEY`, `GEMINI_MODEL`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `APP_BASE_URL`, `ELEVENLABS_API_KEY` to `src/env.ts` as optional, plus a `requireEnv(name)` helper that throws a clear message when a feature needs a missing one, and placeholders to `.env.example`; verify `pnpm dev` starts with none of them set
+- [x] 3.3 Add `src/db/schema/exportready.ts` with the seven tables (including `buyer_request`, `request_connection`, `product.listed` and the widened `notification`), checks, unique indexes and foreign keys exactly as design.md Decision 2, export it from `index.ts`, and run `pnpm db:generate` once; verify `pnpm db:migrate` applies cleanly on a fresh database
+- [x] 3.4 Add a real-PostgreSQL test that updating a job to COMPLETED without `result_id` is rejected by the check constraint; verify it fails when the check is removed from the schema, then restore it
+- [x] 3.5 Add `src/lib/assessment/types.ts` (RequirementSet, Requirement, PageText, Observation, Citation, Finding, FindingStatus, AssessmentResult, JobStatus, JobStage, FieldOrigin, WorkspaceDirective, ReadinessDimension, SupplierProfile) and `requirement-sets.ts` with `neckar-cap-104` v1, R1-R5, each with its dimension (design.md Decision 2) and expected values from the working plan, section 3; verify `pnpm typecheck` and that R1-R5 map to the dimensions in the evidence-assessment spec
+- [x] 3.6 Add every stub file listed in design.md Decision 1 with its final exported signature and a body that throws `not implemented: <name>`, and the four slot components (`assistant-panel.tsx`, `connections-nav.tsx`, `product-connections.tsx`, `report-share.tsx`) rendering nothing; verify `pnpm typecheck` passes and a grep for `not implemented:` lists one stub per lane function
+  - Note: Gemini entry point is `callGemini`. `contents` is a string or `@google/genai` `Content[]`; the response `content` is the model turn to echo, including function-call ids and thought signatures. Email template function is `renderCompletionEmail`. `requestEvidence` takes `buyerOrgName` because the user table has no organisation. Document finalise is spelled `finaliseDocuments`.
+- [x] 3.7 Add `/workspace` and `/connections` to the `src/proxy.ts` matcher; verify a signed-out request to either redirects to `/sign-in`
+- [x] 3.8 Add `vitest.golden.config.ts` (includes `src/**/*.golden.ts`, loads `.env`, `passWithNoTests`) and a `test:golden` script; add `unpdf` to `serverExternalPackages` in `next.config.ts` only if `next build` needs it; verify `pnpm test:golden` exits 0 and `pnpm build` passes
+  - Note: `pnpm build` passed without listing `unpdf` in `serverExternalPackages`. Nothing imports it until group 5.
+- [x] 3.9 Get one `independent-pr-reviewer` pass (Opus) and fix its blocking findings in one round; verify the review report says PASS for the final head
+  - Note: Opus was rejected (weekly usage limit) and cursor-agent is not installed. A fresh independent-pr-reviewer on Grok returned FAIL, then PASS after 7c6821c. Round 1 finding R1-1: Gemini history could not echo function-call ids and thought signatures. Round 2 report says PASS.
 
 ## 4. Demo fixtures · wave 1 · M0 · branch feat/demo-fixtures
 
@@ -48,14 +52,19 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 5. PDF text extraction · wave 2 · M1 · branch feat/pdf-text
 
-- [ ] 5.1 Implement `extractPages` in `src/lib/assessment/pdf-text.ts` with `unpdf`, returning text per page with document ID, filename and 1-based page number, and an `empty` flag when a document yields no text; verify with 5.2
-- [ ] 5.2 Add `pdf-text.test.ts` reading the fixture files: 01 page 1 contains `LM-ABS-01`, 02 contains `2026-08-01`, 03 contains revision `A`, `empty.pdf` is flagged empty; verify it passes and fails if extraction returns an empty string
+- [x] 5.1 Implement `extractPages` in `src/lib/assessment/pdf-text.ts` with `unpdf`, returning text per page with document ID, filename and 1-based page number, and an `empty` flag when a document yields no text; verify with 5.2
+  - Note: a document with no non-whitespace text is listed in `emptyDocuments` and contributes no pages. Page numbers stay 1-based.
+- [x] 5.2 Add `pdf-text.test.ts` reading the fixture files: 01 page 1 contains `LM-ABS-01`, 02 contains `2026-08-01`, 03 contains revision `A`, `empty.pdf` is flagged empty; verify it passes and fails if extraction returns an empty string
+  - Note: returning an empty string for page text fails the datasheet assertion (`expected '' to contain 'LM-ABS-01'`).
 
 ## 6. Gemini fact extraction · wave 2 · M1 · branch feat/gemini-extraction
 
-- [ ] 6.1 Implement `src/lib/assessment/gemini.ts`: client from `requireEnv("GEMINI_API_KEY")` and `GEMINI_MODEL`, two retries with backoff, 60 s timeout, typed errors; verify a call without a key fails with the clear env message
-- [ ] 6.2 Implement `extractFacts` in `extract-facts.ts`: the plan's extraction instruction, requirements and page-labelled text in separate fields, structured output schema for observations only (no statuses), temperature 0, Zod-parse the response; verify `pnpm typecheck`
+- [x] 6.1 Implement `src/lib/assessment/gemini.ts`: client from `requireEnv("GEMINI_API_KEY")` and `GEMINI_MODEL`, two retries with backoff, 60 s timeout, typed errors; verify a call without a key fails with the clear env message
+  - Note: one call plus two retries (1s, then 2s) for timeout, network, 408, 429 and 5xx. Each attempt aborts at 60s. A missing key throws `GEMINI_API_KEY is not set. Add it to .env before using this feature (see .env.example).` before any attempt. Tool calls disable automatic function calling and return the model content unchanged.
+- [x] 6.2 Implement `extractFacts` in `extract-facts.ts`: the plan's extraction instruction, requirements and page-labelled text in separate fields, structured output schema for observations only (no statuses), temperature 0, Zod-parse the response; verify `pnpm typecheck`
+  - Note: requirements (id, statement, field names) and page-labelled text are separate JSON fields. Expected values are not sent. Null values with an empty quote are dropped. Field names: supplierName, partNumber, revision, material, grade, scope, validityEnd (YYYY-MM-DD), resinBatch, productionLot, shipment, packagingCode, packagingRevision, accepted (`yes` or null).
 - [ ] 6.3 Live smoke on fixtures 01-04 with a one-off `tsx` command (not committed): paste the observations into the PR description; verify doc 03 yields revision `A` with an exact quote and doc 02 yields validity end `2026-08-01`
+  - Blocked: needs GEMINI_API_KEY for the live check. Run an uncommitted tsx command: `extractPages` on fixtures 01-04, then `extractFacts` with `neckarCap104`. Doc 03 must yield revision `A` with an exact quote and doc 02 `validityEnd` `2026-08-01`. Paste the observations into the PR description.
 
 ## 7. Rules and citation checks · wave 2 · M1 · branch feat/rules-engine
 
@@ -65,23 +74,28 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 8. Products and document upload · wave 2 · M1 · branch feat/document-upload
 
-- [ ] 8.1 Implement `src/lib/products/service.ts`: create a product for `neckar-cap-104`, get and list owned products, update allowed fields with origin and the declared supplier profile (both Zod-validated), all filtered by `userId`; verify `pnpm typecheck`; full check in 13.4
-- [ ] 8.2 Implement `src/lib/documents/service.ts`: add a pending file (MIME, 4 MB, 5 active PDFs, 2 photos, sha256), list active and pending, replace (new pending linked by `replaces_document_id`), and finalise in one transaction (pending to active, replaced to inactive) returning the active set; verify `pnpm typecheck`; full check in 13.4
-- [ ] 8.3 Add `POST /api/products/[productId]/documents` (multipart, one file, session required, 401 without one, 404 for a foreign product, 413 with a message naming the 4 MB limit); verify with `curl` and a session cookie: a fixture PDF gives 201 and a 5 MB file gives 413
+- [x] 8.1 Implement `src/lib/products/service.ts`: create a product for `neckar-cap-104`, get and list owned products, update allowed fields with origin and the declared supplier profile (both Zod-validated), all filtered by `userId`; verify `pnpm typecheck`; full check in 13.4
+- [x] 8.2 Implement `src/lib/documents/service.ts`: add a pending file (MIME, 4 MB, 5 active PDFs, 2 photos, sha256), list active and pending, replace (new pending linked by `replaces_document_id`), and finalise in one transaction (pending to active, replaced to inactive) returning the active set; verify `pnpm typecheck`; full check in 13.4
+- [x] 8.3 Add `POST /api/products/[productId]/documents` (multipart, one file, session required, 401 without one, 404 for a foreign product, 413 with a message naming the 4 MB limit); verify with `curl` and a session cookie: a fixture PDF gives 201 and a 5 MB file gives 413
 
 ## 9. Assessment jobs · wave 2 · M1 · branch feat/assessment-jobs
 
-- [ ] 9.1 Implement `startAssessment(userId, productId)` in `src/lib/jobs/service.ts`: compute the document set hash, insert with on-conflict-do-nothing, return the existing or new job, schedule `runAssessment` with `after()`; verify with 9.4
-- [ ] 9.2 Implement the claim (`QUEUED` to `PROCESSING` by update-where), `setStage`, `failJob`, and `completeJob` (insert result, set COMPLETED with `result_id`, insert the notification row for the owner's account email, all in one transaction); verify `pnpm typecheck`
-- [ ] 9.3 Add `GET /api/jobs/[jobId]` (session required, 404 for a foreign or unknown job, returns status, stage, error and result ID, re-queues a job stuck in PROCESSING for over 5 minutes up to 2 attempts); verify with 9.4
-- [ ] 9.4 Add `jobs.test.ts` on real PostgreSQL: two starts for the same snapshot return one job ID and one row; a direct duplicate insert is rejected; another user's job returns 404; verify each fails when its guard is removed, then restore
-- [ ] 9.5 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
+- [x] 9.1 Implement `startAssessment(userId, productId)` in `src/lib/jobs/service.ts`: compute the document set hash, insert with on-conflict-do-nothing, return the existing or new job, schedule `runAssessment` with `after()`; verify with 9.4
+- [x] 9.2 Implement the claim (`QUEUED` to `PROCESSING` by update-where), `setStage`, `failJob`, and `completeJob` (insert result, set COMPLETED with `result_id`, insert the notification row for the owner's account email, all in one transaction); verify `pnpm typecheck`
+- [x] 9.3 Add `GET /api/jobs/[jobId]` (session required, 404 for a foreign or unknown job, returns status, stage, error and result ID, re-queues a job stuck in PROCESSING for over 5 minutes up to 2 attempts); verify with 9.4
+- [x] 9.4 Add `jobs.test.ts` on real PostgreSQL: two starts for the same snapshot return one job ID and one row; a direct duplicate insert is rejected; another user's job returns 404; verify each fails when its guard is removed, then restore
+- [x] 9.5 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
+  - Note: Opus was out of weekly usage, so the pass ran as a fresh reviewer on Grok. Verdict PASS, no open findings. Report on PR 18.
 
 ## 10. Completion email · wave 2 · M1 · branch feat/completion-email
 
-- [ ] 10.1 Implement `sendBrevoEmail({to, subject, text})` in `src/lib/notify/brevo.ts` (Brevo `POST /v3/smtp/email` over `fetch` with a 15 s timeout; group 17 reuses it) and `sendCompletionEmail(notificationId)` in `src/lib/notify/completion-email.ts` on top of it: claim by update-where, store `messageId` or the error, mark failed with "email not configured" without a key; verify `pnpm typecheck`
-- [ ] 10.2 Add the fixed template (subject "Your ExportReady assessment is ready", issue count from the findings, link `${APP_BASE_URL}/workspace/<productId>/report`, no attachments); verify by rendering it for the baseline findings: the text says three documentation issues remain
+- [x] 10.1 Implement `sendBrevoEmail({to, subject, text})` in `src/lib/notify/brevo.ts` (Brevo `POST /v3/smtp/email` over `fetch` with a 15 s timeout; group 17 reuses it) and `sendCompletionEmail(notificationId)` in `src/lib/notify/completion-email.ts` on top of it: claim by update-where, store `messageId` or the error, mark failed with "email not configured" without a key; verify `pnpm typecheck`
+  - Note: `notification_status` has no `sending` value, so the claim is `UPDATE … SET attempts = 1 WHERE status = 'pending' AND attempts = 0`. A second call does not send. Missing `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` or `APP_BASE_URL` stores "email not configured".
+- [x] 10.2 Add the fixed template (subject "Your ExportReady assessment is ready", issue count from the findings, link `${APP_BASE_URL}/workspace/<productId>/report`, no attachments); verify by rendering it for the baseline findings: the text says three documentation issues remain
+  - Note: Open issues are findings whose status is not DOCUMENTED. Baseline R2 EXPIRED, R3 MISMATCH and R4 MISSING render "three documentation issues remain". The Brevo body is `textContent` only.
 - [ ] 10.3 Live send to a team-controlled address from a local notification row; verify the inbox receives it, the link opens the report after sign-in, and the row holds the message ID. Record the address used (not the key) as a note
+  - Blocked: Brevo accepted the send and the local row stores message id `<202611071032.41981504803@smtp-relay.mailin.fr>`. The link redirects to sign-in, and the report page is not on main yet (group 11). This environment cannot open the Gmail inbox, so delivery and the post-sign-in report are not confirmed.
+  - Note: sender and test inbox are both nam95.pn@gmail.com. Sent 2026-11-07 11:32 Europe/Berlin, while local `APP_BASE_URL` was blank, so that message links to `https://exportready-production.up.railway.app/workspace/afdbaf2c-750e-4906-9599-f8adbc9e2de5/report`. Local `APP_BASE_URL` is now `https://exportready.vercel.app`. That origin also redirects the report path to sign-in.
 
 ## 11. Workspace and report UI · wave 2 · M1 · branch feat/workspace-ui
 
@@ -94,10 +108,14 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 12. Production deploy · wave 2 · M1 · branch chore/production-deploy
 
-- [ ] 12.1 Add `scripts/vercel-build.mjs`: run `pnpm db:migrate` only when `VERCEL_ENV` is `production`, then `next build`; verify locally that without `VERCEL_ENV` it skips migration and builds
-- [ ] 12.2 Write `docs/deploy.md`: Vercel project, Neon from the Marketplace, build command, previews off, the env list from design.md Decision 11, rollback by Promote; verify the owner can follow it alone
-- [ ] 12.3 Owner step: create the app's Vercel project (build command `node scripts/vercel-build.mjs`, previews off) and Neon database and set the env from `docs/deploy.md`; the worker ticks this after the owner confirms; verify the project and env exist in the Vercel dashboard
+- [x] 12.1 Add `scripts/vercel-build.mjs`: run `pnpm db:migrate` only when `VERCEL_ENV` is `production`, then `next build`; verify locally that without `VERCEL_ENV` it skips migration and builds
+  - Note: 12.5 changed this script. It only runs `next build`. Railway runs `pnpm db:migrate`. There is no Neon pooler check.
+- [x] 12.2 Write `docs/deploy.md`: Vercel project, Neon from the Marketplace, build command, previews off, the env list from design.md Decision 11, rollback by Promote; verify the owner can follow it alone
+  - Note: 12.5 rewrote `docs/deploy.md` for Railway (backend and Postgres) and Vercel (UI). There is no Neon database. Production `GEMINI_MODEL` is `gemini-3.6-flash`.
+- [ ] 12.3 Owner step: create the Railway project (Next.js service from this repo, Node 22, build `pnpm build`, pre-deploy `pnpm db:migrate`, start `pnpm start`, healthcheck `/api/health`, Railway Postgres, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, env from `docs/deploy.md`) and the Vercel project (build command `node scripts/vercel-build.mjs`, previews off, `BACKEND_URL`, Railway's public `DATABASE_URL`, and the same `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`); the worker ticks this after the owner confirms; verify both projects and their env
 - [ ] 12.4 (post-merge) Smoke-test the first production deploy: sign up, sign in, open `/workspace`; verify each works, then record the URL as a note and set `APP_BASE_URL` and `BETTER_AUTH_URL` to it
+- [x] 12.5 Railway backend + Postgres deploy (railway.json, /api rewrite, health route, docs)
+  - Note: `BACKEND_URL` is an optional URL in `src/env.ts` and `.env.example`. `.env.example` sets `GEMINI_MODEL=gemini-3.6-flash`. `next.config.ts` still reads `process.env.BACKEND_URL` for the rewrite.
 
 ## 13. End-to-end assessment · wave 3 · M2 · branch feat/assessment-integration
 
