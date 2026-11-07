@@ -13,6 +13,8 @@ import {
 } from "@/db/schema";
 import { env } from "@/env";
 import { auth } from "@/lib/auth";
+import { executeAgentTool } from "@/lib/agent/tools";
+import { pagePathSchema } from "@/lib/agent/site-map";
 import {
   createBuyerRequest,
   getConnection,
@@ -164,6 +166,38 @@ describe("buyer and supplier connections", () => {
     expect(supplierInbox).toHaveLength(2);
     expect(await unreadCount(dual.id, "buyer")).toBe(1);
     expect(await unreadCount(dual.id, "supplier")).toBe(2);
+
+    const buyerTool = await executeAgentTool(dual.id, null, { name: "read_inbox" }, "/buyer/inbox");
+    const supplierTool = await executeAgentTool(
+      dual.id,
+      null,
+      { name: "read_inbox" },
+      "/workspace/inbox",
+    );
+    expect(buyerTool.output).toMatchObject({
+      ok: true,
+      notices: [{ title: "Lotus Mould responded to your request" }],
+    });
+    expect(supplierTool.output.notices).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ title: "Your assessment is ready" }),
+        expect.objectContaining({ title: "Customer purchasing requested evidence" }),
+      ]),
+    );
+    expect((await executeAgentTool(dual.id, null, { name: "read_inbox" })).output).toMatchObject({
+      ok: false,
+      error: "Choose a workspace first.",
+    });
+    for (const path of [
+      "/buyer/inbox",
+      "/buyer/requests/new",
+      `/buyer/connections/${connection.id}`,
+      "/workspace/inbox",
+      "/workspace/requests",
+      `/workspace/connections/${incoming.id}`,
+    ]) {
+      expect(pagePathSchema.safeParse(path).success).toBe(true);
+    }
 
     const incomingNotice = supplierInbox.find((notice) => notice.connectionId === incoming.id);
     assert.ok(incomingNotice);

@@ -137,10 +137,15 @@ export async function runAssistantTurn(input: {
     contents.push(response.content);
     const parts: NonNullable<Content["parts"]> = [];
     for (const call of response.functionCalls) {
-      const result = await executeAgentTool(input.userId, input.productId, {
-        name: call.name,
-        args: call.args,
-      });
+      const result = await executeAgentTool(
+        input.userId,
+        input.productId,
+        {
+          name: call.name,
+          args: call.args,
+        },
+        input.page?.path ?? "",
+      );
       if (result.directive) directives.push(result.directive);
       executed.push({
         name: call.name ?? "unknown",
