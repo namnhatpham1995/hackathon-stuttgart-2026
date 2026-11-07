@@ -52,8 +52,10 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 5. PDF text extraction · wave 2 · M1 · branch feat/pdf-text
 
-- [ ] 5.1 Implement `extractPages` in `src/lib/assessment/pdf-text.ts` with `unpdf`, returning text per page with document ID, filename and 1-based page number, and an `empty` flag when a document yields no text; verify with 5.2
-- [ ] 5.2 Add `pdf-text.test.ts` reading the fixture files: 01 page 1 contains `LM-ABS-01`, 02 contains `2026-08-01`, 03 contains revision `A`, `empty.pdf` is flagged empty; verify it passes and fails if extraction returns an empty string
+- [x] 5.1 Implement `extractPages` in `src/lib/assessment/pdf-text.ts` with `unpdf`, returning text per page with document ID, filename and 1-based page number, and an `empty` flag when a document yields no text; verify with 5.2
+  - Note: a document with no non-whitespace text is listed in `emptyDocuments` and contributes no pages. Page numbers stay 1-based.
+- [x] 5.2 Add `pdf-text.test.ts` reading the fixture files: 01 page 1 contains `LM-ABS-01`, 02 contains `2026-08-01`, 03 contains revision `A`, `empty.pdf` is flagged empty; verify it passes and fails if extraction returns an empty string
+  - Note: returning an empty string for page text fails the datasheet assertion (`expected '' to contain 'LM-ABS-01'`).
 
 ## 6. Gemini fact extraction · wave 2 · M1 · branch feat/gemini-extraction
 
@@ -83,9 +85,13 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 10. Completion email · wave 2 · M1 · branch feat/completion-email
 
-- [ ] 10.1 Implement `sendBrevoEmail({to, subject, text})` in `src/lib/notify/brevo.ts` (Brevo `POST /v3/smtp/email` over `fetch` with a 15 s timeout; group 17 reuses it) and `sendCompletionEmail(notificationId)` in `src/lib/notify/completion-email.ts` on top of it: claim by update-where, store `messageId` or the error, mark failed with "email not configured" without a key; verify `pnpm typecheck`
-- [ ] 10.2 Add the fixed template (subject "Your ExportReady assessment is ready", issue count from the findings, link `${APP_BASE_URL}/workspace/<productId>/report`, no attachments); verify by rendering it for the baseline findings: the text says three documentation issues remain
+- [x] 10.1 Implement `sendBrevoEmail({to, subject, text})` in `src/lib/notify/brevo.ts` (Brevo `POST /v3/smtp/email` over `fetch` with a 15 s timeout; group 17 reuses it) and `sendCompletionEmail(notificationId)` in `src/lib/notify/completion-email.ts` on top of it: claim by update-where, store `messageId` or the error, mark failed with "email not configured" without a key; verify `pnpm typecheck`
+  - Note: `notification_status` has no `sending` value, so the claim is `UPDATE … SET attempts = 1 WHERE status = 'pending' AND attempts = 0`. A second call does not send. Missing `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` or `APP_BASE_URL` stores "email not configured".
+- [x] 10.2 Add the fixed template (subject "Your ExportReady assessment is ready", issue count from the findings, link `${APP_BASE_URL}/workspace/<productId>/report`, no attachments); verify by rendering it for the baseline findings: the text says three documentation issues remain
+  - Note: Open issues are findings whose status is not DOCUMENTED. Baseline R2 EXPIRED, R3 MISMATCH and R4 MISSING render "three documentation issues remain". The Brevo body is `textContent` only.
 - [ ] 10.3 Live send to a team-controlled address from a local notification row; verify the inbox receives it, the link opens the report after sign-in, and the row holds the message ID. Record the address used (not the key) as a note
+  - Blocked: needs BREVO_API_KEY for the live send
+  - Note: sender and test inbox are both nam95.pn@gmail.com (`BREVO_SENDER_EMAIL`). The send stays gated on the key.
 
 ## 11. Workspace and report UI · wave 2 · M1 · branch feat/workspace-ui
 
