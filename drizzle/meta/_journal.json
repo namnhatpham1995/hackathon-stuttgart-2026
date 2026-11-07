@@ -8,6 +8,13 @@
       "when": 1792605995105,
       "tag": "0000_better-auth-core",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794044304593,
+      "tag": "0001_exportready",
+      "breakpoints": true
     }
   ]
 }
