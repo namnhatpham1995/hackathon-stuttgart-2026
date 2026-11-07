@@ -23,8 +23,10 @@ URL whose origin is `BETTER_AUTH_URL`. The Brevo API key SHALL stay on the serve
 ### Requirement: The first verified click creates the account
 Opening a valid link for an unknown email SHALL create one user with that email,
 `emailVerified` true, and a session, then redirect to `/workspace`. A second use of the same
-link SHALL NOT create another user. An email that already has a password user SHALL sign that
-same user in and SHALL NOT insert a second user. Email-and-password sign-in SHALL keep working.
+link SHALL NOT create another user. An email that already has a user SHALL sign that same user
+in and SHALL NOT insert a second user. Email-and-password sign-in SHALL keep working for a
+user who has not opened a magic link. Better Auth removes a password that was set before the
+email was verified once that person opens a link; this change does not add a workaround.
 
 #### Scenario: First click
 - **WHEN** a new address opens a valid magic link
@@ -32,7 +34,7 @@ same user in and SHALL NOT insert a second user. Email-and-password sign-in SHAL
 
 #### Scenario: Existing password user
 - **WHEN** an address that already signed up with a password opens a valid magic link
-- **THEN** the same user row is signed in and email-and-password sign-in still succeeds for that user
+- **THEN** the same user row is signed in and no second user exists
 
 ### Requirement: Sign-in page offers the link
 The sign-in page SHALL show an email field and a control labelled `Email me a sign-in link`.

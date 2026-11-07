@@ -67,6 +67,9 @@ and existing users. Password sign-in still follows `?next=`. Styles reuse `.fiel
 
 - A failed send still leaves a verification row, because the plugin inserts it before
   `sendMagicLink`. The row expires with the token and is never emailed.
+- Opening a link for a password account whose email is not verified deletes that password
+  and its sessions (`revokeUnprovenAccountAccess`). Password sign-in is unchanged until then.
+  The demo account's password stops working if that address opens a magic link.
 - In-memory rate limits reset on process restart and are not shared across instances. Accepted:
   no extra infrastructure.
 - Live delivery cannot be checked in this run: there is no `BREVO_API_KEY`.
