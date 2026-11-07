@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 
 import { AttentionBanner } from "./attention-banner";
 import type { AssessmentResult, SupplierProfile, WorkspaceProduct } from "./contract";
-import { fixtureById, requirementNames, requirementSet } from "./fixtures";
 import { ChevronIcon, DocumentIcon } from "./icons";
 import { MetaItem, PageHeader, ProductNav } from "./page-chrome";
 import {
@@ -16,6 +15,7 @@ import {
   dimensionSummary,
   documentRequestDraft,
 } from "./report-summary";
+import { requirementNames, requirementSet } from "./requirements";
 import { StatusChip } from "./status-chip";
 
 const evidenceLabels: Record<string, string> = {
@@ -92,7 +92,6 @@ function ReportBody({
         meta={
           <>
             <MetaItem>{product.profile.companyName}</MetaItem>
-            {fixtureById(product.id) ? <MetaItem>Demo data</MetaItem> : null}
             <MetaItem>
               <span className="font-mono">
                 {product.fields.partNumber?.value ?? "—"} · Rev{" "}

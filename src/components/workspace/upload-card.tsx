@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 
 import { DIMENSION_LABELS, FILE_LIMITS, type Finding, type ProductDocument } from "./contract";
 import { currentDocuments, evidenceSlots, formatBytes, photoSlots } from "./documents";
-import { requirementNames, requirementSet } from "./fixtures";
 import { ChevronIcon, DocumentIcon, UploadIcon } from "./icons";
+import { requirementNames, requirementSet } from "./requirements";
 import { StatusChip } from "./status-chip";
 
 export function UploadCard({
