@@ -1,8 +1,6 @@
-import type { Schema } from "@google/genai";
-import { Type } from "@google/genai";
 import { z } from "zod";
 
-import { callGemini } from "./gemini";
+import { callClaude } from "./claude";
 import type { Observation, PageText, Requirement, RequirementKind } from "./types";
 import { evidenceTypeLabels } from "./types";
 
@@ -65,41 +63,37 @@ const extractionSchema = z.object({
   observations: z.array(observationSchema),
 });
 
-const observationResponseSchema: Schema = {
-  type: Type.OBJECT,
+const observationResponseSchema = {
+  type: "object",
   description: "Observed facts only. Do not include a status.",
   properties: {
     observations: {
-      type: Type.ARRAY,
+      type: "array",
       description: "One item per requested field.",
       items: {
-        type: Type.OBJECT,
+        type: "object",
         properties: {
-          requirementId: {
-            type: Type.STRING,
-            description: "Id from the requirements field.",
-          },
-          field: { type: Type.STRING, description: "One requested field name." },
+          requirementId: { type: "string", description: "Id from the requirements field." },
+          field: { type: "string", description: "One requested field name." },
           value: {
-            type: Type.STRING,
-            nullable: true,
+            type: ["string", "null"],
             description:
               "Fact copied from the page, or null when it is absent or ambiguous. Dates are YYYY-MM-DD.",
           },
-          documentId: { type: Type.STRING, description: "documentId from the pages field." },
-          page: { type: Type.INTEGER, description: "1-based page number from the pages field." },
+          documentId: { type: "string", description: "documentId from the pages field." },
+          page: { type: "integer", description: "1-based page number from the pages field." },
           quote: {
-            type: Type.STRING,
+            type: "string",
             description: "Exact excerpt from that page. Empty string when value is null.",
           },
         },
         required: ["requirementId", "field", "value", "documentId", "page", "quote"],
-        propertyOrdering: ["requirementId", "field", "value", "documentId", "page", "quote"],
+        additionalProperties: false,
       },
     },
   },
   required: ["observations"],
-  propertyOrdering: ["observations"],
+  additionalProperties: false,
 };
 
 function fieldsFor(requirement: Requirement): string[] {
@@ -124,12 +118,12 @@ function parseObservations(text: string): z.infer<typeof extractionSchema>["obse
   try {
     json = JSON.parse(text);
   } catch (error) {
-    throw new Error("Gemini fact extraction did not return JSON.", { cause: error });
+    throw new Error("Claude fact extraction did not return JSON.", { cause: error });
   }
   const parsed = extractionSchema.safeParse(json);
   if (!parsed.success) {
     throw new Error(
-      `Gemini fact extraction did not match the observation schema:\n${z.prettifyError(parsed.error)}`,
+      `Claude fact extraction did not match the observation schema:\n${z.prettifyError(parsed.error)}`,
     );
   }
   return parsed.data.observations;
@@ -199,11 +193,10 @@ async function requestObservations(input: {
   documentIds: string[];
   allowed: AllowedFields;
 }): Promise<Observation[]> {
-  const response = await callGemini({
-    systemInstruction: extractionInstruction(input.documentIds),
-    temperature: 0,
-    responseSchema: observationResponseSchema,
-    contents: JSON.stringify({
+  const response = await callClaude({
+    system: extractionInstruction(input.documentIds),
+    schema: observationResponseSchema,
+    content: JSON.stringify({
       requirements: input.requirements.map((requirement) => ({
         id: requirement.id,
         statement: requirement.statement,
