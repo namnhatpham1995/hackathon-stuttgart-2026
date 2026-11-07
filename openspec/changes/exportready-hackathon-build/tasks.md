@@ -43,7 +43,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
   - Note: supplier string is `Lotus Mould Co., Ltd.`; certificate issuer is `Fictional Standards Bureau`; doc 03 quote line is `Part number: CAP-104. Drawing revision: A.`
 - [x] 4.3 Generate two trap files: `trap_CAP104_Inspection_RevB.pdf` whose body says revision A, and `empty.pdf` with no text layer; verify the trap's body text shows revision A and the empty one has no selectable text
   - Note: `empty.pdf` has no footer. A footer would be selectable text.
-- [ ] 4.4 Write `fixtures/exportready/answer-key.json` with the baseline and correction outcomes from the working plan's section 4, and `fixtures/exportready/README.md` stating it is test-only and never sent to the model; verify the JSON matches the plan's table line by line
+- [x] 4.4 Write `fixtures/exportready/answer-key.json` with the baseline and correction outcomes from the working plan's section 4, and `fixtures/exportready/README.md` stating it is test-only and never sent to the model; verify the JSON matches the plan's table line by line
+  - Note: `rows` copies the section 4 cells, including Unchanged. `baseline.findings` and `correction.findings` are the resolved statuses. `trap.findings.R3` is MISMATCH. `empty.result` is incomplete.
 
 ## 5. PDF text extraction · wave 2 · M1 · branch feat/pdf-text
 
