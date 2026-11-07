@@ -7,6 +7,8 @@ import { type FormEvent, useState } from "react";
 import { signIn, signUp } from "@/lib/auth-client";
 import { safeNextPath } from "@/lib/safe-next-path";
 
+import { MagicLinkForm } from "./magic-link-form";
+
 const providerLabels: Record<string, string> = { google: "Google", github: "GitHub" };
 
 export function AuthForm({
@@ -80,6 +82,13 @@ export function AuthForm({
           {pending ? "Please wait…" : isSignUp ? "Create account" : "Sign in"}
         </button>
       </form>
+
+      {!isSignUp && (
+        <>
+          <p className="text-center text-sm text-muted">or</p>
+          <MagicLinkForm />
+        </>
+      )}
 
       {socialProviders.length > 0 && (
         <div className="flex flex-col gap-2">
