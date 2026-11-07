@@ -330,21 +330,22 @@ Needs 26 on `main` (same files). The owner decided the assistant may act on the 
 
 Owns `src/lib/agent/**` and `src/components/assistant/**`. Review: one `independent-pr-reviewer` pass (Opus). These are actions with another company's data.
 
-- [ ] 27.1 Read tools that run at once:
+- [x] 27.1 Read tools that run at once:
   - `search_catalog` over `searchCatalog`.
   - `list_my_requests` over `listMyRequests`.
   - `read_inbox` over `listInbox`.
   - `close_request` over `closeMyRequest`. It stays inside the user's own account, and its reply says it was closed.
 
   Verify with 27.4
-- [ ] 27.2 Confirm-card tools that never write on the server: `request_evidence`, `create_board_request`, `respond_to_request` and `share_result`.
+- [x] 27.2 Confirm-card tools that never write on the server: `request_evidence`, `create_board_request`, `respond_to_request` and `share_result`.
+  - Note: two read tools were added because the card tools need ids the listed tools do not give: `list_board` (open requests of others, for `respond_to_request`) and `list_product_connections` (for `share_result`). `share_result` defaults to the latest completed result.
   - **Server:** validate the arguments, look up the names the card shows (product, organisation, result), and return a `confirm_action` directive.
   - **Panel:** shows a card with what will be sent and to whom, plus Cancel and Send.
   - **Send:** calls the existing server action: `requestProductEvidence`, `createRequestAction`, `respondAction` or `shareAction`. Validation, ownership and the email stay on the manual path.
 
   Verify with 27.4
-- [ ] 27.3 Add the connection actions to the system instruction. The spec already lists them. A refused card ("Cancel") is reported as not sent. Verify with 27.4
-- [ ] 27.4 Tests (real PostgreSQL):
+- [x] 27.3 Add the connection actions to the system instruction. The spec already lists them. A refused card ("Cancel") is reported as not sent. Verify with 27.4
+- [x] 27.4 Tests (real PostgreSQL):
   - **No write before the card:** a `request_evidence` or `share_result` call creates no `request_connection` row or notification, and returns one `confirm_action` directive.
   - **Foreign request:** `close_request` on another user's request reports not found and leaves it open.
   - **Catalog:** `search_catalog` never returns the caller's own or unlisted products.

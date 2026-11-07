@@ -7,12 +7,27 @@ import { AssistantPanel } from "./assistant-panel";
 
 const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
+const actions = vi.hoisted(() => ({
+  requestProductEvidence: vi.fn(),
+  createRequestAction: vi.fn(),
+  respondAction: vi.fn(),
+  shareAction: vi.fn(),
+}));
+vi.mock("@/app/buyer/actions", () => ({
+  requestProductEvidence: actions.requestProductEvidence,
+}));
+vi.mock("@/app/connections/actions", () => ({
+  createRequestAction: actions.createRequestAction,
+  respondAction: actions.respondAction,
+  shareAction: actions.shareAction,
+}));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push }) }));
 
 let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+  for (const action of Object.values(actions)) action.mockReset();
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   sessionStorage.clear();
   sessionStorage.setItem("tradeready-speech-muted", "1");
@@ -167,4 +182,73 @@ test("a stored chat survives a strict-mode mount", async () => {
   expect(sessionStorage.getItem("tradeready-assistant:history:user-a")).toContain(
     "Earlier question",
   );
+});
+
+const evidenceCard = {
+  type: "confirm_action",
+  title: "Request evidence",
+  details: ["Product: Cap 104", "Your organisation: Acme GmbH"],
+  send: { action: "request_evidence", productId: "p1", buyerOrgName: "Acme GmbH" },
+};
+
+async function showCard(directive: unknown) {
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    Response.json({ reply: "Review the card.", directives: [directive] }),
+  );
+  await act(async () => root.render(<AssistantPanel path="/buyer" />));
+  await send("Ask for evidence");
+}
+
+function button(label: string): HTMLButtonElement {
+  const found = [...container.querySelectorAll("button")].find(
+    (candidate) => candidate.textContent?.trim() === label,
+  );
+  if (!found) throw new Error(`Missing button ${label}`);
+  return found;
+}
+
+test("a confirm card calls nothing until Send, then calls the matching action once", async () => {
+  actions.requestProductEvidence.mockResolvedValue({ ok: true, connectionId: "c1" });
+  await showCard(evidenceCard);
+  expect(container.textContent).toContain("Product: Cap 104");
+  expect(actions.requestProductEvidence).not.toHaveBeenCalled();
+
+  await act(async () => button("Send").click());
+
+  expect(actions.requestProductEvidence).toHaveBeenCalledTimes(1);
+  expect(actions.requestProductEvidence).toHaveBeenCalledWith({
+    productId: "p1",
+    buyerOrgName: "Acme GmbH",
+    message: undefined,
+  });
+  expect(actions.createRequestAction).not.toHaveBeenCalled();
+  expect(container.textContent).toContain("Sent: Request evidence.");
+});
+
+test("Cancel on a confirm card calls no action and reports it as not sent", async () => {
+  await showCard(evidenceCard);
+
+  await act(async () => button("Cancel").click());
+
+  for (const action of Object.values(actions)) expect(action).not.toHaveBeenCalled();
+  expect(container.textContent).toContain("Not sent: Request evidence.");
+});
+
+test("Send on a share card calls shareAction with the connection and result", async () => {
+  actions.shareAction.mockResolvedValue(null);
+  await showCard({
+    type: "confirm_action",
+    title: "Share an assessment result",
+    details: ["Buyer: Acme"],
+    send: { action: "share_result", connectionId: "conn-1", resultId: "res-1" },
+  });
+
+  await act(async () => button("Send").click());
+
+  expect(actions.shareAction).toHaveBeenCalledTimes(1);
+  const [prev, data] = actions.shareAction.mock.calls[0] as [unknown, FormData];
+  expect(prev).toBeNull();
+  expect(data.get("connectionId")).toBe("conn-1");
+  expect(data.get("resultId")).toBe("res-1");
+  expect(actions.requestProductEvidence).not.toHaveBeenCalled();
 });

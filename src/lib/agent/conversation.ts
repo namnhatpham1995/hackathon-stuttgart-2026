@@ -3,6 +3,7 @@ import type { Content } from "@google/genai";
 import { callGemini } from "@/lib/assessment/gemini";
 import type { WorkspaceDirective } from "@/lib/assessment/types";
 
+import type { ConfirmDirective } from "./confirm-action";
 import { describePage, type SiteDirective, siteMapText } from "./site-map";
 import { agentTools, executeAgentTool } from "./tools";
 
@@ -12,10 +13,10 @@ const MAX_ROUNDS = 5;
 type Executed = {
   name: string;
   output: Record<string, unknown>;
-  directive?: WorkspaceDirective | SiteDirective;
+  directive?: WorkspaceDirective | SiteDirective | ConfirmDirective;
 };
 
-export type AssistantDirective = WorkspaceDirective | SiteDirective;
+export type AssistantDirective = WorkspaceDirective | SiteDirective | ConfirmDirective;
 
 function systemInstruction(productId: string | null, path: string): string {
   return [
@@ -25,6 +26,7 @@ function systemInstruction(productId: string | null, path: string): string {
     "You can only act by calling the provided tools. You cannot send email, open an arbitrary URL, run code, or read another user's product, document, job or report.",
     "An id in a tool argument is checked. If the tool result says not found, tell the user you could not open it. Do not invent the record.",
     "Describe progress and results only from tool results. Do not invent a finding, a quote, a status or a percentage. An assessment is finished only when a tool result says its status is COMPLETED.",
+    "Buyer and connection actions: search_catalog, list_my_requests, list_board, read_inbox, list_product_connections and close_request run at once. request_evidence, create_board_request, respond_to_request and share_result only show a confirm card: nothing is sent, emailed or published until the user presses Send, so never say it was sent. If the user cancels a card, say it was not sent.",
     "Files are chosen by the user. To collect documents, call show_upload_card and wait. Do not start an assessment until the user has finalised the batch.",
     "When a tool result includes a recovery step, tell the user that step.",
     "If the user asks for something you cannot do, say so and call no tool.",
@@ -53,6 +55,15 @@ function actionSentence(item: Executed): string {
     if (item.directive.view === "report") return "Opened the report view.";
   }
   if (item.name === "navigate_site") return "Opened the page.";
+  if (item.directive?.type === "confirm_action") {
+    return "Review the card and press Send. Nothing has been sent yet.";
+  }
+  if (item.name === "search_catalog") return "Searched the catalog.";
+  if (item.name === "list_my_requests") return "Listed your requests.";
+  if (item.name === "list_board") return "Listed the open board.";
+  if (item.name === "read_inbox") return "Read your inbox.";
+  if (item.name === "list_product_connections") return "Listed the product's connections.";
+  if (item.name === "close_request") return "Closed the request.";
   if (item.name === "list_products") return "Listed your products.";
   if (item.name === "show_upload_card") {
     return "The upload card is waiting for you to choose files.";

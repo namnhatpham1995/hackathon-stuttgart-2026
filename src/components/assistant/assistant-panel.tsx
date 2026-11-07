@@ -4,10 +4,13 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 
+import { requestProductEvidence } from "@/app/buyer/actions";
+import { createRequestAction, respondAction, shareAction } from "@/app/connections/actions";
 import { Button } from "@/components/ui/button";
 import { MUTE_KEY, SpeakReply } from "@/components/voice/speak-reply";
 import { CloseIcon, PanelIcon, SpeakerIcon } from "@/components/workspace/icons";
 import { publishWorkspaceDirective } from "@/components/workspace/workspace-events";
+import { type ConfirmDirective, confirmDirectiveSchema } from "@/lib/agent/confirm-action";
 import { siteDirectiveSchema } from "@/lib/agent/site-map";
 import { workspaceDirectiveSchema } from "@/lib/assessment/types";
 
@@ -15,9 +18,52 @@ import { type AssistantMessage, loadHistory, saveHistory } from "./assistant-his
 
 const turnSchema = z.object({
   reply: z.string(),
-  directives: z.array(z.union([workspaceDirectiveSchema, siteDirectiveSchema])),
+  directives: z.array(
+    z.union([workspaceDirectiveSchema, siteDirectiveSchema, confirmDirectiveSchema]),
+  ),
 });
 type Message = AssistantMessage;
+
+type Card = {
+  id: string;
+  directive: ConfirmDirective;
+  status: "waiting" | "sending" | "sent" | "cancelled";
+  error: string | null;
+};
+
+function formData(values: Record<string, string | number | undefined>): FormData {
+  const data = new FormData();
+  for (const [key, value] of Object.entries(values)) {
+    if (value !== undefined) data.set(key, String(value));
+  }
+  return data;
+}
+
+/** The existing server actions. Validation, ownership and the email stay on the manual path. */
+async function sendConfirmed(send: ConfirmDirective["send"]): Promise<string | null> {
+  switch (send.action) {
+    case "request_evidence": {
+      const result = await requestProductEvidence({
+        productId: send.productId,
+        buyerOrgName: send.buyerOrgName,
+        message: send.message,
+      });
+      return result.ok ? null : (result.error ?? Object.values(result.errors)[0] ?? "Not sent.");
+    }
+    case "create_board_request": {
+      const { action: _action, ...fields } = send;
+      return (await createRequestAction(null, formData(fields)))?.error ?? null;
+    }
+    case "respond_to_request": {
+      const { action: _action, ...fields } = send;
+      return (await respondAction(null, formData(fields)))?.error ?? null;
+    }
+    case "share_result": {
+      const { action: _action, ...fields } = send;
+      return (await shareAction(null, formData(fields)))?.error ?? null;
+    }
+  }
+}
 
 export function AssistantPanel({
   userId,
@@ -42,6 +88,7 @@ export function AssistantPanel({
   const [pending, setPending] = useState(false);
   const [muted, setMuted] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cards, setCards] = useState<Card[]>([]);
   const request = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
 
@@ -110,6 +157,11 @@ export function AssistantPanel({
       setText((current) => (current.trim() === next.at(-1)?.text ? "" : current));
       for (const directive of turn.directives) {
         if (directive.type === "navigate_site") router.push(directive.route);
+        else if (directive.type === "confirm_action")
+          setCards((current) => [
+            ...current,
+            { id: crypto.randomUUID(), directive, status: "waiting", error: null },
+          ]);
         else publishWorkspaceDirective(directive);
       }
       if (turn.directives.length > 0) onNavigated?.();
@@ -122,6 +174,40 @@ export function AssistantPanel({
     } finally {
       setPending(false);
     }
+  }
+
+  function note(textValue: string) {
+    setMessages((current) => [
+      ...current,
+      { id: crypto.randomUUID(), role: "model", text: textValue },
+    ]);
+  }
+
+  function updateCard(id: string, patch: Partial<Card>) {
+    setCards((current) => current.map((card) => (card.id === id ? { ...card, ...patch } : card)));
+  }
+
+  async function confirm(card: Card) {
+    if (card.status !== "waiting") return;
+    updateCard(card.id, { status: "sending", error: null });
+    try {
+      const failure = await sendConfirmed(card.directive.send);
+      if (failure) {
+        updateCard(card.id, { status: "waiting", error: failure });
+        return;
+      }
+      updateCard(card.id, { status: "sent" });
+      note(`Sent: ${card.directive.title}.`);
+      router.refresh();
+    } catch {
+      updateCard(card.id, { status: "waiting", error: "It could not be sent. Try again." });
+    }
+  }
+
+  function cancel(card: Card) {
+    if (card.status !== "waiting") return;
+    updateCard(card.id, { status: "cancelled" });
+    note(`Cancelled. Not sent: ${card.directive.title}.`);
   }
 
   return (
@@ -184,6 +270,49 @@ export function AssistantPanel({
             </li>
           ))}
         </ol>
+        {cards.map((card) => (
+          <fieldset
+            key={card.id}
+            className="mt-5 min-w-0 rounded-md border border-line p-4 text-[13px] leading-relaxed"
+          >
+            <legend className="px-1 font-medium">{card.directive.title}</legend>
+            <ul className="mt-2 space-y-1 text-muted">
+              {card.directive.details.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+            {card.error ? (
+              <p role="alert" className="mt-2 text-danger">
+                {card.error}
+              </p>
+            ) : null}
+            {card.status === "sent" ? (
+              <p className="mt-3 text-muted">Sent.</p>
+            ) : card.status === "cancelled" ? (
+              <p className="mt-3 text-muted">Cancelled. Nothing was sent.</p>
+            ) : (
+              <div className="mt-3 flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  pending={card.status === "sending"}
+                  onClick={() => void confirm(card)}
+                >
+                  Send
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={card.status === "sending"}
+                  onClick={() => cancel(card)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </fieldset>
+        ))}
         {pending ? (
           <p role="status" className="mt-4 text-[13px] text-muted">
             Working on your request…
