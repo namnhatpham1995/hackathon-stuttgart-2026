@@ -133,6 +133,7 @@ export async function setListedAction(
     return rejected(error);
   }
   revalidatePath("/connections", "layout");
+  revalidatePath("/workspace", "layout");
   return null;
 }
 
