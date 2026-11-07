@@ -21,6 +21,8 @@ import {
 } from "@/lib/assessment/types";
 import { createProduct, ProductRequestError } from "@/lib/products/service";
 
+import { deliverConnectionNotices } from "./notify";
+
 const requiredText = z.string().trim().min(1).max(300);
 const optionalMessage = z
   .string()
@@ -225,12 +227,10 @@ function toRecord(row: typeof requestConnection.$inferSelect): ConnectionRecord 
   };
 }
 
-/**
- * Sends connection notices after the transaction that inserted them has committed.
- * Task 17.2 replaces this with Brevo delivery. A missing send must not undo the write.
- */
+/** Runs only after the transaction that inserted the notices has committed. */
 async function publishNotices(noticeIds: readonly string[]): Promise<void> {
-  void noticeIds;
+  if (noticeIds.length === 0) return;
+  await deliverConnectionNotices(noticeIds);
 }
 
 async function insertNotice(
