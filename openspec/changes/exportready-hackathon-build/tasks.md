@@ -107,7 +107,7 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 - [ ] 12.3 Owner step: create the Railway project (Next.js service from this repo, Node 22, build `pnpm build`, pre-deploy `pnpm db:migrate`, start `pnpm start`, healthcheck `/api/health`, Railway Postgres, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, env from `docs/deploy.md`) and the Vercel project (build command `node scripts/vercel-build.mjs`, previews off, `BACKEND_URL`, Railway's public `DATABASE_URL`, and the same `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`); the worker ticks this after the owner confirms; verify both projects and their env
 - [ ] 12.4 (post-merge) Smoke-test the first production deploy: sign up, sign in, open `/workspace`; verify each works, then record the URL as a note and set `APP_BASE_URL` and `BETTER_AUTH_URL` to it
 - [x] 12.5 Railway backend + Postgres deploy (railway.json, /api rewrite, health route, docs)
-  - Blocked: `BACKEND_URL` was not added to `src/env.ts` or `.env.example`, and `GEMINI_MODEL=gemini-3.6-flash` was not written into `.env.example`. Group 3 (PR #8, `feat/assessment-contract`) is mid-edit on both files. On that branch `GEMINI_MODEL=` is blank. The rewrite reads `process.env.BACKEND_URL`. After PR #8 merges, add `BACKEND_URL` and set the example model to `gemini-3.6-flash`.
+  - Note: `BACKEND_URL` is an optional URL in `src/env.ts` and `.env.example`. `.env.example` sets `GEMINI_MODEL=gemini-3.6-flash`. `next.config.ts` still reads `process.env.BACKEND_URL` for the rewrite.
 
 ## 13. End-to-end assessment · wave 3 · M2 · branch feat/assessment-integration
 
