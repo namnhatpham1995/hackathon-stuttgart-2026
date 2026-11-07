@@ -114,6 +114,7 @@ export type ConnectionView = ConnectionRecord & {
   requestMessage: string | null;
   productName: string;
   supplierCompany: string;
+  listed: boolean;
 };
 
 /** The one result stored on the connection. A later assessment is not included. */
@@ -639,6 +640,7 @@ export async function getConnectionView(
       requestMessage: buyerRequest.message,
       productName: product.name,
       profile: product.profile,
+      listed: product.listed,
       ownerId: product.userId,
       buyerEmail: user.email,
     })
@@ -670,6 +672,7 @@ export async function getConnectionView(
     requirementSetKey: row.requirementSetKey,
     requestMessage: row.requestMessage,
     productName: row.productName,
+    listed: row.listed,
     supplierCompany: supplierLabel(row.profile, row.productName, [
       row.buyerEmail,
       supplier?.email ?? "",
