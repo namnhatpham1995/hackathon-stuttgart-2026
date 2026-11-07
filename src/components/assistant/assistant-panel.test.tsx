@@ -252,3 +252,25 @@ test("Send on a share card calls shareAction with the connection and result", as
   expect(data.get("resultId")).toBe("res-1");
   expect(actions.requestProductEvidence).not.toHaveBeenCalled();
 });
+
+test("a redirect after a successful send marks the card sent and cannot be sent twice", async () => {
+  const { redirect } = await import("next/navigation").then(() => ({
+    redirect: () => {
+      throw Object.assign(new Error("NEXT_REDIRECT"), {
+        digest: "NEXT_REDIRECT;push;/connections/conn-1;307;",
+      });
+    },
+  }));
+  actions.shareAction.mockImplementation(async () => redirect());
+  await showCard({
+    type: "confirm_action",
+    title: "Share an assessment result",
+    details: ["Buyer: Acme"],
+    send: { action: "share_result", connectionId: "conn-1", resultId: "res-1" },
+  });
+  await act(async () => button("Send").click());
+  expect(container.textContent).toContain("Sent: Share an assessment result.");
+  expect(container.textContent).not.toContain("Try again");
+  expect(container.querySelector("fieldset")?.querySelector("button") ?? null).toBeNull();
+  expect(actions.shareAction).toHaveBeenCalledTimes(1);
+});

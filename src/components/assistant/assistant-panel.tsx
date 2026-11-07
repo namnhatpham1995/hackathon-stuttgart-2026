@@ -1,5 +1,6 @@
 "use client";
 
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { z } from "zod";
@@ -199,7 +200,13 @@ export function AssistantPanel({
       updateCard(card.id, { status: "sent" });
       note(`Sent: ${card.directive.title}.`);
       router.refresh();
-    } catch {
+    } catch (error) {
+      // The actions redirect after a successful write; that is a success, never a retry.
+      if (isRedirectError(error)) {
+        updateCard(card.id, { status: "sent" });
+        note(`Sent: ${card.directive.title}.`);
+        return;
+      }
       updateCard(card.id, { status: "waiting", error: "It could not be sent. Try again." });
     }
   }

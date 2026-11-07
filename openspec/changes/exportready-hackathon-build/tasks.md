@@ -352,7 +352,8 @@ Owns `src/lib/agent/**` and `src/components/assistant/**`. Review: one `independ
   - **Panel:** "Send" calls the matching action once, and "Cancel" calls none.
 
   Verify with `pnpm test src/lib/agent src/components/assistant`.
-- [ ] 27.5 Review: one `independent-pr-reviewer` pass
+- [x] 27.5 Review: one `independent-pr-reviewer` pass
+  - Note: round 1 found that the share, respond and board actions redirect after writing, which rejected the client promise and re-enabled Send; the panel now treats a redirect as sent. Re-review not run (one fix round allowed).
 
 ## Workflow follow-up
 
