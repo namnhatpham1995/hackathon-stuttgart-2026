@@ -239,8 +239,8 @@ export async function completeJob(
   const id = idSchema.parse(jobId);
   const assessment = completedAssessmentSchema.parse(result);
 
-  // Group 10 sends this notification after the transaction commits. The report
-  // is already stored if that send fails.
+  // Group 13 calls sendCompletionEmail after this transaction commits.
+  // The result is already stored if that send fails.
   return db.transaction(async (tx) => {
     const [job] = await tx.select().from(assessmentJob).where(eq(assessmentJob.id, id));
     if (job?.status !== "PROCESSING") {
