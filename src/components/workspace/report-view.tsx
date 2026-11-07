@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { AttentionBanner } from "./attention-banner";
 import { checklistFor } from "./checklists";
 import type { AssessmentResult, SupplierProfile, WorkspaceProduct } from "./contract";
-import { fixtureById } from "./fixtures";
 import { ChevronIcon, DocumentIcon } from "./icons";
 import { MetaItem, PageHeader, ProductNav } from "./page-chrome";
 import {
@@ -97,7 +96,6 @@ function ReportBody({
         meta={
           <>
             <MetaItem>{product.profile.companyName}</MetaItem>
-            {fixtureById(product.id) ? <MetaItem>Demo data</MetaItem> : null}
             <MetaItem>
               <span className="font-mono">
                 {product.fields.partNumber?.value ?? "—"} · Rev{" "}

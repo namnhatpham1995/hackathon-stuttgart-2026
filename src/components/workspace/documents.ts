@@ -79,16 +79,3 @@ export function rejectionForFile(
   }
   return null;
 }
-
-/** Active evidence filenames decide which demo finding set a local assessment shows. */
-export function packFromFilenames(filenames: readonly string[]) {
-  const names = filenames.map((name) => name.toLowerCase());
-  const hasRevA = names.some(
-    (name) => name.includes("reva") || name.includes("rev-a") || name.includes("revision-a"),
-  );
-  const hasRevB = names.some(
-    (name) => name.includes("revb") || name.includes("rev-b") || name.includes("05_"),
-  );
-  if (hasRevB && !hasRevA) return "corrected" as const;
-  return "baseline" as const;
-}

@@ -2,11 +2,12 @@ import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import type { EvidenceType, WorkspaceProduct } from "@/components/workspace/contract";
+import { draftSchema, type FieldErrors, fieldErrors } from "@/components/workspace/schemas";
 import { db } from "@/db/client";
 import { assessmentJob, assessmentResult } from "@/db/schema";
 import { evidenceTypeLabels, findingSchema, supplierProfileSchema } from "@/lib/assessment/types";
 import { listDocuments } from "@/lib/documents/service";
-import { getProduct } from "./service";
+import { getProduct, ProductRequestError, updateProduct } from "./service";
 
 /** The workspace and assistant read the same owned product, documents and stored findings. */
 export async function loadWorkspaceProduct(
@@ -87,4 +88,28 @@ export async function loadWorkspaceProduct(
         }
       : null,
   };
+}
+
+/** Saves the draft form the way `update_product_draft` saves a field: unchanged values keep their origin. */
+export async function applyProductDraft(
+  userId: string,
+  productId: string,
+  input: unknown,
+): Promise<{ ok: true; product: WorkspaceProduct } | { ok: false; errors: FieldErrors }> {
+  const id = z.string().min(1).max(200).parse(productId);
+  const parsed = draftSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
+  const previous = await getProduct(userId, id);
+  if (!previous) throw new ProductRequestError(404, "Product not found");
+  const { name, ...values } = parsed.data;
+  const fields = Object.fromEntries(
+    Object.entries(values).map(([key, value]) => {
+      const old = previous.fields[key as keyof typeof previous.fields];
+      return [key, old?.value === value ? old : { value, origin: "user" as const }];
+    }),
+  );
+  await updateProduct(userId, id, { name, fields });
+  const product = await loadWorkspaceProduct(userId, id);
+  if (!product) throw new ProductRequestError(404, "Product not found");
+  return { ok: true, product };
 }

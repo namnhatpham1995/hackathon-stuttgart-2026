@@ -1,13 +1,13 @@
 "use client";
 
 import { type ChangeEvent, type FormEvent, useState } from "react";
-import { saveWorkspaceDraft, validateDraft } from "@/app/workspace/actions";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 
 import type { ProductFields, WorkspaceProduct } from "./contract";
-import { type FieldErrors, focusFirstInvalid } from "./schemas";
+import { draftSchema, type FieldErrors, fieldErrors, focusFirstInvalid } from "./schemas";
 import { OriginBadge } from "./status-chip";
+import { saveDraftRequest } from "./workspace-api";
 
 const order = ["name", "supplierName", "partNumber", "revision", "material", "packaging"] as const;
 
@@ -29,44 +29,27 @@ export function DraftForm({
     setSaved(false);
     const form = new FormData(event.currentTarget);
     const input = Object.fromEntries(order.map((key) => [key, String(form.get(key) ?? "")]));
+    const parsed = draftSchema.safeParse(input);
+    if (!parsed.success) {
+      const next = fieldErrors(parsed.error);
+      setErrors(next);
+      focusFirstInvalid(next, order);
+      return;
+    }
     setPending(true);
     try {
-      if (product.stored) {
-        const result = await saveWorkspaceDraft(product.id, input);
-        if (!result.ok) {
-          setErrors(result.errors);
-          focusFirstInvalid(result.errors, order);
-          return;
-        }
-        onSaved(result.product);
-        setErrors({});
-        setChanges({});
-        setSaved(true);
-        return;
-      }
-      const result = await validateDraft(input);
-      if (!result.ok) {
-        setErrors(result.errors);
-        focusFirstInvalid(result.errors, order);
-        return;
-      }
+      const saved = await saveDraftRequest(product.id, parsed.data);
+      onSaved(saved);
       setErrors({});
-      const next: WorkspaceProduct = {
-        ...product,
-        name: result.values.name,
-        fields: {
-          supplierName: keepOrigin(fields.supplierName, result.values.supplierName),
-          partNumber: keepOrigin(fields.partNumber, result.values.partNumber),
-          revision: keepOrigin(fields.revision, result.values.revision),
-          material: keepOrigin(fields.material, result.values.material),
-          packaging: keepOrigin(fields.packaging, result.values.packaging),
-        },
-      };
-      onSaved(next);
       setChanges({});
       setSaved(true);
-    } catch {
-      setErrors({ form: "The draft could not be saved. Your entries are still here. Try again." });
+    } catch (error) {
+      setErrors({
+        form:
+          error instanceof Error
+            ? error.message
+            : "The draft could not be saved. Your entries are still here. Try again.",
+      });
     } finally {
       setPending(false);
     }

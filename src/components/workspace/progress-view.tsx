@@ -8,11 +8,11 @@ import { fetchJob, JobPollError, POLL_INTERVAL_MS } from "./job-client";
 
 export function ProgressView({
   jobId,
-  startedAt,
   onComplete,
   pausedJob,
 }: {
   jobId: string;
+  /** Kept so a resumed job can name when it started. Polling reads the server status only. */
   startedAt: number;
   onComplete: (job: AssessmentJobView) => void;
   /** When set, the view shows this job and does not poll. Used for the error and loading states. */
@@ -32,7 +32,7 @@ export function ProgressView({
       if (stopped || inFlight) return;
       inFlight = true;
       try {
-        const next = await fetchJob(jobId, startedAt);
+        const next = await fetchJob(jobId);
         if (stopped) return;
         setJob(next);
         setFailure(null);
@@ -62,7 +62,7 @@ export function ProgressView({
       stopped = true;
       window.clearInterval(timer);
     };
-  }, [jobId, pausedJob, startedAt]);
+  }, [jobId, pausedJob]);
 
   const current = pausedJob ?? job;
 

@@ -3,16 +3,20 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 
-import { createProduct } from "@/app/workspace/actions";
 import { Button } from "@/components/ui/button";
 import { Field, TextArea } from "@/components/ui/field";
 
 import type { SupplierProfile, WorkspaceProduct } from "./contract";
-import { fixtureById, listedFixtures } from "./fixtures";
 import { ArrowIcon, DocumentIcon, PlusIcon } from "./icons";
 import { PageHeader } from "./page-chrome";
-import { type FieldErrors, fieldErrors, focusFirstInvalid, profileSchema } from "./schemas";
-import { mergeProducts } from "./store";
+import {
+  createProductSchema,
+  type FieldErrors,
+  fieldErrors,
+  focusFirstInvalid,
+  profileSchema,
+} from "./schemas";
+import { createProductRequest } from "./workspace-api";
 
 const profileOrder = [
   "companyName",
@@ -32,15 +36,11 @@ const draftOrder = [
 ] as const;
 
 export function WorkspaceHome({ initial }: { initial: WorkspaceProduct[] }) {
-  const [products, setProducts] = useState<WorkspaceProduct[]>([...initial, ...listedFixtures()]);
+  const [products, setProducts] = useState<WorkspaceProduct[]>(initial);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    const storedIds = new Set(initial.map((product) => product.id));
-    setProducts([
-      ...initial,
-      ...mergeProducts(listedFixtures()).filter((product) => !storedIds.has(product.id)),
-    ]);
+    setProducts(initial);
   }, [initial]);
 
   return (
@@ -64,7 +64,7 @@ export function WorkspaceHome({ initial }: { initial: WorkspaceProduct[] }) {
 
       {creating ? (
         <Onboarding
-          initialProfile={products.find((product) => !fixtureById(product.id))?.profile}
+          initialProfile={products.find((product) => product.profile.companyName)?.profile}
           onCancel={() => setCreating(false)}
           onCreated={(product) => {
             setProducts((current) => [product, ...current]);
@@ -93,8 +93,7 @@ export function WorkspaceHome({ initial }: { initial: WorkspaceProduct[] }) {
           </div>
           <ProductTable products={products} />
           <p className="meta mt-5 max-w-[75ch] text-muted">
-            CAP-104 examples contain demo data. New products are saved to your account. Older
-            browser-local drafts remain available on this device.
+            Products and the supplier profile are saved to your account.
           </p>
         </div>
       )}
@@ -257,21 +256,26 @@ function Onboarding({
       setStep(2);
       return;
     }
+    const parsed = createProductSchema.safeParse({ ...profile, ...values });
+    if (!parsed.success) {
+      const next = fieldErrors(parsed.error);
+      setErrors(next);
+      if (profileOrder.some((key) => next[key])) setStep(1);
+      return;
+    }
     setPending(true);
     setProfile(values);
     setErrors({});
     try {
-      const result = await createProduct({ ...profile, ...values });
-      if (!result.ok) {
-        setErrors(result.errors);
-        if (profileOrder.some((key) => result.errors[key])) setStep(1);
-        return;
-      }
-      onCreated(result.product);
-      router.push(`/workspace/${result.product.id}`);
-    } catch {
+      const product = await createProductRequest(parsed.data);
+      onCreated(product);
+      router.push(`/workspace/${product.id}`);
+    } catch (error) {
       setErrors({
-        form: "The product could not be created. Your entries are still here. Try again.",
+        form:
+          error instanceof Error
+            ? error.message
+            : "The product could not be created. Your entries are still here. Try again.",
       });
     } finally {
       setPending(false);
