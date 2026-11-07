@@ -16,7 +16,7 @@ export default defineConfig({
     alias: { "@": path.resolve(import.meta.dirname, "src") },
   },
   test: {
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx", "roadmap/**/*.test.ts"],
     globalSetup: ["./test/global-setup.ts"],
     // Tests that touch persistence use a real PostgreSQL database, never mocks: global setup
     // recreates and migrates this one before every run.

@@ -17,11 +17,12 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 2. Live roadmap page · wave 1 · M0 · branch feat/live-roadmap
 
-- [ ] 2.1 Create `roadmap/milestones.json` with M0 Foundation 10:45 (groups 1-4), M1 Parts merged and app live 12:15 (5-12), M2 End-to-end assessment 13:45 (13), M3 Assistant and buyer connections live 14:45 (14, 17), M4 Feature freeze 15:15 (15), M5 Submitted 16:45 (16), times as ISO strings with +01:00; verify every group number 1-17 appears exactly once
-- [ ] 2.2 Implement `roadmap/lib/parse-tasks.ts` (pure): group number, title, wave, milestone and branch from headings; ticked and total counts (`[x]`, `[X]`, `[ x]` count as ticked); `Blocked:` notes; `(post-merge)` markers; group status (including Merged, verifying) and milestone status rules from design.md Decision 10; add `roadmap/**/*.test.ts` to the `vitest.config.ts` include and `roadmap/**/*` to `biome.json` includes; verify `roadmap/lib/parse-tasks.test.ts` covers each status and Late, with expected values written from the spec, and passes
-- [ ] 2.3 Implement `roadmap/api/progress.ts` (Web-standard `GET` handler): one GitHub GraphQL query with server-only `GITHUB_TOKEN` for `main`'s tasks.md and open PRs' head tasks.md; fallback to `raw.githubusercontent.com` for `main` only without a token; `Cache-Control: s-maxage=20, stale-while-revalidate=60`; verify by calling the handler from a one-off `tsx` script with and without the token, and that the JSON never contains the token
-- [ ] 2.4 Build `roadmap/index.html` (vanilla JS and CSS inline, light and dark, readable at 375 px): milestone strip with target times and On track / Late / Done, groups by wave with status, n/m bar, PR link and draft state, last-commit time, Blocked reason, "last updated" time, stale-data banner on error, polling every 30 s; verify it renders the endpoint's data locally at 375 px and 1280 px
-- [ ] 2.5 Write `roadmap/README.md`: heading convention, "tick + push = update", how to change milestone times, the Vercel project settings (root `roadmap/`, framework Other, Ignored Build Step `git diff --quiet HEAD^ HEAD ./`) and the token scope (fine-grained, this repo only, read Contents and Pull requests); verify the owner can follow it alone
+- [x] 2.1 Create `roadmap/milestones.json` with M0 Foundation 10:45 (groups 1-4), M1 Parts merged and app live 12:15 (5-12), M2 End-to-end assessment 13:45 (13), M3 Assistant and buyer connections live 14:45 (14, 17), M4 Feature freeze 15:15 (15), M5 Submitted 16:45 (16), times as ISO strings with +01:00; verify every group number 1-17 appears exactly once
+- [x] 2.2 Implement `roadmap/lib/parse-tasks.ts` (pure): group number, title, wave, milestone and branch from headings; ticked and total counts (`[x]`, `[X]`, `[ x]` count as ticked); `Blocked:` notes; `(post-merge)` markers; group status (including Merged, verifying) and milestone status rules from design.md Decision 10; add `roadmap/**/*.test.ts` to the `vitest.config.ts` include and `roadmap/**/*` to `biome.json` includes; verify `roadmap/lib/parse-tasks.test.ts` covers each status and Late, with expected values written from the spec, and passes
+- [x] 2.3 Implement `roadmap/api/progress.ts` (Web-standard `GET` handler): one GitHub GraphQL query with server-only `GITHUB_TOKEN` for `main`'s tasks.md and open PRs' head tasks.md; fallback to `raw.githubusercontent.com` for `main` only without a token; `Cache-Control: s-maxage=20, stale-while-revalidate=60`; verify by calling the handler from a one-off `tsx` script with and without the token, and that the JSON never contains the token
+  - Note: Verified without GITHUB_TOKEN against raw.githubusercontent.com (17 groups, open pull requests not shown). The token path was a mocked GraphQL response; the sentinel was absent from the JSON, including a GraphQL error. The live token check happens in 2.6.
+- [x] 2.4 Build `roadmap/index.html` (vanilla JS and CSS inline, light and dark, readable at 375 px): milestone strip with target times and On track / Late / Done, groups by wave with status, n/m bar, PR link and draft state, last-commit time, Blocked reason, "last updated" time, stale-data banner on error, polling every 30 s; verify it renders the endpoint's data locally at 375 px and 1280 px
+- [x] 2.5 Write `roadmap/README.md`: heading convention, "tick + push = update", how to change milestone times, the Vercel project settings (root `roadmap/`, framework Other, Ignored Build Step `git diff --quiet HEAD^ HEAD ./`) and the token scope (fine-grained, this repo only, read Contents and Pull requests); verify the owner can follow it alone
 - [ ] 2.6 (post-merge) Owner step: create the roadmap Vercel project and set `GITHUB_TOKEN`; the controller ticks this after the owner confirms; verify the production URL shows groups 1 and 2 as Done or Merged, verifying and any open PR as In progress, then record the URL as a note under this task
 
 ## 3. Assessment contract · wave 1 · M0 · branch feat/assessment-contract
@@ -121,12 +122,18 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 13. End-to-end assessment · wave 3 · M2 · branch feat/assessment-integration
 
-- [ ] 13.1 Implement `runAssessment(jobId)` in `pipeline.ts`: claim, set each stage, extract pages, extract facts, validate citations, decide findings, `completeJob`, then `sendCompletionEmail` after commit; on failure `failJob` with an actionable message; verify with 13.2
+- [x] 13.1 Implement `runAssessment(jobId)` in `pipeline.ts`: claim, set each stage, extract pages, extract facts, validate citations, decide findings, `completeJob`, then `sendCompletionEmail` after commit; on failure `failJob` with an actionable message; verify with 13.2
+  - Note: A non-empty `extractFacts` warning marks the result incomplete, the same `complete: false` path as a PDF with no text. `pipeline.test.ts` mocks that path. The live answer-key run is 13.2. The stored assessment date is the Europe/Berlin calendar date. A completion-email error after commit leaves the stored result.
 - [ ] 13.2 Add `assessment.golden.ts`: baseline 01-04 equals the answer key; replacing 03 with 05 flips only R3; the trap file still gives R3 MISMATCH; `empty.pdf` marks the result incomplete; expected values read from `answer-key.json`; verify `pnpm test:golden` passes twice in a row
+  - Blocked: live golden run by controller (needs GEMINI_API_KEY)
 - [ ] 13.3 Tune only the prompt or rules if 13.2 fails, never the answer key; verify `pnpm test:golden` passes
+  - Blocked: live golden run by controller (needs GEMINI_API_KEY)
 - [ ] 13.4 Local click-through: onboard the Lotus Mould profile, create a product, upload 01-04, Upload and assess, see the R3 citation, the dimension summary and three actions, replace 03 with 05, re-assess and see two actions, receive the email; verify each step and that reload shows the stored report
+  - Blocked: needs group 11 (PR #11) merged
 - [ ] 13.5 (post-merge) Production click-through of 13.4, closing the tab during processing and reopening after completion; verify the stored report loads, or record the failure honestly as a note
-- [ ] 13.6 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
+  - Blocked: needs group 11 (PR #11) merged
+- [x] 13.6 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
+  - Note: Round 1 FAIL (R1-1 photos, R1-2 unnamed incomplete files), fixed in one round. Round 2 PASS. The reviewer ran on Grok because Opus was out of usage.
 
 ## 14. Text assistant · wave 4 · M3 · branch feat/workspace-assistant
 
