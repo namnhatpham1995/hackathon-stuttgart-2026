@@ -59,9 +59,12 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 6. Gemini fact extraction · wave 2 · M1 · branch feat/gemini-extraction
 
-- [ ] 6.1 Implement `src/lib/assessment/gemini.ts`: client from `requireEnv("GEMINI_API_KEY")` and `GEMINI_MODEL`, two retries with backoff, 60 s timeout, typed errors; verify a call without a key fails with the clear env message
-- [ ] 6.2 Implement `extractFacts` in `extract-facts.ts`: the plan's extraction instruction, requirements and page-labelled text in separate fields, structured output schema for observations only (no statuses), temperature 0, Zod-parse the response; verify `pnpm typecheck`
+- [x] 6.1 Implement `src/lib/assessment/gemini.ts`: client from `requireEnv("GEMINI_API_KEY")` and `GEMINI_MODEL`, two retries with backoff, 60 s timeout, typed errors; verify a call without a key fails with the clear env message
+  - Note: one call plus two retries (1s, then 2s) for timeout, network, 408, 429 and 5xx. Each attempt aborts at 60s. A missing key throws `GEMINI_API_KEY is not set. Add it to .env before using this feature (see .env.example).` before any attempt. Tool calls disable automatic function calling and return the model content unchanged.
+- [x] 6.2 Implement `extractFacts` in `extract-facts.ts`: the plan's extraction instruction, requirements and page-labelled text in separate fields, structured output schema for observations only (no statuses), temperature 0, Zod-parse the response; verify `pnpm typecheck`
+  - Note: requirements (id, statement, field names) and page-labelled text are separate JSON fields. Expected values are not sent. Null values with an empty quote are dropped. Field names: supplierName, partNumber, revision, material, grade, scope, validityEnd (YYYY-MM-DD), resinBatch, productionLot, shipment, packagingCode, packagingRevision, accepted (`yes` or null).
 - [ ] 6.3 Live smoke on fixtures 01-04 with a one-off `tsx` command (not committed): paste the observations into the PR description; verify doc 03 yields revision `A` with an exact quote and doc 02 yields validity end `2026-08-01`
+  - Blocked: needs GEMINI_API_KEY for the live check. Run an uncommitted tsx command: `extractPages` on fixtures 01-04, then `extractFacts` with `neckarCap104`. Doc 03 must yield revision `A` with an exact quote and doc 02 `validityEnd` `2026-08-01`. Paste the observations into the PR description.
 
 ## 7. Rules and citation checks · wave 2 · M1 · branch feat/rules-engine
 
@@ -111,7 +114,7 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 - [ ] 12.3 Owner step: create the Railway project (Next.js service from this repo, Node 22, build `pnpm build`, pre-deploy `pnpm db:migrate`, start `pnpm start`, healthcheck `/api/health`, Railway Postgres, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, env from `docs/deploy.md`) and the Vercel project (build command `node scripts/vercel-build.mjs`, previews off, `BACKEND_URL`, Railway's public `DATABASE_URL`, and the same `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`); the worker ticks this after the owner confirms; verify both projects and their env
 - [ ] 12.4 (post-merge) Smoke-test the first production deploy: sign up, sign in, open `/workspace`; verify each works, then record the URL as a note and set `APP_BASE_URL` and `BETTER_AUTH_URL` to it
 - [x] 12.5 Railway backend + Postgres deploy (railway.json, /api rewrite, health route, docs)
-  - Blocked: `BACKEND_URL` was not added to `src/env.ts` or `.env.example`, and `GEMINI_MODEL=gemini-3.6-flash` was not written into `.env.example`. Group 3 (PR #8, `feat/assessment-contract`) is mid-edit on both files. On that branch `GEMINI_MODEL=` is blank. The rewrite reads `process.env.BACKEND_URL`. After PR #8 merges, add `BACKEND_URL` and set the example model to `gemini-3.6-flash`.
+  - Note: `BACKEND_URL` is an optional URL in `src/env.ts` and `.env.example`. `.env.example` sets `GEMINI_MODEL=gemini-3.6-flash`. `next.config.ts` still reads `process.env.BACKEND_URL` for the rewrite.
 
 ## 13. End-to-end assessment · wave 3 · M2 · branch feat/assessment-integration
 
