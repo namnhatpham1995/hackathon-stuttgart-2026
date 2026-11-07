@@ -3,10 +3,9 @@
 import { type RefObject, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-
+import { type Checklist, checklistFor } from "./checklists";
 import { DIMENSION_LABELS, FILE_LIMITS, type Finding, type ProductDocument } from "./contract";
 import { currentDocuments, evidenceSlots, formatBytes, photoSlots } from "./documents";
-import { requirementNames, requirementSet } from "./fixtures";
 import { ChevronIcon, DocumentIcon, UploadIcon } from "./icons";
 import { StatusChip } from "./status-chip";
 
@@ -18,6 +17,7 @@ export function UploadCard({
   error,
   findings,
   canAssess = false,
+  checklist = checklistFor(),
   onAdd,
   onStartReplace,
   onCancelReplace,
@@ -32,6 +32,8 @@ export function UploadCard({
   error: string | null;
   findings?: readonly Finding[];
   canAssess?: boolean;
+  /** The product's buyer checklist. Defaults to the original demo checklist. */
+  checklist?: Checklist;
   onAdd: (files: File[], requirementId?: string) => void;
   onStartReplace: (id: string) => void;
   onCancelReplace: () => void;
@@ -48,7 +50,7 @@ export function UploadCard({
   const photos = photoSlots(documents);
   const pendingDocs = documents.filter((document) => document.state === "pending");
   const assignedIds = new Set(
-    requirementSet.requirements.map(
+    checklist.set.requirements.map(
       (requirement) => linkedDocument(requirement.id, documents, findings)?.id,
     ),
   );
@@ -108,7 +110,7 @@ export function UploadCard({
         <span className="text-right">Action</span>
       </div>
       <ul className="divide-y divide-line">
-        {requirementSet.requirements.map((requirement) => {
+        {checklist.set.requirements.map((requirement) => {
           const linked = linkedDocument(requirement.id, documents, findings);
           const finding = findings?.find(
             (item) =>
@@ -137,7 +139,7 @@ export function UploadCard({
                   </span>
                   <span className="min-w-0">
                     <span className="block text-[13px] font-medium">
-                      {requirementNames[requirement.id] ?? requirement.id}
+                      {checklist.names[requirement.id] ?? requirement.id}
                     </span>
                     <span className="mt-1 block text-xs text-muted">
                       {requirement.id} · {DIMENSION_LABELS[requirement.dimension]}
@@ -300,7 +302,7 @@ export function UploadCard({
       ) : null}
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line px-5 py-4">
         <p className="meta text-muted">
-          {pdfs} / 5 PDFs · {photos} / 2 photos · 4 MB per file
+          {pdfs} / {FILE_LIMITS.maxEvidence} PDFs · {photos} / 2 photos · 4 MB per file
         </p>
         <Button
           type="button"
