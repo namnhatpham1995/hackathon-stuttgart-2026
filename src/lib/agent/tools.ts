@@ -14,6 +14,7 @@ import {
   workspaceDirectiveSchema,
   workspaceViews,
 } from "@/lib/assessment/types";
+import { ConnectionRequestError } from "@/lib/connections/service";
 import { DocumentRequestError, listDocuments } from "@/lib/documents/service";
 import { getJob, type JobRecord, NotFoundError, startAssessment } from "@/lib/jobs/service";
 import {
@@ -23,6 +24,14 @@ import {
   ProductRequestError,
   updateProduct,
 } from "@/lib/products/service";
+import type { ConfirmDirective } from "./confirm-action";
+import {
+  type ConnectionToolName,
+  connectionDeclarations,
+  connectionNotFound,
+  connectionToolNames,
+  runConnectionTool,
+} from "./connection-tools";
 import {
   type SiteDirective,
   siteDirectiveSchema,
@@ -48,13 +57,14 @@ export const agentToolNames = [
   "request_replacement",
   "navigate_site",
   "list_products",
+  ...connectionToolNames,
 ] as const;
 
 export type AgentToolName = (typeof agentToolNames)[number];
 
 export type AgentToolResult = {
   output: Record<string, unknown>;
-  directive?: WorkspaceDirective | SiteDirective;
+  directive?: WorkspaceDirective | SiteDirective | ConfirmDirective;
 };
 
 const idSchema = z.string().trim().min(1).max(200);
@@ -111,7 +121,7 @@ function parameters(
   };
 }
 
-const declarations: Record<AgentToolName, FunctionDeclaration> = {
+const declarations: Record<Exclude<AgentToolName, ConnectionToolName>, FunctionDeclaration> = {
   get_workflow_state: {
     name: "get_workflow_state",
     description:
@@ -228,7 +238,12 @@ const declarations: Record<AgentToolName, FunctionDeclaration> = {
 
 /** Passed to callGemini as the tool list. Automatic function calling stays off. */
 export const agentTools = [
-  { functionDeclarations: agentToolNames.map((name) => declarations[name]) },
+  {
+    functionDeclarations: [
+      ...(Object.values(declarations) as FunctionDeclaration[]),
+      ...connectionDeclarations,
+    ],
+  },
 ];
 
 function failed(error: string, recovery: string, message?: string): AgentToolResult {
@@ -309,6 +324,10 @@ function knownFailure(error: unknown): AgentToolResult | null {
     if (error.status === 404) return notFound();
     return failed(error.message, "Correct the value and try again, or use the form on the page.");
   }
+  if (error instanceof ConnectionRequestError) {
+    if (error.status === 404) return connectionNotFound();
+    return failed(error.message, "Correct the value and try again, or use the form on the page.");
+  }
   if (error instanceof ZodError) {
     return failed(
       "Invalid arguments",
@@ -322,6 +341,10 @@ function knownFailure(error: unknown): AgentToolResult | null {
     );
   }
   return null;
+}
+
+function isConnectionTool(name: AgentToolName): name is ConnectionToolName {
+  return (connectionToolNames as readonly string[]).includes(name);
 }
 
 function isAgentToolName(name: string): name is AgentToolName {
@@ -663,7 +686,7 @@ async function listOwnProducts(userId: string): Promise<AgentToolResult> {
 }
 
 const handlers: Record<
-  AgentToolName,
+  Exclude<AgentToolName, ConnectionToolName>,
   (userId: string, contextProductId: string | null, args: unknown) => Promise<AgentToolResult>
 > = {
   get_workflow_state: getWorkflowState,
@@ -691,8 +714,14 @@ export async function executeAgentTool(
     );
   }
   try {
-    const result = await handlers[name](userId, contextProductId, call.args);
-    if (result.directive && result.directive.type !== "navigate_site") {
+    const result = isConnectionTool(name)
+      ? await runConnectionTool(name, userId, contextProductId, call.args)
+      : await handlers[name](userId, contextProductId, call.args);
+    if (
+      result.directive &&
+      result.directive.type !== "navigate_site" &&
+      result.directive.type !== "confirm_action"
+    ) {
       const targetId = workflowArgs.parse(call.args ?? {}).productId ?? contextProductId;
       if (targetId && targetId !== contextProductId)
         result.directive = { ...result.directive, productId: targetId };
