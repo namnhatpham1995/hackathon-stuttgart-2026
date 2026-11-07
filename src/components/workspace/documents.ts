@@ -1,4 +1,4 @@
-import { FILE_LIMITS, type ProductDocument } from "./contract";
+import { FILE_LIMITS, type Finding, type ProductDocument, type Requirement } from "./contract";
 
 export function formatBytes(bytes: number) {
   if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`;
@@ -78,4 +78,75 @@ export function rejectionForFile(
     return "You can attach 2 photos. They are kept with the product and are not used as evidence. The file was not added.";
   }
   return null;
+}
+
+const NAME_HINTS: Record<string, RegExp> = {
+  product_specification: /product[ _-]?spec|datasheet/,
+  material_declaration: /material[ _-]?declaration/,
+  material_documentation: /datasheet|^01_/,
+  inspection_report: /inspection/,
+  inspection_revision: /inspection|^0[35]_/,
+  certificate: /certificate|(^|[^a-z])iso/,
+  traceability_record: /traceab/,
+  traceability: /traceab/,
+  packaging_specification: /packaging/,
+  packaging_acceptance: /packaging|^04_/,
+};
+
+function matchesRequirement(requirement: Requirement, document: ProductDocument) {
+  if (document.requirementId) return document.requirementId === requirement.id;
+  const hint = NAME_HINTS[requirement.kind];
+  return Boolean(hint?.test(document.filename.toLowerCase()));
+}
+
+/**
+ * The document each requirement row shows. A document belongs to at most one row, so Replace on a
+ * row can only ever target that row's own file. A row takes, in order: a document the supplier
+ * assigned to it or one a finding cites for it, then one whose file name fits the requirement's
+ * evidence kind. A waiting replacement beats the file it replaces.
+ */
+export function assignDocuments(
+  requirements: readonly Requirement[],
+  documents: readonly ProductDocument[],
+  findings?: readonly Finding[],
+): Map<string, ProductDocument | null> {
+  const usable = currentDocuments(documents).filter((document) => document.kind === "evidence");
+  const claimed = new Set<string>();
+  const assigned = new Map<string, ProductDocument | null>();
+
+  function take(requirement: Requirement, fits: (document: ProductDocument) => boolean) {
+    const free = usable.filter((document) => !claimed.has(document.id));
+    const found =
+      free.find((document) => document.state === "pending" && fits(document)) ??
+      free.find(fits) ??
+      null;
+    if (found) claimed.add(found.id);
+    return found;
+  }
+
+  const direct = (requirement: Requirement) => (document: ProductDocument) =>
+    document.requirementId === requirement.id ||
+    Boolean(
+      findings
+        ?.find((finding) => finding.requirementId === requirement.id)
+        ?.evidence.some((citation) => citation.documentId === document.id),
+    );
+  const byName = (requirement: Requirement) => (document: ProductDocument) =>
+    matchesRequirement(requirement, document) ||
+    Boolean(
+      document.replacesDocumentId &&
+        documents.some(
+          (previous) =>
+            previous.id === document.replacesDocumentId &&
+            matchesRequirement(requirement, previous),
+        ),
+    );
+
+  for (const requirement of requirements)
+    assigned.set(requirement.id, take(requirement, direct(requirement)));
+  for (const requirement of requirements) {
+    if (!assigned.get(requirement.id))
+      assigned.set(requirement.id, take(requirement, byName(requirement)));
+  }
+  return assigned;
 }
