@@ -2,9 +2,6 @@
 
 import { cookies } from "next/headers";
 import { z } from "zod";
-import { createProduct as persistProduct, getProduct, updateProduct } from "@/lib/products/service";
-import { loadWorkspaceProduct } from "@/lib/products/workspace";
-import { discardPendingDocument, finaliseDocuments } from "@/lib/documents/service";
 import {
   DEMO_REQUIREMENT_SET_KEY,
   DEMO_REQUIREMENT_SET_VERSION,
@@ -16,6 +13,9 @@ import {
   type FieldErrors,
   fieldErrors,
 } from "@/components/workspace/schemas";
+import { discardPendingDocument, finaliseDocuments } from "@/lib/documents/service";
+import { createProduct as persistProduct } from "@/lib/products/service";
+import { applyProductDraft, loadWorkspaceProduct } from "@/lib/products/workspace";
 import { requireSession } from "@/lib/session";
 
 export async function setTheme(theme: "light" | "dark") {
@@ -81,22 +81,7 @@ export async function readWorkspace(productId: string) {
 
 export async function saveWorkspaceDraft(productId: string, input: unknown) {
   const session = await requireSession();
-  const id = z.string().min(1).max(200).parse(productId);
-  const parsed = draftSchema.safeParse(input);
-  if (!parsed.success) return { ok: false as const, errors: fieldErrors(parsed.error) };
-  const previous = await getProduct(session.user.id, id);
-  if (!previous) throw new Error("Product not found");
-  const { name, ...values } = parsed.data;
-  const fields = Object.fromEntries(
-    Object.entries(values).map(([key, value]) => {
-      const old = previous.fields[key as keyof typeof previous.fields];
-      return [key, old?.value === value ? old : { value, origin: "user" as const }];
-    }),
-  );
-  await updateProduct(session.user.id, id, { name, fields });
-  const product = await loadWorkspaceProduct(session.user.id, id);
-  if (!product) throw new Error("Product not found");
-  return { ok: true as const, product };
+  return applyProductDraft(session.user.id, productId, input);
 }
 
 export async function finaliseWorkspaceDocuments(productId: string) {
