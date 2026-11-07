@@ -184,9 +184,10 @@ function groupedValues(observations: Observation[]): Map<string, string[]> {
 
 function lookup(groups: Map<string, string[]>, field: string): FieldState {
   const values = groups.get(field) ?? [];
+  const value = values[0];
   if (values.length > 1) return { state: "conflict", values };
-  if (values.length === 0) return { state: "absent" };
-  return { state: "value", value: values[0] };
+  if (value === undefined) return { state: "absent" };
+  return { state: "value", value };
 }
 
 function collectIssues(
