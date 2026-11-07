@@ -94,8 +94,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 - [x] 10.2 Add the fixed template (subject "Your ExportReady assessment is ready", issue count from the findings, link `${APP_BASE_URL}/workspace/<productId>/report`, no attachments); verify by rendering it for the baseline findings: the text says three documentation issues remain
   - Note: Open issues are findings whose status is not DOCUMENTED. Baseline R2 EXPIRED, R3 MISMATCH and R4 MISSING render "three documentation issues remain". The Brevo body is `textContent` only.
 - [ ] 10.3 Live send to a team-controlled address from a local notification row; verify the inbox receives it, the link opens the report after sign-in, and the row holds the message ID. Record the address used (not the key) as a note
-  - Blocked: needs BREVO_API_KEY for the live send
-  - Note: sender and test inbox are both nam95.pn@gmail.com (`BREVO_SENDER_EMAIL`). The send stays gated on the key.
+  - Blocked: Brevo accepted the send and the local row stores message id `<202611071032.41981504803@smtp-relay.mailin.fr>`. The link redirects to sign-in, and the report page is not on main yet (group 11). This environment cannot open the Gmail inbox, so delivery and the post-sign-in report are not confirmed.
+  - Note: sender and test inbox are both nam95.pn@gmail.com. Sent 2026-11-07 11:32 Europe/Berlin, while local `APP_BASE_URL` was blank, so that message links to `https://exportready-production.up.railway.app/workspace/afdbaf2c-750e-4906-9599-f8adbc9e2de5/report`. Local `APP_BASE_URL` is now `https://exportready.vercel.app`. That origin also redirects the report path to sign-in.
 
 ## 11. Workspace and report UI · wave 2 · M1 · branch feat/workspace-ui
 
