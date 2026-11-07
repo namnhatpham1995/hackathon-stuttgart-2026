@@ -23,7 +23,7 @@ export function NavItem({
         ? "bg-navy-current text-navy-ink"
         : "text-navy-muted hover:bg-navy-hover hover:text-navy-ink"
       : current
-        ? "bg-paper text-ink"
+        ? "bg-selected text-selected-ink"
         : "text-muted hover:bg-paper hover:text-ink";
 
   return (

@@ -262,6 +262,17 @@ Found while rerunning TC01 on production. (1) When a product has no result for i
 - [ ] 24.4 (post-merge) On production with the TC01 product, replace one document in a new unassessed set: each row shows only a document of its own evidence type or "No file", Replace on R5 replaces the traceability record, and a retried run shows no old error
 - Not in this group: the job snapshot is keyed by file content (`hashDocumentSet`, sha256), so re-uploading an identical PDF returns the old finished job without saying so. A later message such as "No changes since the last assessment" could tell the supplier.
 
+## 25. Passport branding and workspace navigation · wave 4 · M4 · branch fix/board-navigation-brand
+
+User-requested follow-up. One account can switch between Supplier and Buyer. Reuse the supplied isolated passport mark and existing Atlassian-style controls. Owns the brand asset and component, auth form and email-link destination, workspace choice page, public entry links, workspace switcher, supplier/buyer/connections shells, shared connection navigation, related tests and brand/navigation guidance in `DESIGN.md`.
+
+- [x] 25.1 Put the isolated passport mark above the login heading and in application brand headers, keeping its supplied colours readable in both themes
+- [x] 25.2 Stack Board, Directory and Inbox evenly in the supplier sidebar, retain active state and unread behaviour, and expose connections navigation on mobile
+- [x] 25.3 Add Back to workspaces on shared connections pages, a default post-sign-in workspace choice, and explicit Supplier/Buyer switching for the same account
+- [x] 25.4 Preserve the selected on-site workspace through email-link sign-in and account-form switching; verify focused auth and navigation regression tests
+- [x] 25.5 Verify the production build, authenticated HTTP entry points and the local pre-push hook, then publish a reviewable PR
+  - Browser visual checks are blocked by disabled local browser access in Work settings.
+
 ## Workflow follow-up
 
 - After submission, delete `.claude/rules/hackathon-mode.md` and its index line so the normal rules apply again.

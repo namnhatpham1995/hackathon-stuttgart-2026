@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { BrandMark } from "@/components/ui/brand-mark";
 import { signIn, signUp } from "@/lib/auth-client";
 import { safeNextPath } from "@/lib/safe-next-path";
 
@@ -47,6 +48,7 @@ export function AuthForm({
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 px-6 py-16">
+      <BrandMark className="auth-brand-mark" alt="TradeReady passport" />
       <h1 className="text-3xl font-semibold tracking-tight">
         {isSignUp ? "Create your account" : "Welcome back"}
       </h1>
@@ -86,7 +88,7 @@ export function AuthForm({
       {!isSignUp && (
         <>
           <p className="text-center text-sm text-muted">or</p>
-          <MagicLinkForm />
+          <MagicLinkForm next={next} />
         </>
       )}
 
@@ -109,7 +111,7 @@ export function AuthForm({
         {isSignUp ? "Already have an account? " : "New here? "}
         <Link
           className="font-medium text-accent underline"
-          href={isSignUp ? "/sign-in" : "/sign-up"}
+          href={`${isSignUp ? "/sign-in" : "/sign-up"}?next=${encodeURIComponent(next)}`}
         >
           {isSignUp ? "Sign in" : "Create an account"}
         </Link>

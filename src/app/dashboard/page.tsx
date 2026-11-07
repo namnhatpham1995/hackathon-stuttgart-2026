@@ -1,3 +1,5 @@
+import { BrandMark } from "@/components/ui/brand-mark";
+import { Button } from "@/components/ui/button";
 import { requireSession } from "@/lib/session";
 import { SignOutButton } from "./sign-out-button";
 
@@ -7,18 +9,31 @@ export default async function DashboardPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-8 px-6 py-16">
       <header className="flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
+        <div className="flex items-center gap-2 font-semibold">
+          <BrandMark /> TradeReady
+        </div>
         <SignOutButton />
       </header>
-      <section className="rounded-xl border border-line p-6">
-        <p className="text-sm text-muted">Signed in as</p>
-        <p className="text-lg font-medium">{user.name}</p>
-        <p className="text-muted">{user.email}</p>
+      <div className="space-y-2">
+        <h1 className="page-title">Choose your workspace</h1>
+        <p className="text-muted [overflow-wrap:anywhere]">
+          Signed in as {user.name}. You can switch workspaces at any time.
+        </p>
+      </div>
+      <section className="space-y-3 border-b border-line pb-8">
+        <h2 className="text-lg font-semibold">Supplier workspace</h2>
+        <p className="text-muted">
+          Manage your products, upload evidence and respond to buyer requirements.
+        </p>
+        <Button href="/workspace">Open supplier workspace</Button>
       </section>
-      <p className="text-muted">
-        This page is protected. Start your feature here: propose it with <code>/opsx:propose</code>,
-        then build it with <code>/opsx:apply</code>.
-      </p>
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Buyer workspace</h2>
+        <p className="text-muted">
+          Publish requirements, discover suppliers and review shared evidence.
+        </p>
+        <Button href="/buyer">Open buyer workspace</Button>
+      </section>
     </main>
   );
 }

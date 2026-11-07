@@ -5,13 +5,15 @@ import { useParams, usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { setTheme } from "@/app/workspace/actions";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/ui/brand-mark";
 import { NavItem } from "@/components/ui/nav-item";
+import { WorkspaceSwitcher } from "@/components/ui/workspace-switcher";
 import { ConnectionsNav } from "@/components/connections/connections-nav";
 import { signOut } from "@/lib/auth-client";
 
 import { AssistantPanel } from "@/components/assistant/assistant-panel";
 import { subscribeWorkspaceDirective } from "./workspace-events";
-import { DocumentIcon, PanelIcon, ProductIcon, SignOutIcon, ThemeIcon } from "./icons";
+import { PanelIcon, ProductIcon, SignOutIcon, ThemeIcon } from "./icons";
 
 export function WorkspaceShell({
   user,
@@ -64,7 +66,7 @@ export function WorkspaceShell({
       </a>
       <aside className="workspace-sidebar">
         <Link href="/workspace" className="workspace-brand">
-          <DocumentIcon />
+          <BrandMark />
           <span>TradeReady</span>
         </Link>
         <div className="px-4 pt-6 pb-3">
@@ -77,8 +79,10 @@ export function WorkspaceShell({
               <ProductIcon /> Products
             </span>
           </NavItem>
-          <ConnectionsNav />
         </nav>
+        <div className="px-3 pb-3">
+          <ConnectionsNav layout="sidebar" />
+        </div>
         <div className="mt-auto border-t border-line p-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <span
@@ -100,7 +104,7 @@ export function WorkspaceShell({
       <div className="min-w-0">
         <header className="workspace-topbar">
           <Link href="/workspace" className="inline-flex items-center gap-2 font-medium md:hidden">
-            <DocumentIcon /> TradeReady
+            <BrandMark /> TradeReady
           </Link>
           <span className="meta hidden text-muted md:inline">Supplier workspace</span>
           <div className="ml-auto flex items-center gap-3">
@@ -122,6 +126,10 @@ export function WorkspaceShell({
             </div>
           </div>
         </header>
+        <WorkspaceSwitcher />
+        <div className="md:hidden">
+          <ConnectionsNav />
+        </div>
         <main id="workspace-main" className="workspace-main" key={pathname}>
           {children}
         </main>
