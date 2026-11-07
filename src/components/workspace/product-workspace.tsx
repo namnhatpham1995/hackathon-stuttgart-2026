@@ -222,6 +222,7 @@ export function ProductWorkspace({
       />
       {job ? (
         <ProgressView
+          key={`${job.id}-${job.startedAt}`}
           jobId={job.id}
           startedAt={job.startedAt}
           onComplete={() => {
