@@ -8,20 +8,36 @@ import { Button } from "@/components/ui/button";
 import { MUTE_KEY, SpeakReply } from "@/components/voice/speak-reply";
 import { CloseIcon, PanelIcon, SpeakerIcon } from "@/components/workspace/icons";
 import { publishWorkspaceDirective } from "@/components/workspace/workspace-events";
+import { siteDirectiveSchema } from "@/lib/agent/site-map";
 import { workspaceDirectiveSchema } from "@/lib/assessment/types";
 
-const turnSchema = z.object({ reply: z.string(), directives: z.array(workspaceDirectiveSchema) });
-type Message = { id: string; role: "user" | "model"; text: string };
+import { type AssistantMessage, loadHistory, saveHistory } from "./assistant-history";
+
+const turnSchema = z.object({
+  reply: z.string(),
+  directives: z.array(z.union([workspaceDirectiveSchema, siteDirectiveSchema])),
+});
+type Message = AssistantMessage;
 
 export function AssistantPanel({
+  userId,
+  path,
   productId,
   onCollapse,
+  onNavigated,
 }: {
+  /** Signed-in user's id. It keys the stored chat. Without it the chat stays in memory. */
+  userId?: string;
+  /** Current page path, sent so the assistant knows where the user is. */
+  path: string;
   productId?: string;
   onCollapse?: () => void;
+  /** Called after the assistant has applied a navigation. */
+  onNavigated?: () => void;
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [restoredFor, setRestoredFor] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [pending, setPending] = useState(false);
   const [muted, setMuted] = useState(true);
@@ -30,6 +46,16 @@ export function AssistantPanel({
   const end = useRef<HTMLDivElement>(null);
 
   useEffect(() => () => request.current?.abort(), []);
+  useEffect(() => {
+    if (!userId) return;
+    setMessages(loadHistory(userId));
+    setRestoredFor(userId);
+  }, [userId]);
+  // Saves only after the stored chat was read into state, so a first render
+  // with no messages never overwrites it.
+  useEffect(() => {
+    if (userId && restoredFor === userId) saveHistory(userId, messages);
+  }, [userId, restoredFor, messages]);
   useEffect(() => {
     try {
       setMuted(sessionStorage.getItem(MUTE_KEY) === "1");
@@ -52,7 +78,7 @@ export function AssistantPanel({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!productId || pending || !text.trim()) return;
+    if (pending || !text.trim()) return;
     const next: Message[] = [
       ...messages,
       { id: crypto.randomUUID(), role: "user", text: text.trim() },
@@ -65,7 +91,7 @@ export function AssistantPanel({
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          productId,
+          page: { path, ...(productId ? { productId } : {}) },
           messages: next.slice(-39).map(({ role, text }) => ({ role, text })),
         }),
         signal: request.current.signal,
@@ -82,7 +108,11 @@ export function AssistantPanel({
       const turn = turnSchema.parse(await response.json());
       setMessages([...next, { id: crypto.randomUUID(), role: "model", text: turn.reply }]);
       setText((current) => (current.trim() === next.at(-1)?.text ? "" : current));
-      for (const directive of turn.directives) publishWorkspaceDirective(directive);
+      for (const directive of turn.directives) {
+        if (directive.type === "navigate_site") router.push(directive.route);
+        else publishWorkspaceDirective(directive);
+      }
+      if (turn.directives.length > 0) onNavigated?.();
       router.refresh();
     } catch (error) {
       if (!request.current?.signal.aborted)
@@ -134,7 +164,7 @@ export function AssistantPanel({
           <p className="text-[13px] leading-relaxed text-muted">
             {productId
               ? "Ask about buyer requirements, add documents, or review a finding. You choose the files and decide when to assess."
-              : "Open a product to start a conversation about its documents and buyer requirements."}
+              : "Ask how to use TradeReady, or open a product to work on its documents and buyer requirements."}
           </p>
         ) : null}
         <ol className="space-y-5">
@@ -176,15 +206,14 @@ export function AssistantPanel({
           onChange={(event) => setText(event.target.value)}
           maxLength={8000}
           rows={3}
-          disabled={!productId}
-          placeholder={productId ? "Ask about this product…" : "Open a product first"}
-          className="field resize-none py-3 text-sm disabled:cursor-not-allowed disabled:bg-paper"
+          placeholder={productId ? "Ask about this product…" : "Ask about the site…"}
+          className="field resize-none py-3 text-sm"
         />
         <div className="mt-3 flex items-start justify-between gap-4">
           <p className="text-xs leading-relaxed text-muted">
             The assistant can make mistakes. Verify its output.
           </p>
-          <Button type="submit" size="sm" pending={pending} disabled={!productId || !text.trim()}>
+          <Button type="submit" size="sm" pending={pending} disabled={!text.trim()}>
             Send
           </Button>
         </div>

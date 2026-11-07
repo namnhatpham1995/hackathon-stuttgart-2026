@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
+import { AssistantDock } from "@/components/assistant/assistant-dock";
 import { ConnectionsNav } from "@/components/connections/connections-nav";
 import { SignOutButton } from "@/components/connections/sign-out-button";
 import { BrandMark } from "@/components/ui/brand-mark";
@@ -21,6 +22,7 @@ export default async function ConnectionsLayout({ children }: { children: ReactN
         <span className="text-sm text-muted">Connections</span>
         <div className="ml-auto flex items-center gap-3">
           <p className="hidden max-w-40 truncate text-sm text-muted sm:block">{user.name}</p>
+          <AssistantDock />
           <SignOutButton />
         </div>
       </header>

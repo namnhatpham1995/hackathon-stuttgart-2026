@@ -291,30 +291,31 @@ One account is both buyer and supplier, so the assistant knows the current page 
 
 Owns `src/components/assistant/**`, `src/lib/agent/**`, `src/app/api/assistant/**`, the assistant mount and directive handling in `src/components/workspace/shell.tsx` and `src/components/buyer/shell.tsx`, the mount in `src/app/connections/layout.tsx` and `src/app/dashboard/page.tsx`, the sign-out buttons (`src/components/connections/sign-out-button.tsx`, `src/app/dashboard/sign-out-button.tsx` and the two shells' `SignOut`), and the `.assistant-*` rules in `src/app/globals.css`. Review: controller diff read.
 
-- [ ] 26.1 Keep the conversation outside the panel: store messages in `sessionStorage` under a key that contains the signed-in user's id. Restore them on mount, drop the `key={productId}` remount, and clear them in every sign-out button before `signOut()`. Verify with 26.6
-- [ ] 26.2 Make `productId` optional end to end:
+- [x] 26.1 Keep the conversation outside the panel: store messages in `sessionStorage` under a key that contains the signed-in user's id. Restore them on mount, drop the `key={productId}` remount, and clear them in every sign-out button before `signOut()`. Verify with 26.6
+- [x] 26.2 Make `productId` optional end to end:
   - The panel accepts typed text without a product.
   - `/api/assistant` takes `{ messages, page: { path, productId? } }`, with the path validated against the known route patterns.
   - With a `productId`, the route still checks ownership and returns 404 for a foreign one.
   - Without one, the product tools return "Open a product first." with no empty id passed to any handler.
 
   Verify with 26.6
-- [ ] 26.3 Give the system instruction a short fixed site map and the current page.
+- [x] 26.3 Give the system instruction a short fixed site map and the current page.
   - **Site map:** supplier: Products, New product (two-step form), product draft, uploads, report. Buyer: Overview, My requests, Find products, Request evidence. Connections: Board, New request, Directory, Inbox. Plus the `/dashboard` workspace chooser.
   - **Current page:** one sentence, for example "The user is on the buyer's Find products page."
   - **Tools:** add `navigate_site`, limited to an enum of those routes (no free URL), returned as a directive, and `list_products` over `listProducts(userId)`.
   - **Spec and design:** already written in `specs/workspace-assistant/spec.md` and design decision 9.
 
   Verify with 26.6
-- [ ] 26.4 Mount the same `AssistantPanel` with an Assistant button in `BuyerShell`, the connections layout and the dashboard page. Apply directives in all of them. A product directive outside `/workspace` goes to `/workspace/<id>/…`.
+- [x] 26.4 Mount the same `AssistantPanel` with an Assistant button in `BuyerShell`, the connections layout and the dashboard page. Apply directives in all of them. A product directive outside `/workspace` goes to `/workspace/<id>/…`.
 
   Verify by hand at 1280 px: workspace product → `/buyer/products` → `/connections/inbox` → reload, with the same chat throughout.
-- [ ] 26.5 Turn the assistant into a non-modal side panel on wide screens that stays open across navigation and leaves the page usable.
+- [x] 26.5 Turn the assistant into a non-modal side panel on wide screens that stays open across navigation and leaves the page usable.
   - **Below 768 px:** it closes after a navigation directive, and the Assistant button reopens it.
   - **Check:** light and dark at 375 px and 1280 px.
 
   Verify by hand.
-- [ ] 26.6 Tests (update `assistant.test.ts` and `assistant-panel.test.tsx`, which assume a product):
+  - Note: checked by hand against the worktree dev server (demo user, Gemini not configured so replies are the config notice). 1280 px light and dark: panel is a 400 px side panel, page gets 400 px right padding, chat and open state survive workspace → buyer → connections and a hard load. 375 px light and dark: panel covers the page, no horizontal scroll, close then Assistant button reopens with the chat. Not exercised live: a real model reply with a navigate_site directive closing the panel below 768 px (covered by unit tests).
+- [x] 26.6 Tests (update `assistant.test.ts` and `assistant-panel.test.tsx`, which assume a product):
   - **Panel, product-free:** without a `productId` the panel sends typed text.
   - **Panel, persistence:** after an unmount and remount it shows the stored messages, and another user's key shows none.
   - **Route, no product:** without a product it answers and a product tool returns "Open a product first."
