@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
-
-import { Button } from "@/components/ui/button";
+import type { ReactNode } from "react";
 
 export function PageHeader({
   crumbs,
@@ -52,98 +50,6 @@ export function MetaItem({ icon, children }: { icon?: ReactNode; children: React
       <span className="text-ink">{children}</span>
     </span>
   );
-}
-
-export function OverflowMenu({
-  items,
-}: {
-  items: { label: string; href?: string; onSelect?: () => void }[];
-}) {
-  const [open, setOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const button = useRef<HTMLButtonElement>(null);
-  const menuId = useId();
-
-  useEffect(() => {
-    if (!open) return;
-    function onPointer(event: MouseEvent) {
-      if (!root.current?.contains(event.target as Node)) {
-        setOpen(false);
-        button.current?.focus();
-      }
-    }
-    function onKey(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      setOpen(false);
-      button.current?.focus();
-    }
-    document.addEventListener("mousedown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  function close() {
-    setOpen(false);
-    button.current?.focus();
-  }
-
-  return (
-    <div ref={root} className="relative">
-      <Button
-        ref={button}
-        type="button"
-        variant="secondary"
-        size="sm"
-        aria-expanded={open}
-        aria-controls={menuId}
-        aria-label="More actions"
-        onClick={() => setOpen((value) => !value)}
-      >
-        …
-      </Button>
-      {open ? (
-        <div
-          id={menuId}
-          role="menu"
-          className="absolute right-0 z-20 mt-1 min-w-44 rounded-md border border-line bg-card py-1"
-        >
-          {items.map((item) =>
-            item.href ? (
-              <Link
-                key={item.label}
-                href={item.href}
-                role="menuitem"
-                className="block px-3 py-2 text-sm hover:bg-paper"
-                onClick={close}
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <button
-                key={item.label}
-                type="button"
-                role="menuitem"
-                className="block w-full px-3 py-2 text-left text-sm hover:bg-paper"
-                onClick={() => {
-                  item.onSelect?.();
-                  close();
-                }}
-              >
-                {item.label}
-              </button>
-            ),
-          )}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-export function askAssistant() {
-  window.dispatchEvent(new Event("exportready:focus-assistant"));
 }
 
 export function ProductNav({

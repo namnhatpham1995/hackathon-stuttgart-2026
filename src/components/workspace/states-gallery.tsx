@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 
 import { AttentionBanner } from "./attention-banner";
 import { FINDING_STATUSES, type ProductDocument } from "./contract";
-import { longValueProduct } from "./fixtures";
+import { baselineProduct, longValueProduct } from "./fixtures";
 import { ProgressView } from "./progress-view";
 import { ReportView } from "./report-view";
+import { ReportScreen } from "./report-screen";
 import { StatusChip } from "./status-chip";
 import { UploadCard } from "./upload-card";
 
@@ -134,6 +135,11 @@ export function StatesGallery() {
         <Button href="/workspace/lotus-cap-104/report?evidence=incomplete">
           Open the incomplete report
         </Button>
+      </section>
+
+      <section aria-label="Buyer report state" className="space-y-3">
+        <h2 className="text-lg font-semibold">Buyer view</h2>
+        <ReportScreen productId={baselineProduct.id} initial={baselineProduct} readOnly />
       </section>
 
       <section className="space-y-3">

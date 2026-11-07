@@ -1,6 +1,7 @@
 import { FILE_LIMITS, type ProductDocument } from "./contract";
 
 export function formatBytes(bytes: number) {
+  if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
@@ -25,26 +26,24 @@ export function classifyFile(
   };
 }
 
-export function evidenceSlots(documents: readonly ProductDocument[]) {
-  const active = documents.filter(
-    (document) => document.kind === "evidence" && document.state === "active",
-  ).length;
-  const pendingNew = documents.filter(
+export function currentDocuments(documents: readonly ProductDocument[]) {
+  const replaced = new Set(
+    documents
+      .filter((document) => document.state === "pending")
+      .map((document) => document.replacesDocumentId),
+  );
+  return documents.filter(
     (document) =>
-      document.kind === "evidence" && document.state === "pending" && !document.replacesDocumentId,
-  ).length;
-  return active + pendingNew;
+      document.state === "pending" || (document.state === "active" && !replaced.has(document.id)),
+  );
+}
+
+export function evidenceSlots(documents: readonly ProductDocument[]) {
+  return currentDocuments(documents).filter((document) => document.kind === "evidence").length;
 }
 
 export function photoSlots(documents: readonly ProductDocument[]) {
-  const active = documents.filter(
-    (document) => document.kind === "photo" && document.state === "active",
-  ).length;
-  const pendingNew = documents.filter(
-    (document) =>
-      document.kind === "photo" && document.state === "pending" && !document.replacesDocumentId,
-  ).length;
-  return active + pendingNew;
+  return currentDocuments(documents).filter((document) => document.kind === "photo").length;
 }
 
 export function rejectionForFile(
@@ -55,13 +54,27 @@ export function rejectionForFile(
   const classified = classifyFile(file);
   if (!classified.ok) return classified.message;
   if (file.size > FILE_LIMITS.maxBytes) {
-    return `${file.name} is ${formatBytes(file.size)}. The limit is 4 MB per file, so it was not added and the batch is unchanged.`;
+    return `${file.name} exceeds the 4 MB limit. Choose a smaller file.`;
   }
-  if (replacingId) return null;
-  if (classified.kind === "evidence" && evidenceSlots(documents) >= FILE_LIMITS.maxEvidence) {
+  const replacing = replacingId
+    ? documents.find((document) => document.id === replacingId && document.state === "active")
+    : null;
+  if (replacingId && !replacing)
+    return "This document is no longer active. Refresh the page and choose the current file.";
+  if (
+    replacingId &&
+    documents.some(
+      (document) => document.state === "pending" && document.replacesDocumentId === replacingId,
+    )
+  )
+    return "A replacement is already waiting. Undo it or assess the current batch first.";
+  const remaining = replacing
+    ? documents.filter((document) => document.id !== replacing.id)
+    : documents;
+  if (classified.kind === "evidence" && evidenceSlots(remaining) >= FILE_LIMITS.maxEvidence) {
     return "This product already has 5 PDFs. Replace one before adding another. The file was not added.";
   }
-  if (classified.kind === "photo" && photoSlots(documents) >= FILE_LIMITS.maxPhotos) {
+  if (classified.kind === "photo" && photoSlots(remaining) >= FILE_LIMITS.maxPhotos) {
     return "You can attach 2 photos. They are kept with the product and are not used as evidence. The file was not added.";
   }
   return null;

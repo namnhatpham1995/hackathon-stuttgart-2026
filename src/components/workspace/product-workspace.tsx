@@ -84,8 +84,8 @@ export function ProductWorkspace({
   }, [job?.pack, productId, revealUpload, router]);
 
   function update(next: WorkspaceProduct) {
-    setProduct(next);
     writeProduct(next);
+    setProduct(next);
   }
 
   function addFiles(selected: File[], requirementId?: string) {
@@ -203,7 +203,9 @@ export function ProductWorkspace({
               </span>
             </MetaItem>
             {open !== undefined ? (
-              <MetaItem>{open === 1 ? "1 open" : `${open} open`}</MetaItem>
+              <MetaItem>
+                {job ? "Assessment in progress" : open === 1 ? "1 open" : `${open} open`}
+              </MetaItem>
             ) : null}
           </>
         }
@@ -234,11 +236,11 @@ export function ProductWorkspace({
         }}
         onCancelReplace={() => setReplacingId(null)}
         onRemovePending={(id) => {
-          files.current.delete(id);
           update({
             ...product,
             documents: product.documents.filter((document) => document.id !== id),
           });
+          files.current.delete(id);
         }}
         onAssess={() => void assess()}
         inputRef={inputRef}

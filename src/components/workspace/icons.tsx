@@ -85,14 +85,6 @@ export function PlusIcon() {
   );
 }
 
-export function CollapseIcon() {
-  return (
-    <Icon>
-      <path d="M10 3.5 6.5 8 10 12.5" />
-    </Icon>
-  );
-}
-
 export function DocumentIcon() {
   return (
     <Icon>

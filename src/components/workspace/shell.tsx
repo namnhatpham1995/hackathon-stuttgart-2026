@@ -25,12 +25,6 @@ export function WorkspaceShell({
   const assistantTrigger = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const open = () => setAssistantOpen(true);
-    window.addEventListener("exportready:focus-assistant", open);
-    return () => window.removeEventListener("exportready:focus-assistant", open);
-  }, []);
-
-  useEffect(() => {
     if (assistantOpen) assistantDialog.current?.showModal();
     else assistantDialog.current?.close();
   }, [assistantOpen]);

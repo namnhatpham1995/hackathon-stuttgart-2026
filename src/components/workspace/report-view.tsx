@@ -47,7 +47,9 @@ export function ReportView({
         <DocumentIcon />
         <h1 className="page-title">No evidence report yet</h1>
         <p className="text-muted">
-          Add documents to the product, then choose Upload and assess to create an evidence report.
+          {readOnly
+            ? "There is no evidence report to display for this product."
+            : "Add documents to the product, then choose Upload and assess to create an evidence report."}
         </p>
         {readOnly ? null : (
           <Button href={`/workspace/${product.id}#upload-card`}>Add documents</Button>

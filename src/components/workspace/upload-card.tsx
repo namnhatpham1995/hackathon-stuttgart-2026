@@ -5,7 +5,7 @@ import { type RefObject, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 import { DIMENSION_LABELS, FILE_LIMITS, type Finding, type ProductDocument } from "./contract";
-import { evidenceSlots, formatBytes, photoSlots } from "./documents";
+import { currentDocuments, evidenceSlots, formatBytes, photoSlots } from "./documents";
 import { requirementNames, requirementSet } from "./fixtures";
 import { ChevronIcon, DocumentIcon, UploadIcon } from "./icons";
 import { StatusChip } from "./status-chip";
@@ -45,6 +45,12 @@ export function UploadCard({
   const pdfs = evidenceSlots(documents);
   const photos = photoSlots(documents);
   const pendingDocs = documents.filter((document) => document.state === "pending");
+  const assignedIds = new Set(
+    requirementSet.requirements.map((requirement) => linkedDocument(requirement.id, documents)?.id),
+  );
+  const additionalDocuments = currentDocuments(documents).filter(
+    (document) => !assignedIds.has(document.id),
+  );
   const pdfsFull = pdfs >= FILE_LIMITS.maxEvidence;
   const photosFull = photos >= FILE_LIMITS.maxPhotos;
 
@@ -247,42 +253,46 @@ export function UploadCard({
           {error}
         </p>
       ) : null}
-      {pendingDocs.some(
-        (document) =>
-          !requirementSet.requirements.some(
-            (requirement) => linkedDocument(requirement.id, documents)?.id === document.id,
-          ),
-      ) ? (
-        <ul className="divide-y divide-line border-t border-line">
-          {pendingDocs
-            .filter(
-              (document) =>
-                !requirementSet.requirements.some(
-                  (requirement) => linkedDocument(requirement.id, documents)?.id === document.id,
-                ),
-            )
-            .map((document) => (
+      {additionalDocuments.length > 0 ? (
+        <details
+          className="border-t border-line"
+          open={additionalDocuments.some((document) => document.state === "pending")}
+        >
+          <summary className="cursor-pointer px-5 py-3 text-[13px] font-medium">
+            Additional files{" "}
+            <span className="ml-2 font-normal text-muted">{additionalDocuments.length}</span>
+          </summary>
+          <p className="meta px-5 pb-3 text-muted">
+            Photos are reference only. PDF documents are included in the assessment.
+          </p>
+          <ul className="divide-y divide-line">
+            {additionalDocuments.map((document) => (
               <li
                 key={document.id}
-                className="flex flex-wrap items-center justify-between gap-2 px-4 py-2"
+                className="flex flex-wrap items-center justify-between gap-3 px-5 py-3"
               >
-                <span className="min-w-0 text-[13px] break-all">
-                  {document.filename}
-                  <span className="meta ml-2 font-sans text-muted">
-                    {formatBytes(document.sizeBytes)} · waiting
-                  </span>
-                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="break-all text-[13px]">{document.filename}</p>
+                  <p className="mt-1 text-xs text-muted">
+                    {document.kind === "photo" ? "Reference photo" : "PDF document"} ·{" "}
+                    {formatBytes(document.sizeBytes)}
+                    {document.state === "pending" ? " · Ready to assess" : ""}
+                  </p>
+                </div>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
-                  onClick={() => onRemovePending(document.id)}
+                  onClick={() =>
+                    document.state === "pending" ? onRemovePending(document.id) : pick(document.id)
+                  }
                 >
-                  Undo
+                  {document.state === "pending" ? "Undo" : "Replace"}
                 </Button>
               </li>
             ))}
-        </ul>
+          </ul>
+        </details>
       ) : null}
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line px-5 py-4">
         <p className="meta text-muted">
@@ -302,9 +312,7 @@ export function UploadCard({
 }
 
 function linkedDocument(requirementId: string, documents: readonly ProductDocument[]) {
-  const usable = documents.filter(
-    (document) => document.state !== "inactive" && document.kind === "evidence",
-  );
+  const usable = currentDocuments(documents).filter((document) => document.kind === "evidence");
   const matches = (document: ProductDocument) =>
     document.requirementId === requirementId ||
     matchesRequirement(requirementId, document) ||

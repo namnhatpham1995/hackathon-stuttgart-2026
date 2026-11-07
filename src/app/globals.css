@@ -42,6 +42,12 @@
   --banner: oklch(0.9712 0.03564 89.44);
   --banner-ink: oklch(0.51049 0.13047 52.469);
   --banner-border: oklch(0.65807 0.17084 51.298);
+
+  --neutral: oklch(0.19041 0.03811 247.91 / 0.05882);
+  --neutral-hover: oklch(0.17329 0.0136 159.534 / 0.14118);
+  --neutral-pressed: oklch(0.17266 0.03915 266.122 / 0.2902);
+  --subtle-hover: oklch(0.19041 0.03811 247.91 / 0.05882);
+  --subtle-pressed: oklch(0.17329 0.0136 159.534 / 0.14118);
 }
 
 :root[data-theme="dark"] {
@@ -82,6 +88,12 @@
   --banner: oklch(0.30526 0.03018 64.191);
   --banner-ink: oklch(0.85433 0.16631 88.882);
   --banner-border: oklch(0.73403 0.17231 58.905);
+
+  --neutral: oklch(0.8547 0.0151 286.076 / 0.07059);
+  --neutral-hover: oklch(0.92223 0.01893 282.752 / 0.12157);
+  --neutral-pressed: oklch(0.93479 0.01807 272.307 / 0.25098);
+  --subtle-hover: oklch(0.8547 0.0151 286.076 / 0.07059);
+  --subtle-pressed: oklch(0.92223 0.01893 282.752 / 0.12157);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -123,6 +135,12 @@
     --banner: oklch(0.30526 0.03018 64.191);
     --banner-ink: oklch(0.85433 0.16631 88.882);
     --banner-border: oklch(0.73403 0.17231 58.905);
+
+    --neutral: oklch(0.8547 0.0151 286.076 / 0.07059);
+    --neutral-hover: oklch(0.92223 0.01893 282.752 / 0.12157);
+    --neutral-pressed: oklch(0.93479 0.01807 272.307 / 0.25098);
+    --subtle-hover: oklch(0.8547 0.0151 286.076 / 0.07059);
+    --subtle-pressed: oklch(0.92223 0.01893 282.752 / 0.12157);
   }
 }
 
@@ -537,14 +555,17 @@ textarea {
 
 /* Bind the SDK's semantic roles to TradeReady's existing light and dark tokens. */
 :root {
+  --ds-font-family-body: var(--font-sans);
+  --ds-font-body: normal 400 14px/20px var(--font-sans);
+  --ds-font-body-small: normal 400 12px/16px var(--font-sans);
   --ds-text: var(--ink);
   --ds-text-subtle: var(--muted);
   --ds-text-selected: var(--selected-ink);
   --ds-border: var(--line);
   --ds-border-selected: var(--selected-ink);
   --ds-border-focused: var(--focus);
-  --ds-background-neutral-subtle-hovered: var(--paper);
-  --ds-background-neutral-subtle-pressed: var(--selected);
+  --ds-background-neutral-subtle-hovered: var(--subtle-hover);
+  --ds-background-neutral-subtle-pressed: var(--subtle-pressed);
 }
 
 .theme-disc {
@@ -576,9 +597,9 @@ textarea {
   --ds-background-brand-bold-hovered: var(--accent-hover);
   --ds-background-brand-bold-pressed: var(--accent-hover);
   --ds-text-inverse: var(--accent-ink);
-  --ds-background-neutral: var(--paper);
-  --ds-background-neutral-hovered: var(--line);
-  --ds-background-neutral-pressed: var(--line);
+  --ds-background-neutral: var(--neutral);
+  --ds-background-neutral-hovered: var(--neutral-hover);
+  --ds-background-neutral-pressed: var(--neutral-pressed);
   --ds-background-disabled: var(--paper);
   --ds-text-disabled: var(--muted);
   --ds-radius-small: 4px;
@@ -593,4 +614,20 @@ textarea {
 }
 .ads-button-sm > button {
   min-height: 32px;
+}
+
+:root {
+  --ds-text-success-bolder: var(--documented-ink);
+  --ds-text-accent-green-bolder: var(--documented-ink);
+  --ds-text-danger-bolder: var(--mismatch-ink);
+  --ds-text-accent-red-bolder: var(--mismatch-ink);
+  --ds-text-warning-bolder: var(--expired-ink);
+  --ds-text-accent-yellow-bolder: var(--expired-ink);
+  --ds-text-accent-orange-bolder: var(--missing-ink);
+  --ds-text-information-bolder: var(--review-ink);
+  --ds-text-accent-blue-bolder: var(--review-ink);
+  --ds-icon-success: var(--documented-ink);
+  --ds-icon-danger: var(--mismatch-ink);
+  --ds-icon-warning: var(--expired-ink);
+  --ds-icon-information: var(--review-ink);
 }

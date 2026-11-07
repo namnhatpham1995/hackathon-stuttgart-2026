@@ -7,8 +7,8 @@ import { createProduct } from "@/app/workspace/actions";
 import { Button } from "@/components/ui/button";
 import { Field, TextArea } from "@/components/ui/field";
 
-import type { WorkspaceProduct } from "./contract";
-import { listedFixtures } from "./fixtures";
+import type { SupplierProfile, WorkspaceProduct } from "./contract";
+import { fixtureById, listedFixtures } from "./fixtures";
 import { ArrowIcon, DocumentIcon, PlusIcon } from "./icons";
 import { PageHeader } from "./page-chrome";
 import { type FieldErrors, fieldErrors, focusFirstInvalid, profileSchema } from "./schemas";
@@ -60,6 +60,7 @@ export function WorkspaceHome() {
 
       {creating ? (
         <Onboarding
+          initialProfile={products.find((product) => !fixtureById(product.id))?.profile}
           onCancel={() => setCreating(false)}
           onCreated={(product) => {
             writeProduct(product);
@@ -193,16 +194,26 @@ function openItems(product: WorkspaceProduct) {
 }
 
 function Onboarding({
+  initialProfile,
   onCancel,
   onCreated,
 }: {
+  initialProfile?: SupplierProfile;
   onCancel: () => void;
   onCreated: (product: WorkspaceProduct) => void;
 }) {
   const router = useRouter();
   const heading = useRef<HTMLHeadingElement>(null);
-  const [step, setStep] = useState<1 | 2>(1);
-  const [profile, setProfile] = useState<Record<string, string>>({});
+  const [step, setStep] = useState<1 | 2>(initialProfile ? 2 : 1);
+  const [profile, setProfile] = useState<Record<string, string>>(
+    initialProfile
+      ? {
+          ...initialProfile,
+          capabilities: initialProfile.capabilities.join(", "),
+          supplierName: initialProfile.companyName,
+        }
+      : {},
+  );
   const [errors, setErrors] = useState<FieldErrors>({});
   const [pending, setPending] = useState(false);
 
@@ -212,6 +223,10 @@ function Onboarding({
     focusedStep.current = step;
     heading.current?.focus();
   }, [step]);
+
+  useEffect(() => {
+    focusFirstInvalid(errors, step === 1 ? profileOrder : draftOrder);
+  }, [errors, step]);
 
   function read(form: HTMLFormElement) {
     const data = new FormData(form);
@@ -231,25 +246,32 @@ function Onboarding({
       if (!parsed.success) {
         const next = fieldErrors(parsed.error);
         setErrors(next);
-        focusFirstInvalid(next, profileOrder);
         return;
       }
-      setProfile(values);
+      setProfile({ ...values, supplierName: values.supplierName || parsed.data.companyName });
       setErrors({});
       setStep(2);
       return;
     }
     setPending(true);
-    const result = await createProduct({ ...profile, ...values });
-    setPending(false);
-    if (!result.ok) {
-      setErrors(result.errors);
-      focusFirstInvalid(result.errors, [...profileOrder, ...draftOrder]);
-      if (profileOrder.some((key) => result.errors[key])) setStep(1);
-      return;
+    setProfile(values);
+    setErrors({});
+    try {
+      const result = await createProduct({ ...profile, ...values });
+      if (!result.ok) {
+        setErrors(result.errors);
+        if (profileOrder.some((key) => result.errors[key])) setStep(1);
+        return;
+      }
+      onCreated(result.product);
+      router.push(`/workspace/${result.product.id}`);
+    } catch {
+      setErrors({
+        form: "The product could not be created. Your entries are still here. Try again.",
+      });
+    } finally {
+      setPending(false);
     }
-    onCreated(result.product);
-    router.push(`/workspace/${result.product.id}`);
   }
 
   return (
@@ -265,64 +287,112 @@ function Onboarding({
             : "These fields start as entered by you. You can change them later."}
         </p>
       </div>
-      {step === 1 ? (
-        <>
-          <Field
-            label="Company"
-            name="companyName"
-            defaultValue={profile.companyName}
-            error={errors.companyName}
-          />
-          <Field
-            label="Country"
-            name="country"
-            defaultValue={profile.country}
-            error={errors.country}
-          />
-          <Field
-            label="Product category"
-            name="productCategory"
-            defaultValue={profile.productCategory}
-            error={errors.productCategory}
-          />
-          <TextArea
-            label="Capabilities"
-            name="capabilities"
-            hint="Separate capabilities with commas."
-            defaultValue={profile.capabilities}
-            error={errors.capabilities}
-          />
-          <Field
-            label="Target market"
-            name="targetMarket"
-            defaultValue={profile.targetMarket}
-            error={errors.targetMarket}
-          />
-        </>
-      ) : (
-        <>
-          <Field label="Product name" name="name" error={errors.name} />
-          <Field label="Supplier" name="supplierName" error={errors.supplierName} />
-          <Field label="Part number" name="partNumber" mono error={errors.partNumber} />
-          <Field label="Revision" name="revision" mono error={errors.revision} />
-          <Field label="Material" name="material" error={errors.material} />
-          <Field label="Packaging" name="packaging" error={errors.packaging} />
-        </>
-      )}
-      <div className="flex flex-wrap gap-3">
-        {step === 2 ? (
-          <Button type="button" variant="secondary" onClick={() => setStep(1)}>
-            Back
-          </Button>
+      {errors.form ? (
+        <p role="alert" className="text-sm text-danger">
+          {errors.form}
+        </p>
+      ) : null}
+      <fieldset key={step} disabled={pending} className="space-y-5">
+        {step === 1 ? (
+          <>
+            <Field
+              label="Company"
+              name="companyName"
+              defaultValue={profile.companyName}
+              error={errors.companyName}
+            />
+            <Field
+              label="Country"
+              name="country"
+              defaultValue={profile.country}
+              error={errors.country}
+            />
+            <Field
+              label="Product category"
+              name="productCategory"
+              defaultValue={profile.productCategory}
+              error={errors.productCategory}
+            />
+            <TextArea
+              label="Capabilities"
+              name="capabilities"
+              hint="Separate capabilities with commas."
+              defaultValue={profile.capabilities}
+              error={errors.capabilities}
+            />
+            <Field
+              label="Target market"
+              name="targetMarket"
+              defaultValue={profile.targetMarket}
+              error={errors.targetMarket}
+            />
+          </>
         ) : (
-          <Button type="button" variant="secondary" onClick={onCancel}>
-            Cancel
-          </Button>
+          <>
+            <Field
+              label="Product name"
+              name="name"
+              defaultValue={profile.name}
+              error={errors.name}
+            />
+            <Field
+              label="Supplier"
+              name="supplierName"
+              defaultValue={profile.supplierName}
+              error={errors.supplierName}
+            />
+            <Field
+              label="Part number"
+              name="partNumber"
+              defaultValue={profile.partNumber}
+              mono
+              error={errors.partNumber}
+            />
+            <Field
+              label="Revision"
+              name="revision"
+              defaultValue={profile.revision}
+              mono
+              error={errors.revision}
+            />
+            <Field
+              label="Material"
+              name="material"
+              defaultValue={profile.material}
+              error={errors.material}
+            />
+            <Field
+              label="Packaging"
+              name="packaging"
+              defaultValue={profile.packaging}
+              error={errors.packaging}
+            />
+          </>
         )}
-        <Button type="submit" pending={pending}>
-          {step === 1 ? "Continue" : "Create product"}
-        </Button>
-      </div>
+        <div className="flex flex-wrap gap-3">
+          {step === 2 ? (
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={pending}
+              onClick={(event) => {
+                const form = event.currentTarget.form;
+                if (form) setProfile(read(form));
+                setStep(1);
+              }}
+            >
+              Back
+            </Button>
+          ) : (
+            <Button type="button" variant="secondary" disabled={pending} onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" pending={pending}>
+            {step === 1 ? "Continue" : "Create product"}
+          </Button>
+        </div>
+      </fieldset>
     </form>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import type { WorkspaceProduct } from "./contract";
 import { ReportShare } from "@/components/connections/report-share";
 import { ReportView } from "./report-view";
@@ -20,11 +21,15 @@ export function ReportScreen({
   const [ready, setReady] = useState(Boolean(initial));
 
   useEffect(() => {
+    if (readOnly) {
+      setProduct(initial);
+      setReady(true);
+      return;
+    }
     const saved = readProduct(productId);
-    if (saved?.result) setProduct(saved);
-    else if (!initial) setProduct(saved);
+    setProduct(saved?.result ? saved : (initial ?? saved));
     setReady(true);
-  }, [initial, productId]);
+  }, [initial, productId, readOnly]);
 
   if (!ready) {
     return (
@@ -39,9 +44,15 @@ export function ReportScreen({
       <section className="max-w-xl space-y-3">
         <h1 className="page-title">Evidence report</h1>
         <p className="text-muted">
-          No report is stored for this product. Open the product, add documents, and choose Upload
-          and assess.
+          {readOnly
+            ? "There is no shared report to display for this product."
+            : "No report is stored for this product. Return to your products and add the requested documents."}
         </p>
+        {readOnly ? null : (
+          <Button href="/workspace" variant="secondary">
+            Back to products
+          </Button>
+        )}
       </section>
     );
   }

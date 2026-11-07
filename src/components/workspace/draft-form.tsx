@@ -21,6 +21,7 @@ export function DraftForm({
   const [errors, setErrors] = useState<FieldErrors>({});
   const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [changes, setChanges] = useState<Record<string, string>>({});
   const fields = product.fields;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -29,87 +30,117 @@ export function DraftForm({
     const form = new FormData(event.currentTarget);
     const input = Object.fromEntries(order.map((key) => [key, String(form.get(key) ?? "")]));
     setPending(true);
-    const result = await validateDraft(input);
-    setPending(false);
-    if (!result.ok) {
-      setErrors(result.errors);
-      focusFirstInvalid(result.errors, order);
-      return;
+    try {
+      const result = await validateDraft(input);
+      if (!result.ok) {
+        setErrors(result.errors);
+        focusFirstInvalid(result.errors, order);
+        return;
+      }
+      setErrors({});
+      const next: WorkspaceProduct = {
+        ...product,
+        name: result.values.name,
+        fields: {
+          supplierName: keepOrigin(fields.supplierName, result.values.supplierName),
+          partNumber: keepOrigin(fields.partNumber, result.values.partNumber),
+          revision: keepOrigin(fields.revision, result.values.revision),
+          material: keepOrigin(fields.material, result.values.material),
+          packaging: keepOrigin(fields.packaging, result.values.packaging),
+        },
+      };
+      onSaved(next);
+      setChanges({});
+      setSaved(true);
+    } catch {
+      setErrors({ form: "The draft could not be saved. Your entries are still here. Try again." });
+    } finally {
+      setPending(false);
     }
-    setErrors({});
-    const next: WorkspaceProduct = {
-      ...product,
-      name: result.values.name,
-      fields: {
-        supplierName: keepOrigin(fields.supplierName, result.values.supplierName),
-        partNumber: keepOrigin(fields.partNumber, result.values.partNumber),
-        revision: keepOrigin(fields.revision, result.values.revision),
-        material: keepOrigin(fields.material, result.values.material),
-        packaging: keepOrigin(fields.packaging, result.values.packaging),
-      },
-    };
-    onSaved(next);
-    setSaved(true);
+  }
+
+  function originBadge(name: keyof ProductFields) {
+    const previous = fields[name];
+    if (!previous && changes[name] === undefined) return null;
+    const current = keepOrigin(previous, changes[name] ?? previous?.value ?? "");
+    return <OriginBadge origin={current.origin} />;
   }
 
   return (
-    <form id="product-draft" className="space-y-4" onSubmit={(event) => void onSubmit(event)}>
+    <form
+      id="product-draft"
+      className="space-y-4"
+      onSubmit={(event) => void onSubmit(event)}
+      onChange={(event) => {
+        const input = event.target;
+        if (!(input instanceof HTMLInputElement)) return;
+        setSaved(false);
+        setChanges((current) => ({ ...current, [input.name]: input.value }));
+      }}
+    >
       <div className="space-y-1">
         <h2 className="section-title">Product draft</h2>
         <p className="text-sm text-muted">
           Each value records who entered it. Assistant and document values stay editable.
         </p>
       </div>
-      <Field label="Product name" name="name" defaultValue={product.name} error={errors.name} />
-      <Field
-        label="Supplier"
-        name="supplierName"
-        defaultValue={fields.supplierName?.value ?? ""}
-        error={errors.supplierName}
-        aside={fields.supplierName ? <OriginBadge origin={fields.supplierName.origin} /> : null}
-      />
-      <Field
-        label="Part number"
-        name="partNumber"
-        mono
-        defaultValue={fields.partNumber?.value ?? ""}
-        error={errors.partNumber}
-        aside={fields.partNumber ? <OriginBadge origin={fields.partNumber.origin} /> : null}
-      />
-      <Field
-        label="Revision"
-        name="revision"
-        mono
-        defaultValue={fields.revision?.value ?? ""}
-        error={errors.revision}
-        aside={fields.revision ? <OriginBadge origin={fields.revision.origin} /> : null}
-      />
-      <Field
-        label="Material"
-        name="material"
-        defaultValue={fields.material?.value ?? ""}
-        error={errors.material}
-        aside={fields.material ? <OriginBadge origin={fields.material.origin} /> : null}
-      />
-      <Field
-        label="Packaging"
-        name="packaging"
-        defaultValue={fields.packaging?.value ?? ""}
-        error={errors.packaging}
-        aside={fields.packaging ? <OriginBadge origin={fields.packaging.origin} /> : null}
-      />
-      <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" pending={pending}>
-          Save draft
-        </Button>
-        {saved ? (
-          <p role="status" className="text-sm text-muted">
-            Draft saved in this browser.
-          </p>
-        ) : (
-          <p className="text-sm text-muted">Not saved until you choose Save draft.</p>
-        )}
-      </div>
+      {errors.form ? (
+        <p role="alert" className="text-sm text-danger">
+          {errors.form}
+        </p>
+      ) : null}
+      <fieldset disabled={pending} className="space-y-4">
+        <Field label="Product name" name="name" defaultValue={product.name} error={errors.name} />
+        <Field
+          label="Supplier"
+          name="supplierName"
+          defaultValue={fields.supplierName?.value ?? ""}
+          error={errors.supplierName}
+          aside={originBadge("supplierName")}
+        />
+        <Field
+          label="Part number"
+          name="partNumber"
+          mono
+          defaultValue={fields.partNumber?.value ?? ""}
+          error={errors.partNumber}
+          aside={originBadge("partNumber")}
+        />
+        <Field
+          label="Revision"
+          name="revision"
+          mono
+          defaultValue={fields.revision?.value ?? ""}
+          error={errors.revision}
+          aside={originBadge("revision")}
+        />
+        <Field
+          label="Material"
+          name="material"
+          defaultValue={fields.material?.value ?? ""}
+          error={errors.material}
+          aside={originBadge("material")}
+        />
+        <Field
+          label="Packaging"
+          name="packaging"
+          defaultValue={fields.packaging?.value ?? ""}
+          error={errors.packaging}
+          aside={originBadge("packaging")}
+        />
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="submit" pending={pending}>
+            Save draft
+          </Button>
+          {saved ? (
+            <p role="status" className="text-sm text-muted">
+              Draft saved in this browser.
+            </p>
+          ) : (
+            <p className="text-sm text-muted">Choose Save draft to keep your changes.</p>
+          )}
+        </div>
+      </fieldset>
     </form>
   );
 }
