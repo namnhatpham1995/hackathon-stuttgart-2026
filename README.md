@@ -6,7 +6,7 @@ TradeReady turns a supplier's documents into a source-cited evidence report for 
 
 This repository is the Stuttgart hackathon build for 2026-11-07 (submission 16:45 Europe/Berlin). The paragraph above is the product. The sections below say what `main` actually does on that date, and what is still open.
 
-Live app (pages and API): <https://exportready-production.up.railway.app> (`GET /api/health` returns `{"ok":true}`).
+Live app (pages and API): <https://tradeready-production.up.railway.app> (`GET /api/health` returns `{"ok":true}`).
 The earlier Vercel front end, <https://tradeready-eu.vercel.app>, can no longer be redeployed on the free plan, so it may lag behind `main`. Use the Railway URL.
 
 The public home page is still the starter landing. `/workspace` has no page on `main`, so the product screens are not in this deploy. See [In progress](#in-progress).
@@ -120,8 +120,8 @@ Copy new keys into `src/env.ts` and `.env.example` only. Never commit `.env`.
 
 Railway is the public site: it serves pages and `/api` from `main`. Vercel was the front end until its free deploy limit stopped new deploys on 2026-11-07. Follow [docs/deploy.md](docs/deploy.md) to recreate them.
 
-- **Railway** (`exportready-production.up.railway.app`, the public URL): Node 22, `pnpm build`, pre-deploy `pnpm db:migrate`, `pnpm start`, healthcheck `GET /api/health`. Private `DATABASE_URL`. Gemini and Brevo keys live here.
-- **Vercel** (`tradeready-eu.vercel.app`, legacy, no new deploys): build `node scripts/vercel-build.mjs` (build only, no migrate). `BACKEND_URL` is the Railway origin. `DATABASE_URL` is Railway's public Postgres URL. `BETTER_AUTH_SECRET` matches Railway. `BETTER_AUTH_URL` and `APP_BASE_URL` are the Vercel origin.
+- **Railway** (`tradeready-production.up.railway.app`, the public URL): Node 22, `pnpm build`, pre-deploy `pnpm db:migrate`, `pnpm start`, healthcheck `GET /api/health`. Private `DATABASE_URL`. Gemini and Brevo keys live here.
+- **Vercel** (`tradeready-eu.vercel.app`, legacy, no new deploys): build `node scripts/vercel-build.mjs` (build only, no migrate). `BACKEND_URL` is the Railway origin. `DATABASE_URL` is Railway's public Postgres URL. `BETTER_AUTH_SECRET` matches Railway. Railway's `BETTER_AUTH_URL` and `APP_BASE_URL` are the Railway origin, so sign-in works only on the Railway URL.
 
 Rollback is a Railway redeploy of the previous successful deployment, and a Vercel Promote of the previous production deployment. Migrations are additive.
 
