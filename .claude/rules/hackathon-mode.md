@@ -107,3 +107,80 @@ Do not archive this change until after submission. The roadmap reads its `tasks.
 - Session checks: every protected page, route handler and server action checks the session with
   `requireSession()` or `auth.api.getSession()`.
 - One migration pull request at a time.
+
+## Worker brief
+
+The controller copies the template, fills it from the lane table in this file, and sends that
+block as the worker's assignment. Filling group 7 does not require `design.md`, `tasks.md` or
+any other file: branch, owned files, needs, tests and review are all in the table below.
+
+Needs are the groups that must already be on `main`. Review "yes" means one
+`independent-pr-reviewer` pass (Opus) and at most one fix round. Review "no" means the
+controller reads the diff. Tests are the only tests that group adds. "None named" means the
+group's tasks name no new test file.
+
+```text
+Group: <n>
+Branch: <branch>
+Owned files: <paths>
+Needs: <groups already on main, or none>
+Tests to add: <from the lane table>
+Review: yes | no
+Stop when the PR is ready and the hook is green. Do not merge.
+```
+
+Every brief also includes this fixed line, which is the same for every group: edit only the
+owned files, plus that group's own lines in
+`openspec/changes/exportready-hackathon-build/tasks.md`.
+
+### Filled for group 7
+
+```text
+Group: 7
+Branch: feat/rules-engine
+Owned files: src/lib/assessment/rules.ts, src/lib/assessment/citations.ts (+ tests)
+Needs: 3
+Tests to add: ISO certificate valid to 2026-08-01, assessed 2026-11-07, gives EXPIRED;
+  revision A vs B gives MISMATCH; wrong part never supports (pure).
+  Quote not on the cited page is dropped and the finding becomes NEEDS_REVIEW;
+  unknown document ID is dropped (pure).
+Review: yes
+Stop when the PR is ready and the hook is green. Do not merge.
+```
+
+### Lane table
+
+| Group | Branch | Owns | Needs | Review | Tests to add |
+|---|---|---|---|---|---|
+| 1 | `chore/hackathon-mode` | `.claude/rules/hackathon-mode.md`, `.claude/rules/CLAUDE.md` (one index line) | - | no | none named |
+| 2 | `feat/live-roadmap` | `roadmap/**`, `vitest.config.ts` (include line), `biome.json` (includes) | 1 | no | Roadmap parser: ticks, Blocked notes, heading metadata, status rules (pure) |
+| 3 | `feat/assessment-contract` | `package.json`, `pnpm-lock.yaml`, `src/env.ts`, `.env.example`, `src/db/schema/exportready.ts`, `src/db/schema/index.ts`, `drizzle/**`, `src/proxy.ts`, `next.config.ts`, `vitest.golden.config.ts`, `src/lib/assessment/types.ts`, `src/lib/assessment/requirement-sets.ts`, `src/db/schema/exportready.test.ts`, and the contract stubs below | 1 | yes | none named |
+| 4 | `feat/demo-fixtures` | `fixtures/exportready/**`, `scripts/make-fixtures.ts` | 1 | no | none named |
+| 5 | `feat/pdf-text` | `src/lib/assessment/pdf-text.ts` (+ test) | 3, 4 | no | Fixture PDFs give page-labelled text containing their key values; a PDF with no text is flagged empty (pure, reads `fixtures/`) |
+| 6 | `feat/gemini-extraction` | `src/lib/assessment/extract-facts.ts`, `src/lib/assessment/gemini.ts` | 3, 4 | no | none named |
+| 7 | `feat/rules-engine` | `src/lib/assessment/rules.ts`, `src/lib/assessment/citations.ts` (+ tests) | 3 | yes | ISO certificate valid to 2026-08-01, assessed 2026-11-07, gives EXPIRED; revision A vs B gives MISMATCH; wrong part never supports (pure). Quote not on the cited page is dropped and the finding becomes NEEDS_REVIEW; unknown document ID is dropped (pure) |
+| 8 | `feat/document-upload` | `src/lib/products/**`, `src/lib/documents/**`, `src/app/api/products/**` | 3 | no | none named |
+| 9 | `feat/assessment-jobs` | `src/lib/jobs/**`, `src/app/api/jobs/**` (+ tests) | 3 | yes | Same snapshot started twice returns one job; a direct duplicate insert is rejected by the unique index (real PostgreSQL). Another user's job returns 404 (real PostgreSQL) |
+| 10 | `feat/completion-email` | `src/lib/notify/**` | 3 | no | none named |
+| 11 | `feat/workspace-ui` | `src/app/workspace/**`, `src/components/workspace/**`, `src/app/page.tsx` (link) | 3 | no | Report summary: dimension counts and an action plan for the baseline and the corrected findings (pure) |
+| 12 | `chore/production-deploy` | `scripts/vercel-build.mjs`, `docs/deploy.md` | 3 | no | none named |
+| 13 | `feat/assessment-integration` | `src/lib/assessment/pipeline.ts`, `src/lib/assessment/*.golden.ts` | 5-11 | yes | Golden baseline: documents 01-04 match the answer key. Golden correction: replacing 03 with 05 flips only R3. Both run with `pnpm test:golden` by hand, not in `pnpm verify` |
+| 14 | `feat/workspace-assistant` | `src/lib/agent/**`, `src/components/assistant/**`, `src/app/api/assistant/**` | 13 | no | none named |
+| 15 | `feat/spoken-replies` | `src/components/voice/**`, `src/app/api/speech/**`, one mount line in `assistant-panel.tsx` | 14 merged | no | none named |
+| 16 | `docs/submission` | `README.md`, `docs/pitch/**` | 13 | no | none named |
+| 17 | `feat/buyer-supplier-connections` | `src/lib/connections/**`, `src/components/connections/**`, `src/app/connections/**` | 8-11 | yes | The buyer sees only the shared result; a third user gets 404; a duplicate connection and a shared status without a result are rejected by the database (real PostgreSQL) |
+
+Contract stubs, created by group 3 and then filled by the lane that owns the folder:
+`src/lib/assessment/pdf-text.ts`, `src/lib/assessment/extract-facts.ts`,
+`src/lib/assessment/gemini.ts`, `src/lib/assessment/rules.ts`,
+`src/lib/assessment/citations.ts`, `src/lib/assessment/pipeline.ts`,
+`src/lib/products/service.ts`, `src/lib/documents/service.ts`, `src/lib/jobs/service.ts`,
+`src/lib/notify/completion-email.ts`, `src/lib/notify/brevo.ts` (`sendBrevoEmail`),
+`src/lib/connections/service.ts`, `src/components/assistant/assistant-panel.tsx`,
+`src/components/connections/connections-nav.tsx`,
+`src/components/connections/product-connections.tsx`,
+`src/components/connections/report-share.tsx`.
+
+A lane that needs a file it does not own does not edit it. It adds a `Blocked:` note, and the
+controller dispatches a small serialized pull request. At most one open pull request may contain
+a migration.
