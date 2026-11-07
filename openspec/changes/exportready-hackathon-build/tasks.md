@@ -220,6 +220,15 @@ On production the TC01 assessment failed twice with Gemini "503 This model is cu
   - Note: no Claude key locally, so the live call is checked on production in 21.3.
 - [ ] 21.3 (post-merge) Set `ANTHROPIC_API_KEY` on Railway, rerun the TC01 product's assessment on production and confirm six DOCUMENTED findings
 
+## 22. Retry a failed assessment · wave 4 · M4 · branch fix/retry-failed-assessment
+
+A run that failed without a result (for example the Gemini 503 on TC01) locked its set of documents: starting again returned the same failed job, although the message tells the supplier to start again. Owns `src/lib/jobs/service.ts` and `src/lib/jobs/jobs.test.ts`.
+
+- [x] 22.1 Starting a snapshot whose job needs attention and has no result requeues that same job (status, stage, error, attempts and times reset) and schedules the run; a completed job stays as it is; verify `pnpm test src/lib/jobs` (real PostgreSQL)
+- [x] 22.2 Review: one `independent-pr-reviewer` pass
+  - Note: PASS with no findings; the report is posted on PR #40.
+- [ ] 22.3 (post-merge) Start the TC01 product's assessment again on production and confirm it runs
+
 ## Workflow follow-up
 
 - After submission, delete `.claude/rules/hackathon-mode.md` and its index line so the normal rules apply again.
