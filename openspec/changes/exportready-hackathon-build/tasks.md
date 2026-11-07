@@ -63,7 +63,7 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 7. Rules and citation checks · wave 2 · M1 · branch feat/rules-engine
 
-- [ ] 7.1 Implement `validateCitations` in `citations.ts`: drop citations with an unknown document ID or page, or whose whitespace-normalised quote is not on that page; verify `citations.test.ts`: an invented quote and an unknown document ID are dropped and a real quote is kept
+- [x] 7.1 Implement `validateCitations` in `citations.ts`: drop citations with an unknown document ID or page, or whose whitespace-normalised quote is not on that page; verify `citations.test.ts`: an invented quote and an unknown document ID are dropped and a real quote is kept
 - [ ] 7.2 Implement `decideFindings` in `rules.ts` for R1-R5: identity checks (supplier, part) first, then expiry against the assessment date, revision and grade equality, packaging acceptance; MISSING only for a complete set; NEEDS_REVIEW for incomplete sets or findings left without a valid citation; reason and next action per finding; verify `rules.test.ts` with hand-written observations: 2026-08-01 vs 2026-11-07 gives EXPIRED, revision A vs B gives MISMATCH, a wrong part never gives DOCUMENTED, an incomplete set never gives MISSING
 - [ ] 7.3 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
 
