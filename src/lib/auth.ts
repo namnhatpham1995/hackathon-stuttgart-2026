@@ -1,10 +1,13 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { magicLink } from "better-auth/plugins";
 
 import { db } from "@/db/client";
 import * as schema from "@/db/schema/auth";
 import { env } from "@/env";
+
+import { sendMagicLinkEmail } from "./auth/magic-link-email";
 
 /** A social provider is on only when both of its credentials are set in .env. */
 function socialProviders() {
@@ -32,8 +35,15 @@ export const auth = betterAuth({
     requireEmailVerification: false,
   },
   socialProviders: socialProviders(),
-  // Must stay last: lets server actions set the session cookie.
-  plugins: [nextCookies()],
+  // nextCookies() must stay last: it lets server actions set the session cookie.
+  plugins: [
+    magicLink({
+      sendMagicLink: async ({ email, url }) => {
+        await sendMagicLinkEmail({ email, url });
+      },
+    }),
+    nextCookies(),
+  ],
 });
 
 export type Session = typeof auth.$Infer.Session;
