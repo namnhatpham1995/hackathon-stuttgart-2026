@@ -35,7 +35,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 - [x] 3.6 Add every stub file listed in design.md Decision 1 with its final exported signature and a body that throws `not implemented: <name>`, and the four slot components (`assistant-panel.tsx`, `connections-nav.tsx`, `product-connections.tsx`, `report-share.tsx`) rendering nothing; verify `pnpm typecheck` passes and a grep for `not implemented:` lists one stub per lane function
   - Note: Gemini entry point is `callGemini` (structured output or tools). Email template function is `renderCompletionEmail`. `requestEvidence` takes `buyerOrgName` because the user table has no organisation. Document finalise is spelled `finaliseDocuments`.
 - [ ] 3.7 Add `/workspace` and `/connections` to the `src/proxy.ts` matcher; verify a signed-out request to either redirects to `/sign-in`
-- [ ] 3.8 Add `vitest.golden.config.ts` (includes `src/**/*.golden.ts`, loads `.env`, `passWithNoTests`) and a `test:golden` script; add `unpdf` to `serverExternalPackages` in `next.config.ts` only if `next build` needs it; verify `pnpm test:golden` exits 0 and `pnpm build` passes
+- [x] 3.8 Add `vitest.golden.config.ts` (includes `src/**/*.golden.ts`, loads `.env`, `passWithNoTests`) and a `test:golden` script; add `unpdf` to `serverExternalPackages` in `next.config.ts` only if `next build` needs it; verify `pnpm test:golden` exits 0 and `pnpm build` passes
+  - Note: `pnpm build` passed without listing `unpdf` in `serverExternalPackages`. Nothing imports it until group 5.
 - [ ] 3.9 Get one `independent-pr-reviewer` pass (Opus) and fix its blocking findings in one round; verify the review report says PASS for the final head
 
 ## 4. Demo fixtures · wave 1 · M0 · branch feat/demo-fixtures

@@ -12,6 +12,7 @@
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:golden": "vitest run --config vitest.golden.config.ts",
     "verify": "pnpm typecheck && pnpm lint && pnpm test",
     "db:up": "docker compose up -d --wait",
     "db:generate": "drizzle-kit generate",
