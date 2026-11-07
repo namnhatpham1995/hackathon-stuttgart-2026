@@ -95,6 +95,16 @@ describe("workspace assistant", () => {
       "request_replacement",
       "navigate_site",
       "list_products",
+      "search_catalog",
+      "list_my_requests",
+      "list_board",
+      "read_inbox",
+      "close_request",
+      "list_product_connections",
+      "request_evidence",
+      "create_board_request",
+      "respond_to_request",
+      "share_result",
     ]);
   });
 
