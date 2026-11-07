@@ -1,10 +1,9 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db/client";
 import { buyerRequest, product, requestConnection } from "@/db/schema";
-
-import type { SupplierProfile } from "@/lib/assessment/types";
+import { type SupplierProfile, supplierProfileSchema } from "@/lib/assessment/types";
 
 /** Buyer workspace queries. Every function takes the session's `userId` and returns only that
  * buyer's own requests and connections, plus listed products. Results never contain an email
@@ -70,6 +69,97 @@ function blankToNull(value: string | null): string | null {
   if (value === null) return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function containsPattern(query: string): string {
+  return `%${query.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
+}
+
+/** A stored `{}` is not a declared profile yet. Unknown keys are dropped. */
+function declaredProfile(value: unknown): SupplierProfile | null {
+  const parsed = supplierProfileSchema.safeParse(value);
+  if (!parsed.success) return null;
+  return {
+    companyName: parsed.data.companyName,
+    country: parsed.data.country,
+    productCategory: parsed.data.productCategory,
+    capabilities: parsed.data.capabilities,
+    targetMarket: parsed.data.targetMarket,
+  };
+}
+
+async function callerConnections(userId: string, productIds: string[]) {
+  const byProduct = new Map<string, { connectionId: string; status: BuyerConnectionStatus }>();
+  if (productIds.length === 0) return byProduct;
+  const rows = await db
+    .select({
+      connectionId: requestConnection.id,
+      productId: requestConnection.productId,
+      status: requestConnection.status,
+    })
+    .from(requestConnection)
+    .innerJoin(buyerRequest, eq(buyerRequest.id, requestConnection.requestId))
+    .where(
+      and(eq(buyerRequest.buyerUserId, userId), inArray(requestConnection.productId, productIds)),
+    )
+    .orderBy(desc(requestConnection.updatedAt), desc(requestConnection.id));
+  for (const row of rows) {
+    if (byProduct.has(row.productId)) continue;
+    byProduct.set(row.productId, {
+      connectionId: row.connectionId,
+      status: connectionStatusSchema.parse(row.status),
+    });
+  }
+  return byProduct;
+}
+
+async function loadCatalog(
+  userId: string,
+  filters: CatalogSearchInput,
+  productId?: string,
+): Promise<CatalogProduct[]> {
+  const conditions = [eq(product.listed, true), ne(product.userId, userId)];
+  if (productId !== undefined) conditions.push(eq(product.id, productId));
+  if (filters.q) {
+    const pattern = containsPattern(filters.q);
+    const textMatch = or(
+      sql`${product.name} ilike ${pattern}`,
+      sql`${product.fields}->'partNumber'->>'value' ilike ${pattern}`,
+      sql`${product.profile}->>'companyName' ilike ${pattern}`,
+    );
+    if (textMatch) conditions.push(textMatch);
+  }
+  if (filters.productCategory) {
+    conditions.push(sql`${product.profile}->>'productCategory' = ${filters.productCategory}`);
+  }
+  if (filters.country) {
+    conditions.push(sql`${product.profile}->>'country' = ${filters.country}`);
+  }
+  const where = and(...conditions);
+  if (!where) return [];
+
+  const rows = await db
+    .select({
+      productId: product.id,
+      productName: product.name,
+      partNumber: sql<string | null>`${product.fields}->'partNumber'->>'value'`,
+      profile: product.profile,
+    })
+    .from(product)
+    .where(where)
+    .orderBy(asc(product.name), asc(product.id));
+
+  const connections = await callerConnections(
+    userId,
+    rows.map((row) => row.productId),
+  );
+  return rows.map((row) => ({
+    productId: row.productId,
+    productName: row.productName,
+    partNumber: blankToNull(row.partNumber),
+    profile: declaredProfile(row.profile),
+    myConnection: connections.get(row.productId) ?? null,
+  }));
 }
 
 export async function getBuyerOverview(userId: string): Promise<BuyerOverview> {
@@ -170,9 +260,7 @@ export async function searchCatalog(
   userId: string,
   input: CatalogSearchInput,
 ): Promise<CatalogProduct[]> {
-  void userId;
-  void input;
-  throw new Error("not implemented: searchCatalog");
+  return loadCatalog(userId, catalogSearchInput.parse(input));
 }
 
 /** One listed product; null when it is unlisted, unknown or the caller's own. */
@@ -180,9 +268,9 @@ export async function getCatalogProduct(
   userId: string,
   productId: string,
 ): Promise<CatalogProduct | null> {
-  void userId;
-  void productId;
-  throw new Error("not implemented: getCatalogProduct");
+  if (productId.trim().length === 0) return null;
+  const rows = await loadCatalog(userId, {}, productId);
+  return rows[0] ?? null;
 }
 
 /** Closes the caller's own open request; false when it is not theirs or already closed. */
