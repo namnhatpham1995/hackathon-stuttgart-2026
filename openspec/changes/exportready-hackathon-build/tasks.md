@@ -122,12 +122,18 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 13. End-to-end assessment · wave 3 · M2 · branch feat/assessment-integration
 
-- [ ] 13.1 Implement `runAssessment(jobId)` in `pipeline.ts`: claim, set each stage, extract pages, extract facts, validate citations, decide findings, `completeJob`, then `sendCompletionEmail` after commit; on failure `failJob` with an actionable message; verify with 13.2
+- [x] 13.1 Implement `runAssessment(jobId)` in `pipeline.ts`: claim, set each stage, extract pages, extract facts, validate citations, decide findings, `completeJob`, then `sendCompletionEmail` after commit; on failure `failJob` with an actionable message; verify with 13.2
+  - Note: A non-empty `extractFacts` warning marks the result incomplete, the same `complete: false` path as a PDF with no text. `pipeline.test.ts` mocks that path. The live answer-key run is 13.2. The stored assessment date is the Europe/Berlin calendar date. A completion-email error after commit leaves the stored result.
 - [ ] 13.2 Add `assessment.golden.ts`: baseline 01-04 equals the answer key; replacing 03 with 05 flips only R3; the trap file still gives R3 MISMATCH; `empty.pdf` marks the result incomplete; expected values read from `answer-key.json`; verify `pnpm test:golden` passes twice in a row
+  - Blocked: live golden run by controller (needs GEMINI_API_KEY)
 - [ ] 13.3 Tune only the prompt or rules if 13.2 fails, never the answer key; verify `pnpm test:golden` passes
+  - Blocked: live golden run by controller (needs GEMINI_API_KEY)
 - [ ] 13.4 Local click-through: onboard the Lotus Mould profile, create a product, upload 01-04, Upload and assess, see the R3 citation, the dimension summary and three actions, replace 03 with 05, re-assess and see two actions, receive the email; verify each step and that reload shows the stored report
+  - Blocked: needs group 11 (PR #11) merged
 - [ ] 13.5 (post-merge) Production click-through of 13.4, closing the tab during processing and reopening after completion; verify the stored report loads, or record the failure honestly as a note
-- [ ] 13.6 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
+  - Blocked: needs group 11 (PR #11) merged
+- [x] 13.6 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
+  - Note: Round 1 FAIL (R1-1 photos, R1-2 unnamed incomplete files), fixed in one round. Round 2 PASS. The reviewer ran on Grok because Opus was out of usage.
 
 ## 14. Text assistant · wave 4 · M3 · branch feat/workspace-assistant
 
