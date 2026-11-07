@@ -10,6 +10,7 @@ const links = [
   { href: "/connections/requests", label: "Board" },
   { href: "/connections/suppliers", label: "Directory" },
   { href: "/connections/inbox", label: "Inbox" },
+  { href: "/buyer", label: "Buyer workspace" },
 ] as const;
 
 export function ConnectionsNav() {
