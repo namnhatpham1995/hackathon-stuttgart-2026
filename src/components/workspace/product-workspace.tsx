@@ -10,6 +10,7 @@ import {
 } from "@/app/workspace/actions";
 import { ProductConnections } from "@/components/connections/product-connections";
 import { Button } from "@/components/ui/button";
+import { checklistFor } from "./checklists";
 import type { WorkspaceProduct } from "./contract";
 import { rejectionForFile } from "./documents";
 import { DraftForm } from "./draft-form";
@@ -190,6 +191,7 @@ export function ProductWorkspace({
         requirements v{product.requirementSetVersion}
       </p>
       <UploadCard
+        checklist={checklistFor(product.requirementSetKey, product.requirementSetVersion)}
         documents={product.documents}
         replacing={replacing}
         highlighted={highlighted}

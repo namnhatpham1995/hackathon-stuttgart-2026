@@ -6,6 +6,7 @@ import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 import { AttentionBanner } from "./attention-banner";
+import { checklistFor } from "./checklists";
 import type { AssessmentResult, SupplierProfile, WorkspaceProduct } from "./contract";
 import { ChevronIcon, DocumentIcon } from "./icons";
 import { MetaItem, PageHeader, ProductNav } from "./page-chrome";
@@ -15,7 +16,6 @@ import {
   dimensionSummary,
   documentRequestDraft,
 } from "./report-summary";
-import { requirementNames, requirementSet } from "./requirements";
 import { StatusChip } from "./status-chip";
 
 const evidenceLabels: Record<string, string> = {
@@ -69,6 +69,10 @@ function ReportBody({
   result: AssessmentResult;
   readOnly: boolean;
 }) {
+  const { set: requirementSet, names: requirementNames } = checklistFor(
+    product.requirementSetKey,
+    product.requirementSetVersion,
+  );
   const summary = dimensionSummary(result.findings, requirementSet.requirements);
   const actions = actionPlan(result.findings);
   const draft = documentRequestDraft({

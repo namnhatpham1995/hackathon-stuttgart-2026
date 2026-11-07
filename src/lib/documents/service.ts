@@ -16,7 +16,7 @@ export type DocumentState = (typeof documentStates)[number];
 
 /** 4 MiB. The database check uses the same bound. */
 export const maxDocumentBytes = 4 * 1024 * 1024;
-export const maxActivePdfs = 5;
+export const maxActivePdfs = 8;
 export const maxActivePhotos = 2;
 
 export const documentTooLargeMessage = "This file is over the 4 MB limit";

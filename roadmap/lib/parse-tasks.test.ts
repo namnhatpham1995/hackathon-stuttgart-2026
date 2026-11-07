@@ -84,7 +84,7 @@ test("reads every group heading in the change task list", () => {
   const groups = parseTasks(readFileSync(tasksPath, "utf8"));
 
   expect(groups.map((group) => group.number)).toEqual([
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
   ]);
   expect(groups.find((group) => group.number === 1)?.wave).toBe(0);
   expect(groups.find((group) => group.number === 2)).toMatchObject({

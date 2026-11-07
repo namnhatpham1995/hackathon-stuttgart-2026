@@ -63,7 +63,10 @@ export type EvidenceType =
   | "inspection report"
   | "submitted certificate"
   | "traceability record"
-  | "packaging acceptance";
+  | "packaging acceptance"
+  | "product specification"
+  | "material declaration"
+  | "packaging specification";
 
 export type Citation = {
   documentId: string;
@@ -156,12 +159,13 @@ export type WorkspaceProduct = {
   result: AssessmentResult | null;
 };
 
-export const DEMO_REQUIREMENT_SET_KEY = "neckar-cap-104";
+/** The organisers' TC01 checklist. Products created earlier keep "neckar-cap-104". */
+export const DEMO_REQUIREMENT_SET_KEY = "neckar-cap-104-qualification";
 export const DEMO_REQUIREMENT_SET_VERSION = 1;
 
 export const FILE_LIMITS = {
   maxBytes: 4 * 1024 * 1024,
-  maxEvidence: 5,
+  maxEvidence: 8,
   maxPhotos: 2,
 } as const;
 

@@ -8,8 +8,8 @@ import { AttentionBanner } from "./attention-banner";
 import { FINDING_STATUSES, type ProductDocument } from "./contract";
 import { baselineProduct, longValueProduct } from "./fixtures";
 import { ProgressView } from "./progress-view";
-import { ReportView } from "./report-view";
 import { ReportScreen } from "./report-screen";
+import { ReportView } from "./report-view";
 import { StatusChip } from "./status-chip";
 import { UploadCard } from "./upload-card";
 
@@ -117,7 +117,7 @@ export function StatesGallery() {
           replacing={null}
           highlighted={false}
           pending={false}
-          error="This product already has 5 PDFs. Replace one before adding another. The file was not added."
+          error="This product already has 8 PDFs. Replace one before adding another. The file was not added."
           onAdd={() => undefined}
           onStartReplace={() => undefined}
           onCancelReplace={() => undefined}
