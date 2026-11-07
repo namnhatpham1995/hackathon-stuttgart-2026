@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act } from "react";
+import { act, StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { subscribeWorkspaceDirective } from "@/components/workspace/workspace-events";
@@ -149,4 +149,22 @@ test("the chat is restored after a remount and is not shown to another user", as
   root = createRoot(container);
   await act(async () => root.render(<AssistantPanel userId="user-b" path="/connections" />));
   expect(container.textContent).not.toContain("Hello back.");
+});
+
+test("a stored chat survives a strict-mode mount", async () => {
+  sessionStorage.setItem(
+    "tradeready-assistant:history:user-a",
+    JSON.stringify([{ id: "m1", role: "user", text: "Earlier question" }]),
+  );
+  await act(async () =>
+    root.render(
+      <StrictMode>
+        <AssistantPanel userId="user-a" path="/buyer" />
+      </StrictMode>,
+    ),
+  );
+  expect(container.textContent).toContain("Earlier question");
+  expect(sessionStorage.getItem("tradeready-assistant:history:user-a")).toContain(
+    "Earlier question",
+  );
 });

@@ -306,14 +306,15 @@ Owns `src/components/assistant/**`, `src/lib/agent/**`, `src/app/api/assistant/*
   - **Spec and design:** already written in `specs/workspace-assistant/spec.md` and design decision 9.
 
   Verify with 26.6
-- [ ] 26.4 Mount the same `AssistantPanel` with an Assistant button in `BuyerShell`, the connections layout and the dashboard page. Apply directives in all of them. A product directive outside `/workspace` goes to `/workspace/<id>/…`.
+- [x] 26.4 Mount the same `AssistantPanel` with an Assistant button in `BuyerShell`, the connections layout and the dashboard page. Apply directives in all of them. A product directive outside `/workspace` goes to `/workspace/<id>/…`.
 
   Verify by hand at 1280 px: workspace product → `/buyer/products` → `/connections/inbox` → reload, with the same chat throughout.
-- [ ] 26.5 Turn the assistant into a non-modal side panel on wide screens that stays open across navigation and leaves the page usable.
+- [x] 26.5 Turn the assistant into a non-modal side panel on wide screens that stays open across navigation and leaves the page usable.
   - **Below 768 px:** it closes after a navigation directive, and the Assistant button reopens it.
   - **Check:** light and dark at 375 px and 1280 px.
 
   Verify by hand.
+  - Note: checked by hand against the worktree dev server (demo user, Gemini not configured so replies are the config notice). 1280 px light and dark: panel is a 400 px side panel, page gets 400 px right padding, chat and open state survive workspace → buyer → connections and a hard load. 375 px light and dark: panel covers the page, no horizontal scroll, close then Assistant button reopens with the chat. Not exercised live: a real model reply with a navigate_site directive closing the panel below 768 px (covered by unit tests).
 - [x] 26.6 Tests (update `assistant.test.ts` and `assistant-panel.test.tsx`, which assume a product):
   - **Panel, product-free:** without a `productId` the panel sends typed text.
   - **Panel, persistence:** after an unmount and remount it shows the stored messages, and another user's key shows none.

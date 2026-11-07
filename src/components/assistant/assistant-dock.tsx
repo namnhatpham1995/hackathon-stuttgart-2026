@@ -38,7 +38,8 @@ export function AssistantDock() {
   const [wide, setWide] = useState(false);
 
   useEffect(() => {
-    setOpen(loadOpen());
+    // A panel left open on a wide screen does not cover a phone-sized page on load.
+    setOpen(loadOpen() && isWide());
     if (typeof window.matchMedia !== "function") return;
     const media = window.matchMedia(WIDE);
     const update = () => setWide(media.matches);

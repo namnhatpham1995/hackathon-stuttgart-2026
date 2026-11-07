@@ -37,7 +37,7 @@ export function AssistantPanel({
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
-  const restored = useRef<string | null>(null);
+  const [restoredFor, setRestoredFor] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [pending, setPending] = useState(false);
   const [muted, setMuted] = useState(true);
@@ -49,11 +49,13 @@ export function AssistantPanel({
   useEffect(() => {
     if (!userId) return;
     setMessages(loadHistory(userId));
-    restored.current = userId;
+    setRestoredFor(userId);
   }, [userId]);
+  // Saves only after the stored chat was read into state, so a first render
+  // with no messages never overwrites it.
   useEffect(() => {
-    if (userId && restored.current === userId) saveHistory(userId, messages);
-  }, [userId, messages]);
+    if (userId && restoredFor === userId) saveHistory(userId, messages);
+  }, [userId, restoredFor, messages]);
   useEffect(() => {
     try {
       setMuted(sessionStorage.getItem(MUTE_KEY) === "1");
