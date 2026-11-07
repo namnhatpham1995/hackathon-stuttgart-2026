@@ -72,7 +72,7 @@ export function rejectionForFile(
     ? documents.filter((document) => document.id !== replacing.id)
     : documents;
   if (classified.kind === "evidence" && evidenceSlots(remaining) >= FILE_LIMITS.maxEvidence) {
-    return "This product already has 5 PDFs. Replace one before adding another. The file was not added.";
+    return `This product already has ${FILE_LIMITS.maxEvidence} PDFs. Replace one before adding another. The file was not added.`;
   }
   if (classified.kind === "photo" && photoSlots(remaining) >= FILE_LIMITS.maxPhotos) {
     return "You can attach 2 photos. They are kept with the product and are not used as evidence. The file was not added.";
