@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { after } from "next/server";
 import { z } from "zod";
 
@@ -183,10 +183,41 @@ export async function startAssessment(userId: string, productId: string): Promis
     )[0];
   if (!row) throw new Error("The assessment job could not be stored.");
 
-  // A finished or failed snapshot stays as it is. A queued one (new, or
-  // still waiting) is the only row a runner may claim.
-  if (row.status === "QUEUED") scheduleAssessmentRun(row.id);
-  return toRecord(row);
+  // A failed run without a result is started again on request, so a passing outage
+  // (a model overloaded, a timeout) does not lock this set of documents for good.
+  const current = row.status === "NEEDS_ATTENTION" && !row.resultId ? await requeue(row) : row;
+
+  // A finished snapshot stays as it is. A queued one (new, retried or still
+  // waiting) is the only row a runner may claim.
+  if (current.status === "QUEUED") scheduleAssessmentRun(current.id);
+  return toRecord(current);
+}
+
+async function requeue(
+  failed: typeof assessmentJob.$inferSelect,
+): Promise<typeof assessmentJob.$inferSelect> {
+  const [requeued] = await db
+    .update(assessmentJob)
+    .set({
+      status: "QUEUED",
+      stage: null,
+      error: null,
+      attempts: 0,
+      startedAt: null,
+      finishedAt: null,
+    })
+    .where(
+      and(
+        eq(assessmentJob.id, failed.id),
+        eq(assessmentJob.status, "NEEDS_ATTENTION"),
+        isNull(assessmentJob.resultId),
+      ),
+    )
+    .returning();
+  if (requeued) return requeued;
+  // Another request requeued it first; report the row as it is now.
+  const [latest] = await db.select().from(assessmentJob).where(eq(assessmentJob.id, failed.id));
+  return latest ?? failed;
 }
 
 /** Claims QUEUED → PROCESSING. Null means another runner already has the job. */
