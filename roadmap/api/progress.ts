@@ -3,7 +3,7 @@
  * it is sent only as a GitHub Authorization header and is removed from every response.
  */
 
-import { buildProgress, type MilestoneDefinition, type OpenPullRequest } from "../lib/parse-tasks";
+import { buildProgress, type MilestoneDefinition, type OpenPullRequest } from "../lib/parse-tasks.js";
 import milestoneFile from "../milestones.json" with { type: "json" };
 
 const GITHUB_OWNER = "namnhatpham1995";
