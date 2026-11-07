@@ -3,10 +3,11 @@
 import Link, { useLinkStatus } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
-
 import { setTheme } from "@/app/workspace/actions";
-import { Button } from "@/components/ui/button";
+import { AssistantDock } from "@/components/assistant/assistant-dock";
+import { clearAssistantHistory } from "@/components/assistant/assistant-history";
 import { BrandMark } from "@/components/ui/brand-mark";
+import { Button } from "@/components/ui/button";
 import { WorkspaceSwitcher } from "@/components/ui/workspace-switcher";
 import { SignOutIcon, ThemeIcon } from "@/components/workspace/icons";
 import { signOut } from "@/lib/auth-client";
@@ -51,6 +52,7 @@ export function BuyerShell({
           <span className="meta hidden text-muted lg:inline">Buyer workspace</span>
           <div className="ml-auto flex items-center gap-2">
             <span className="meta hidden max-w-40 truncate text-muted sm:inline">{user.name}</span>
+            <AssistantDock />
             <ThemeToggle />
             <div className="sm:hidden">
               <SignOut compact />
@@ -169,6 +171,7 @@ function SignOut({ compact = false }: { compact?: boolean }) {
       pending={pending}
       onClick={async () => {
         setPending(true);
+        clearAssistantHistory();
         await signOut();
         router.push("/");
         router.refresh();

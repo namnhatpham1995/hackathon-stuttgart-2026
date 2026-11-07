@@ -1,3 +1,4 @@
+import { AssistantDock } from "@/components/assistant/assistant-dock";
 import { BrandMark } from "@/components/ui/brand-mark";
 import { Button } from "@/components/ui/button";
 import { requireSession } from "@/lib/session";
@@ -12,7 +13,10 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-2 font-semibold">
           <BrandMark /> TradeReady
         </div>
-        <SignOutButton />
+        <div className="flex items-center gap-2">
+          <AssistantDock />
+          <SignOutButton />
+        </div>
       </header>
       <div className="space-y-2">
         <h1 className="page-title">Choose your workspace</h1>
