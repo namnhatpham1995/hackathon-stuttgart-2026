@@ -63,14 +63,15 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
   - Note: one call plus two retries (1s, then 2s) for timeout, network, 408, 429 and 5xx. Each attempt aborts at 60s. A missing key throws `GEMINI_API_KEY is not set. Add it to .env before using this feature (see .env.example).` before any attempt. Tool calls disable automatic function calling and return the model content unchanged.
 - [x] 6.2 Implement `extractFacts` in `extract-facts.ts`: the plan's extraction instruction, requirements and page-labelled text in separate fields, structured output schema for observations only (no statuses), temperature 0, Zod-parse the response; verify `pnpm typecheck`
   - Note: requirements (id, statement, field names) and page-labelled text are separate JSON fields. Expected values are not sent. Null values with an empty quote are dropped. Field names: supplierName, partNumber, revision, material, grade, scope, validityEnd (YYYY-MM-DD), resinBatch, productionLot, shipment, packagingCode, packagingRevision, accepted (`yes` or null).
-- [ ] 6.3 Live smoke on fixtures 01-04 with a one-off `tsx` command (not committed): paste the observations into the PR description; verify doc 03 yields revision `A` with an exact quote and doc 02 yields validity end `2026-08-01`
-  - Blocked: needs GEMINI_API_KEY for the live check. Run an uncommitted tsx command: `extractPages` on fixtures 01-04, then `extractFacts` with `neckarCap104`. Doc 03 must yield revision `A` with an exact quote and doc 02 `validityEnd` `2026-08-01`. Paste the observations into the PR description.
+- [x] 6.3 Live smoke on fixtures 01-04 with a one-off `tsx` command (not committed): paste the observations into the PR description; verify doc 03 yields revision `A` with an exact quote and doc 02 yields validity end `2026-08-01`
+  - Note: live smoke by the controller on main 7860596 with gemini-3.6-flash: 3/3 runs pass (doc 03 R3 revision A, quote "Drawing revision: A."; doc 02 R2 validityEnd 2026-08-01, quote "Valid until: 2026-08-01"; no coverage warnings).
+  - Note: coverage retry added in fix/extraction-coverage; live smoke by controller
 
 ## 7. Rules and citation checks · wave 2 · M1 · branch feat/rules-engine
 
-- [ ] 7.1 Implement `validateCitations` in `citations.ts`: drop citations with an unknown document ID or page, or whose whitespace-normalised quote is not on that page; verify `citations.test.ts`: an invented quote and an unknown document ID are dropped and a real quote is kept
-- [ ] 7.2 Implement `decideFindings` in `rules.ts` for R1-R5: identity checks (supplier, part) first, then expiry against the assessment date, revision and grade equality, packaging acceptance; MISSING only for a complete set; NEEDS_REVIEW for incomplete sets or findings left without a valid citation; reason and next action per finding; verify `rules.test.ts` with hand-written observations: 2026-08-01 vs 2026-11-07 gives EXPIRED, revision A vs B gives MISMATCH, a wrong part never gives DOCUMENTED, an incomplete set never gives MISSING
-- [ ] 7.3 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
+- [x] 7.1 Implement `validateCitations` in `citations.ts`: drop citations with an unknown document ID or page, or whose whitespace-normalised quote is not on that page; verify `citations.test.ts`: an invented quote and an unknown document ID are dropped and a real quote is kept
+- [x] 7.2 Implement `decideFindings` in `rules.ts` for R1-R5: identity checks (supplier, part) first, then expiry against the assessment date, revision and grade equality, packaging acceptance; MISSING only for a complete set; NEEDS_REVIEW for incomplete sets or findings left without a valid citation; reason and next action per finding; verify `rules.test.ts` with hand-written observations: 2026-08-01 vs 2026-11-07 gives EXPIRED, revision A vs B gives MISMATCH, a wrong part never gives DOCUMENTED, an incomplete set never gives MISSING
+- [x] 7.3 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
 
 ## 8. Products and document upload · wave 2 · M1 · branch feat/document-upload
 
@@ -80,11 +81,12 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 9. Assessment jobs · wave 2 · M1 · branch feat/assessment-jobs
 
-- [ ] 9.1 Implement `startAssessment(userId, productId)` in `src/lib/jobs/service.ts`: compute the document set hash, insert with on-conflict-do-nothing, return the existing or new job, schedule `runAssessment` with `after()`; verify with 9.4
-- [ ] 9.2 Implement the claim (`QUEUED` to `PROCESSING` by update-where), `setStage`, `failJob`, and `completeJob` (insert result, set COMPLETED with `result_id`, insert the notification row for the owner's account email, all in one transaction); verify `pnpm typecheck`
-- [ ] 9.3 Add `GET /api/jobs/[jobId]` (session required, 404 for a foreign or unknown job, returns status, stage, error and result ID, re-queues a job stuck in PROCESSING for over 5 minutes up to 2 attempts); verify with 9.4
-- [ ] 9.4 Add `jobs.test.ts` on real PostgreSQL: two starts for the same snapshot return one job ID and one row; a direct duplicate insert is rejected; another user's job returns 404; verify each fails when its guard is removed, then restore
-- [ ] 9.5 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
+- [x] 9.1 Implement `startAssessment(userId, productId)` in `src/lib/jobs/service.ts`: compute the document set hash, insert with on-conflict-do-nothing, return the existing or new job, schedule `runAssessment` with `after()`; verify with 9.4
+- [x] 9.2 Implement the claim (`QUEUED` to `PROCESSING` by update-where), `setStage`, `failJob`, and `completeJob` (insert result, set COMPLETED with `result_id`, insert the notification row for the owner's account email, all in one transaction); verify `pnpm typecheck`
+- [x] 9.3 Add `GET /api/jobs/[jobId]` (session required, 404 for a foreign or unknown job, returns status, stage, error and result ID, re-queues a job stuck in PROCESSING for over 5 minutes up to 2 attempts); verify with 9.4
+- [x] 9.4 Add `jobs.test.ts` on real PostgreSQL: two starts for the same snapshot return one job ID and one row; a direct duplicate insert is rejected; another user's job returns 404; verify each fails when its guard is removed, then restore
+- [x] 9.5 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
+  - Note: Opus was out of weekly usage, so the pass ran as a fresh reviewer on Grok. Verdict PASS, no open findings. Report on PR 18.
 
 ## 10. Completion email · wave 2 · M1 · branch feat/completion-email
 
@@ -93,8 +95,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 - [x] 10.2 Add the fixed template (subject "Your ExportReady assessment is ready", issue count from the findings, link `${APP_BASE_URL}/workspace/<productId>/report`, no attachments); verify by rendering it for the baseline findings: the text says three documentation issues remain
   - Note: Open issues are findings whose status is not DOCUMENTED. Baseline R2 EXPIRED, R3 MISMATCH and R4 MISSING render "three documentation issues remain". The Brevo body is `textContent` only.
 - [ ] 10.3 Live send to a team-controlled address from a local notification row; verify the inbox receives it, the link opens the report after sign-in, and the row holds the message ID. Record the address used (not the key) as a note
-  - Blocked: needs BREVO_API_KEY for the live send
-  - Note: sender and test inbox are both nam95.pn@gmail.com (`BREVO_SENDER_EMAIL`). The send stays gated on the key.
+  - Blocked: Brevo accepted the send and the local row stores message id `<202611071032.41981504803@smtp-relay.mailin.fr>`. The link redirects to sign-in, and the report page is not on main yet (group 11). This environment cannot open the Gmail inbox, so delivery and the post-sign-in report are not confirmed.
+  - Note: sender and test inbox are both nam95.pn@gmail.com. Sent 2026-11-07 11:32 Europe/Berlin, while local `APP_BASE_URL` was blank, so that message links to `https://exportready-production.up.railway.app/workspace/afdbaf2c-750e-4906-9599-f8adbc9e2de5/report`. Local `APP_BASE_URL` is now `https://exportready.vercel.app`. That origin also redirects the report path to sign-in.
 
 ## 11. Workspace and report UI · wave 2 · M1 · branch feat/workspace-ui
 
@@ -111,7 +113,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
   - Note: 12.5 changed this script. It only runs `next build`. Railway runs `pnpm db:migrate`. There is no Neon pooler check.
 - [x] 12.2 Write `docs/deploy.md`: Vercel project, Neon from the Marketplace, build command, previews off, the env list from design.md Decision 11, rollback by Promote; verify the owner can follow it alone
   - Note: 12.5 rewrote `docs/deploy.md` for Railway (backend and Postgres) and Vercel (UI). There is no Neon database. Production `GEMINI_MODEL` is `gemini-3.6-flash`.
-- [ ] 12.3 Owner step: create the Railway project (Next.js service from this repo, Node 22, build `pnpm build`, pre-deploy `pnpm db:migrate`, start `pnpm start`, healthcheck `/api/health`, Railway Postgres, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, env from `docs/deploy.md`) and the Vercel project (build command `node scripts/vercel-build.mjs`, previews off, `BACKEND_URL`, Railway's public `DATABASE_URL`, and the same `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`); the worker ticks this after the owner confirms; verify both projects and their env
+- [x] 12.3 Owner step: create the Railway project (Next.js service from this repo, Node 22, build `pnpm build`, pre-deploy `pnpm db:migrate`, start `pnpm start`, healthcheck `/api/health`, Railway Postgres, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, env from `docs/deploy.md`) and the Vercel project (build command `node scripts/vercel-build.mjs`, previews off, `BACKEND_URL`, Railway's public `DATABASE_URL`, and the same `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`); the worker ticks this after the owner confirms; verify both projects and their env
+  - Note: Railway project exportready (service exportready plus Postgres and its env) and Vercel project exportready at https://exportready.vercel.app (BACKEND_URL, DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, APP_BASE_URL) are created.
 - [ ] 12.4 (post-merge) Smoke-test the first production deploy: sign up, sign in, open `/workspace`; verify each works, then record the URL as a note and set `APP_BASE_URL` and `BETTER_AUTH_URL` to it
 - [x] 12.5 Railway backend + Postgres deploy (railway.json, /api rewrite, health route, docs)
   - Note: `BACKEND_URL` is an optional URL in `src/env.ts` and `.env.example`. `.env.example` sets `GEMINI_MODEL=gemini-3.6-flash`. `next.config.ts` still reads `process.env.BACKEND_URL` for the rewrite.
@@ -127,20 +130,27 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 14. Text assistant · wave 4 · M3 · branch feat/workspace-assistant
 
-- [ ] 14.1 Declare the eight tools from the working plan section 6 in `src/lib/agent/tools.ts` with Zod argument schemas; server tools call the products, documents and jobs services with the session's `userId`; browser tools return validated directives; verify `pnpm typecheck`
-- [ ] 14.2 Add `POST /api/assistant` (session required): Gemini function calling over the history, at most 5 rounds, failures explained with a recovery step, replies only from tool results; verify a model-supplied foreign product ID gets "not found"
+- [x] 14.1 Declare the eight tools from the working plan section 6 in `src/lib/agent/tools.ts` with Zod argument schemas; server tools call the products, documents and jobs services with the session's `userId`; browser tools return validated directives; verify `pnpm typecheck`
+  - Note: Draft writes always use origin `assistant`. `start_assessment` calls `startAssessment` only when the checklist exists, at least one document is active and none are pending. Latest job and stored findings are read in this module; the jobs service has no product-scoped read and this lane does not own that file.
+- [x] 14.2 Add `POST /api/assistant` (session required): Gemini function calling over the history, at most 5 rounds, failures explained with a recovery step, replies only from tool results; verify a model-supplied foreign product ID gets "not found"
+  - Blocked: Live Gemini check was not run. This VM has no GEMINI_API_KEY. Tests mock `callGemini`: a foreign product id on show_report returns "not found", tool rounds stop at 5, and a model failure is a recovery step. Production model is `gemini-3.6-flash` via `callGemini` (`GEMINI_MODEL`). The route is `POST /api/assistant` on Railway; Vercel proxies `/api/*`.
 - [ ] 14.3 Fill `assistant-panel.tsx`: text input, message list, applies directives through `workspace-events.ts`, stays usable while a job runs; verify the demo conversation: "I want to submit my product and documents for this buyer" opens the upload card; after the report, "Why did R3 fail?" cites the revision-A quote and offers a replacement
 
 ## 15. Spoken replies (optional, cut at 15:15) · wave 4 · M4 · branch feat/spoken-replies
 
-- [ ] 15.1 Add `POST /api/speech` (session required, text up to 600 characters, ElevenLabs text-to-speech with a stock voice, key server-side) and `src/components/voice/speak-reply.tsx` with a mute toggle; verify a reply plays audio and, with the key unset, the reply stays text with no error dialog
+- [x] 15.1 Add `POST /api/speech` (session required, text up to 600 characters, ElevenLabs text-to-speech with a stock voice, key server-side) and `src/components/voice/speak-reply.tsx` with a mute toggle; verify a reply plays audio and, with the key unset, the reply stays text with no error dialog
+  - Note: Server env is `ELEVENLABS_API_KEY` (Railway only, never `NEXT_PUBLIC_`, never on Vercel). Stock voice Rachel `21m00Tcm4TlvDq8ikWAM`, model `eleven_flash_v2_5`. Missing key or a failed synthesis returns `{ available: false }` and the reply stays text.
 - [ ] 15.2 Mount the speaker in `assistant-panel.tsx` (one line); verify the 14.3 conversation still works with audio off
+  - Blocked: needs 14.3
 
 ## 16. Submission package · wave 4 · M5 · branch docs/submission
 
 - [ ] 16.1 Rewrite `README.md`: what ExportReady does, with the tagline "From Supplier Potential to Buyer Confidence"; architecture diagram; setup and deployment; tech stack; fixtures; the tests that actually ran; real integrations (Gemini, Brevo, ElevenLabs if done); screenshots of the workspace, report and action plan; the demo URL; team members (Phuong, Nam and others) and who did what; known limits (durability, authenticity, no compliance claim, no score); verify every claim matches merged code and the demo URL opens
-- [ ] 16.2 Write `docs/pitch/deck-outline.md` with six slides (problem and target customers, solution, product demo screenshots, market and the business model to test from `docs/exportready-passport-idea.md` section 5, competitive differentiation, team and roadmap) and `docs/pitch/video-script.md` (2:45 target, fictional-data notice, including the two-sided flow: Neckar posts a request, Lotus Mould responds and shares the report, the buyer reads it, then the re-share after the correction); verify the script matches what the app actually does and claims no untested willingness to pay
+  - Blocked: Screenshots and the final claims check run after groups 11, 13 and 17 merge. The README on this branch describes only what is on main and lists the rest under In progress. `/workspace` has no page until group 11 merges, so no screenshots were added. On 2026-11-07 the Vercel URL returned HTTP 200 and Railway `GET /api/health` returned `{"ok":true}`.
+- [x] 16.2 Write `docs/pitch/deck-outline.md` with six slides (problem and target customers, solution, product demo screenshots, market and the business model to test from `docs/exportready-passport-idea.md` section 5, competitive differentiation, team and roadmap) and `docs/pitch/video-script.md` (2:45 target, fictional-data notice, including the two-sided flow: Neckar posts a request, Lotus Mould responds and shares the report, the buyer reads it, then the re-share after the correction); verify the script matches what the app actually does and claims no untested willingness to pay
+  - Note: Slide 3 and the 0:52–2:05 script block are the intended demo after groups 11, 13 and 17 merge, and they are marked that way. A fallback block covers a recording made before those groups land. No willingness to pay is claimed.
 - [ ] 16.3 Owner step (Phuong): customer discovery with up to five people using the idea doc's three questions; record role, current qualification process, the pain and the objection for each, with consent, in `docs/pitch/customer-learning.md`, and state plainly if fewer were reached; verify no interview result is invented
+  - Note: `docs/pitch/customer-learning.md` is an empty template. No interview was recorded in this pull request.
 - [ ] 16.4 (post-merge) Owner step: record the video (3 minutes or less), finish the deck, submit by 16:45; the controller ticks this after the owner confirms; verify the submission confirmation and that the video plays signed out
 
 ## 17. Buyer-supplier connections · wave 3 · M3 · branch feat/buyer-supplier-connections
