@@ -58,7 +58,7 @@ The demo checklist is `neckar-cap-104`: cover cap CAP-104, revision B, ABS grade
 
 **Speaker note**
 
-The answer key in `fixtures/exportready/answer-key.json` is what those frames must show. The golden test that checks it is group 13 and is not on `main` yet. Until the three groups merge, this slide stays a caption list, and the live UI is <https://exportready-production.up.railway.app> with sign-in and no workspace page.
+The answer key in `fixtures/exportready/answer-key.json` is what those frames must show. The golden test that checks it is group 13 and is not on `main` yet. Until the three groups merge, this slide stays a caption list, and the live UI is <https://tradeready-production.up.railway.app> with sign-in and no workspace page.
 
 `<!-- screenshots: add after group 11 merges -->`
 
@@ -124,4 +124,4 @@ Compare with the way qualification works today: a pile of files in email. Do not
 
 **Speaker note**
 
-Demo URL: <https://exportready-production.up.railway.app> (pages and API). Submission time is 16:45 Europe/Berlin on 2026-11-07.
+Demo URL: <https://tradeready-production.up.railway.app> (pages and API). Submission time is 16:45 Europe/Berlin on 2026-11-07.
