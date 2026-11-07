@@ -5,6 +5,7 @@ reuse instructions already available in the current context unless they change.
 
 ## Workflows
 
+- Hackathon mode (overrides the git, review and handoff rules until submission on 2026-11-07): `./.claude/rules/hackathon-mode.md`
 - Token-efficient execution (every task): `./.claude/rules/token-efficient-execution.md`
 - Primary workflow: `./.claude/rules/primary-workflow.md`
 - Git and PR workflow: `./.claude/rules/git-pr-workflow.md`
