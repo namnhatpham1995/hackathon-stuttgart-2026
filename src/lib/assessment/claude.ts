@@ -27,7 +27,14 @@ const MAX_RETRIES = 3;
 
 export async function callClaude(request: ClaudeRequest): Promise<ClaudeResponse> {
   const apiKey = requireEnv("ANTHROPIC_API_KEY");
-  const client = new Anthropic({ apiKey, timeout: TIMEOUT_MS, maxRetries: MAX_RETRIES });
+  // A key that is not scoped to a workspace must name one on every request.
+  const workspaceId = env.ANTHROPIC_WORKSPACE_ID;
+  const client = new Anthropic({
+    apiKey,
+    timeout: TIMEOUT_MS,
+    maxRetries: MAX_RETRIES,
+    defaultHeaders: workspaceId ? { "anthropic-workspace-id": workspaceId } : undefined,
+  });
 
   const message = await client.messages
     .stream({

@@ -232,6 +232,13 @@ A run that failed without a result (for example the Gemini 503 on TC01) locked i
   - Note: PASS with no findings; the report is posted on PR #40.
 - [ ] 22.3 (post-merge) Start the TC01 product's assessment again on production and confirm it runs
 
+## 23. Claude workspace header · wave 4 · M4 · branch fix/claude-workspace-id
+
+The production key is not scoped to a workspace, so Claude rejects extraction with "must include the anthropic-workspace-id header". Owns `src/env.ts`, `.env.example`, `src/lib/assessment/claude.ts`.
+
+- [x] 23.1 Add optional `ANTHROPIC_WORKSPACE_ID` and send it as the `anthropic-workspace-id` header when set; verify `pnpm typecheck`
+- [ ] 23.2 (post-merge) Set `ANTHROPIC_WORKSPACE_ID` on Railway, start the TC01 assessment again on production and confirm six DOCUMENTED findings
+
 ## Workflow follow-up
 
 - After submission, delete `.claude/rules/hackathon-mode.md` and its index line so the normal rules apply again.
