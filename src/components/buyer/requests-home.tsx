@@ -45,7 +45,7 @@ function EmptyRequests() {
         No requests yet. Post a request for a part, or ask a listed supplier for evidence.
       </p>
       <div className="flex flex-wrap gap-2">
-        <Button href="/connections/requests/new">New request</Button>
+        <Button href="/buyer/requests/new">New request</Button>
         <Button href="/buyer/products" variant="secondary">
           Find products
         </Button>
@@ -113,7 +113,7 @@ function RequestList({ requests }: { requests: BuyerRequestSummary[] }) {
                       <ConnectionStatus status={connection.status} />
                       {connection.status === "shared" ? (
                         <Button
-                          href={`/connections/${connection.connectionId}`}
+                          href={`/buyer/connections/${connection.connectionId}`}
                           variant="secondary"
                           size="sm"
                         >

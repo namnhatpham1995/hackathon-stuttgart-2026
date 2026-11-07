@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
@@ -12,15 +13,20 @@ import {
 } from "@/db/schema";
 import { env } from "@/env";
 import { auth } from "@/lib/auth";
+import { executeAgentTool } from "@/lib/agent/tools";
+import { pagePathSchema } from "@/lib/agent/site-map";
 import {
   createBuyerRequest,
   getConnection,
   getSharedResult,
+  listInbox,
+  markNoticeRead,
   requestEvidence,
   requireConnection,
   respondToRequest,
   setProductListed,
   shareResult,
+  unreadCount,
 } from "@/lib/connections/service";
 import { createProduct, updateProduct } from "@/lib/products/service";
 
@@ -124,6 +130,98 @@ async function connectedPair() {
 describe("buyer and supplier connections", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  test("one account has separate buyer and supplier inboxes and read states", async () => {
+    const { buyer: dual, third: customer, connection } = await connectedPair();
+    const ownListing = await supplierProduct(dual.id);
+    await setProductListed(dual.id, ownListing.id, true);
+    const incoming = await requestEvidence(customer.id, {
+      productId: ownListing.id,
+      buyerOrgName: "Customer purchasing",
+    });
+    const resultId = await insertCompletedResult(ownListing.id, "Own assessment");
+    const [job] = await db
+      .select({ id: assessmentJob.id })
+      .from(assessmentJob)
+      .where(eq(assessmentJob.resultId, resultId));
+    const assessmentNoticeId = crypto.randomUUID();
+    assert.ok(job);
+    await db.insert(notification).values({
+      id: assessmentNoticeId,
+      jobId: job.id,
+      recipientUserId: dual.id,
+      recipientEmail: dual.email,
+      type: "assessment_completed",
+      title: "Your assessment is ready",
+      status: "failed",
+    });
+
+    const buyerInbox = await listInbox(dual.id, "buyer");
+    const supplierInbox = await listInbox(dual.id, "supplier");
+    expect(buyerInbox.map((notice) => notice.connectionId)).toEqual([connection.id]);
+    expect(supplierInbox.map((notice) => notice.connectionId)).toEqual(
+      expect.arrayContaining([incoming.id, null]),
+    );
+    expect(supplierInbox).toHaveLength(2);
+    expect(await unreadCount(dual.id, "buyer")).toBe(1);
+    expect(await unreadCount(dual.id, "supplier")).toBe(2);
+
+    const buyerTool = await executeAgentTool(dual.id, null, { name: "read_inbox" }, "/buyer/inbox");
+    const supplierTool = await executeAgentTool(
+      dual.id,
+      null,
+      { name: "read_inbox" },
+      "/workspace/inbox",
+    );
+    expect(buyerTool.output).toMatchObject({
+      ok: true,
+      notices: [{ title: "Lotus Mould responded to your request" }],
+    });
+    expect(supplierTool.output.notices).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ title: "Your assessment is ready" }),
+        expect.objectContaining({ title: "Customer purchasing requested evidence" }),
+      ]),
+    );
+    expect((await executeAgentTool(dual.id, null, { name: "read_inbox" })).output).toMatchObject({
+      ok: false,
+      error: "Choose a workspace first.",
+    });
+    for (const path of [
+      "/buyer/inbox",
+      "/buyer/requests/new",
+      `/buyer/connections/${connection.id}`,
+      "/workspace/inbox",
+      "/workspace/requests",
+      `/workspace/connections/${incoming.id}`,
+    ]) {
+      expect(pagePathSchema.safeParse(path).success).toBe(true);
+    }
+
+    const incomingNotice = supplierInbox.find((notice) => notice.connectionId === incoming.id);
+    assert.ok(incomingNotice);
+    await expect(markNoticeRead(dual.id, incomingNotice.id, "buyer")).rejects.toMatchObject({
+      status: 404,
+      message: "Not found",
+    });
+    await expect(markNoticeRead(customer.id, incomingNotice.id, "supplier")).rejects.toMatchObject({
+      status: 404,
+      message: "Not found",
+    });
+    const [buyerNotice] = buyerInbox;
+    assert.ok(buyerNotice);
+    await markNoticeRead(dual.id, buyerNotice.id, "buyer");
+    await markNoticeRead(dual.id, buyerNotice.id, "buyer");
+    expect(await unreadCount(dual.id, "buyer")).toBe(0);
+    expect(await unreadCount(dual.id, "supplier")).toBe(2);
+    expect((await listInbox(dual.id, "buyer")).map((notice) => Boolean(notice.readAt))).toEqual([
+      true,
+    ]);
+    expect((await listInbox(dual.id, "supplier")).map((notice) => notice.readAt)).toEqual([
+      null,
+      null,
+    ]);
   });
 
   test("the buyer reads the shared result and not a later unshared one", async () => {

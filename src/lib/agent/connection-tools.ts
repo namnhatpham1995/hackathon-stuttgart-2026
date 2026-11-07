@@ -11,6 +11,7 @@ import {
 } from "@/lib/buyer/service";
 import {
   createBuyerRequestInput,
+  type ConnectionRole,
   getProductConnections,
   listCompletedResults,
   listInbox,
@@ -52,6 +53,7 @@ type Handler = (
   userId: string,
   contextProductId: string | null,
   args: unknown,
+  workspace: ConnectionRole | null,
 ) => Promise<ConnectionToolResult>;
 
 const LIST_LIMIT = 20;
@@ -175,8 +177,13 @@ const handlers: Record<ConnectionToolName, Handler> = {
     };
   },
 
-  async read_inbox(userId) {
-    const rows = await listInbox(userId);
+  async read_inbox(userId, _product, _args, workspace) {
+    if (!workspace)
+      return failed(
+        "Choose a workspace first.",
+        "Open Buyer or Supplier, then ask to read its inbox.",
+      );
+    const rows = await listInbox(userId, workspace);
     return {
       output: {
         ok: true,
@@ -320,8 +327,9 @@ export function runConnectionTool(
   userId: string,
   contextProductId: string | null,
   args: unknown,
+  workspace: ConnectionRole | null = null,
 ): Promise<ConnectionToolResult> {
-  return handlers[name](userId, contextProductId, args);
+  return handlers[name](userId, contextProductId, args, workspace);
 }
 
 const productIdProperty: Schema = {

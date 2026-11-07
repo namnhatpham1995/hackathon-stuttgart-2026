@@ -705,6 +705,7 @@ export async function executeAgentTool(
   userId: string,
   contextProductId: string | null,
   call: { name?: string; args?: unknown },
+  path = "",
 ): Promise<AgentToolResult> {
   const name = call.name ?? "";
   if (!isAgentToolName(name)) {
@@ -715,7 +716,13 @@ export async function executeAgentTool(
   }
   try {
     const result = isConnectionTool(name)
-      ? await runConnectionTool(name, userId, contextProductId, call.args)
+      ? await runConnectionTool(
+          name,
+          userId,
+          contextProductId,
+          call.args,
+          path.startsWith("/buyer") ? "buyer" : path.startsWith("/workspace") ? "supplier" : null,
+        )
       : await handlers[name](userId, contextProductId, call.args);
     if (
       result.directive &&

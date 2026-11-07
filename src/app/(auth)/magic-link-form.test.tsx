@@ -33,6 +33,7 @@ describe("magic-link sign-in form", () => {
     const html = renderToStaticMarkup(<AuthForm mode="sign-in" socialProviders={[]} />);
     expect(html).toContain('alt="TradeReady passport"');
     expect(html).toContain("tradeready-passport.png");
+    expect(html).toMatch(/<h1[^>]*>Welcome<\/h1>/);
     expect(html.indexOf("<img")).toBeLessThan(html.indexOf("<h1"));
   });
 

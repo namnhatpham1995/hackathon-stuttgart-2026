@@ -32,7 +32,7 @@ test("assistant directives navigate from the report and close the dialog", async
   try {
     await act(async () =>
       root.render(
-        <WorkspaceShell user={{ name: "Demo", email: "demo@example.com" }}>
+        <WorkspaceShell user={{ name: "Demo", email: "demo@example.com" }} unread={0}>
           <h1>Evidence report</h1>
         </WorkspaceShell>,
       ),

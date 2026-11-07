@@ -83,7 +83,7 @@ function ExistingConnection({
         Evidence has already been requested for this product.
       </p>
       {status === "shared" ? (
-        <Button href={`/connections/${connectionId}`} variant="secondary" size="sm">
+        <Button href={`/buyer/connections/${connectionId}`} variant="secondary" size="sm">
           View report
         </Button>
       ) : null}

@@ -12,17 +12,19 @@ import {
   listCompletedResults,
   listShareTargets,
   markNoticeRead,
-  requestEvidence,
-  requestEvidenceInput,
   respondToRequest,
   respondToRequestInput,
   setProductListed,
   shareResult,
-  unreadCount,
 } from "@/lib/connections/service";
 import { requireSession } from "@/lib/session";
 
 export type ActionState = { error: string } | null;
+
+function revalidateWorkspaces() {
+  revalidatePath("/buyer", "layout");
+  revalidatePath("/workspace", "layout");
+}
 
 function field(formData: FormData, name: string): string {
   const value = formData.get(name);
@@ -63,8 +65,8 @@ export async function createRequestAction(
   } catch (error) {
     return rejected(error);
   }
-  revalidatePath("/connections", "layout");
-  redirect("/connections/requests");
+  revalidateWorkspaces();
+  redirect("/buyer#requests");
 }
 
 export async function respondAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -84,31 +86,8 @@ export async function respondAction(_prev: ActionState, formData: FormData): Pro
   } catch (error) {
     return rejected(error);
   }
-  revalidatePath("/connections", "layout");
-  redirect(`/connections/${connectionId}`);
-}
-
-export async function requestEvidenceAction(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const session = await requireSession();
-  const parsed = requestEvidenceInput.safeParse({
-    productId: field(formData, "productId"),
-    buyerOrgName: field(formData, "buyerOrgName"),
-    message: optionalField(formData, "message"),
-  });
-  if (!parsed.success) return { error: zodMessage(parsed.error) };
-
-  let connectionId = "";
-  try {
-    const connection = await requestEvidence(session.user.id, parsed.data);
-    connectionId = connection.id;
-  } catch (error) {
-    return rejected(error);
-  }
-  revalidatePath("/connections", "layout");
-  redirect(`/connections/${connectionId}`);
+  revalidateWorkspaces();
+  redirect(`/workspace/connections/${connectionId}`);
 }
 
 export async function setListedAction(
@@ -132,8 +111,7 @@ export async function setListedAction(
   } catch (error) {
     return rejected(error);
   }
-  revalidatePath("/connections", "layout");
-  revalidatePath("/workspace", "layout");
+  revalidateWorkspaces();
   return null;
 }
 
@@ -155,26 +133,29 @@ export async function shareAction(_prev: ActionState, formData: FormData): Promi
   } catch (error) {
     return rejected(error);
   }
-  revalidatePath("/connections", "layout");
-  redirect(`/connections/${parsed.data.connectionId}`);
+  revalidateWorkspaces();
+  redirect(`/workspace/connections/${parsed.data.connectionId}`);
 }
 
 export async function markReadAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const session = await requireSession();
-  const parsed = z.string().trim().min(1).safeParse(field(formData, "notificationId"));
+  const parsed = z
+    .object({
+      notificationId: z.string().trim().min(1).max(200),
+      role: z.enum(["buyer", "supplier"]),
+    })
+    .safeParse({
+      notificationId: field(formData, "notificationId"),
+      role: field(formData, "role"),
+    });
   if (!parsed.success) return { error: "That notice could not be found." };
   try {
-    await markNoticeRead(session.user.id, parsed.data);
+    await markNoticeRead(session.user.id, parsed.data.notificationId, parsed.data.role);
   } catch (error) {
     return rejected(error);
   }
-  revalidatePath("/connections", "layout");
+  revalidateWorkspaces();
   return null;
-}
-
-export async function loadUnreadCount(): Promise<number> {
-  const session = await requireSession();
-  return unreadCount(session.user.id);
 }
 
 export async function loadProductConnections(productId: string) {
