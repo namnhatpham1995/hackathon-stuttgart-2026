@@ -31,7 +31,7 @@ For questions answerable by reading the repo, scout before asking. Ask only when
 
 ## Proposals Before Implementation
 
-Review an OpenSpec change once, before its first task group is planned, with the `proposal-review` skill: three fresh `proposal-reviewer` agents on Opus (critic, readiness, codebase) whose code claims are checked before they are kept. Run it after `openspec-propose`, and `full-feature-develop` runs it itself when it reaches a change's first group. The result is the change's `review.md`:
+Review an OpenSpec change once, before its first task group is planned, with the `proposal-review` skill: three fresh `proposal-reviewer` agents on the top tier (critic, readiness, codebase) whose code claims are checked before they are kept. Run it after `openspec-propose`, and `full-feature-develop` runs it itself when it reaches a change's first group. The result is the change's `review.md`:
 
 - Owner decisions are the owner's. An agent never answers one, and a logged conservative default does not settle it; the work stops until the owner (or whoever the owner named to decide, see `docs/multi-controller-setup.md`) answers.
 - Plan defects are folded into the change with `openspec-update-change` before planning.
@@ -39,7 +39,7 @@ Review an OpenSpec change once, before its first task group is planned, with the
 
 ## Tests in a Review
 
-When the diff adds or changes tests, have them reviewed on Opus with the `test-fidelity-review` skill and treat its blocking findings like any other review finding: in `full-feature-develop` the `independent-pr-reviewer` agent does it as part of its review, elsewhere a `general-purpose` agent on Opus that follows the skill. Never run that review on the model that wrote the tests (`.claude/rules/CLAUDE.md`, "Models"). Rules: `docs/code-standards.md`, "Test quality".
+When the diff adds or changes tests, have them reviewed in a fresh context on the top tier with the `test-fidelity-review` skill and treat its blocking findings like any other review finding: in `full-feature-develop` the `independent-pr-reviewer` agent does it as part of its review, elsewhere a fresh agent on the top tier that follows the skill (`multi-tool-agents.md`). Never run that review in the session that wrote the tests (`.claude/rules/CLAUDE.md`, "Models"). Rules: `docs/code-standards.md`, "Test quality".
 
 ## Stable Code Artifacts
 

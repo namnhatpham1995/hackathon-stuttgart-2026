@@ -42,7 +42,8 @@ Claude Code's memory for this folder. It is safe to run again.
 3. Plan a feature: `/opsx:propose <idea>` creates `openspec/changes/<name>/` with the proposal,
    design, spec deltas and `tasks.md` (one task group per PR).
 4. Build it in its own worktree: `pnpm worktree feat/<name>`, then `/opsx:apply` — or run the
-   `full-feature-develop` skill to go from plan to an independently reviewed PR in one go.
+   `full-feature-develop` skill to go from plan to an independently reviewed PR in one go (Claude Code,
+   Cursor or Gemini CLI).
 5. The agent commits per task, pushes and opens the PR into `main`; you review and merge. Then
    `/opsx:archive`.
 
@@ -106,10 +107,12 @@ If only one project runs at a time, step 1 is enough: stop the other with `docke
 | `skills/impeccable/` | Design, critique, polish and audit of UI ([impeccable](https://github.com/pbakaus/impeccable), Apache 2.0) |
 | `skills/ui-ux-pro-max/` | Searchable styles, palettes, font pairings, UX guidelines and stack notes for UI work ([ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill), MIT) |
 | `skills/ux-review/` | Audits the running app like real users: personas, three widths, light and dark, reload-to-verify. Its target, persona seed, password check and stop are `pnpm ux-review:*` (`scripts/ux-review/`) |
-| `agents/` | `task-group-planner`, `independent-pr-reviewer`, `proposal-reviewer`, `ux-reviewer` and the impeccable helpers |
+| `agents/` | `independent-pr-reviewer`, `proposal-reviewer`, `ux-reviewer` and the impeccable helpers |
 | `settings.json` | Impeccable's UI check hooks, no AI attribution in commits |
 
-`CLAUDE.md` is the project guide; `AGENTS.md` points other agents (Codex, Cursor) at the same rules.
+`CLAUDE.md` is the project guide; `AGENTS.md` (Cursor, Codex) and `GEMINI.md` (Gemini CLI) point the
+other tools at the same rules, and `.cursor/` and `.gemini/` hold their generated OpenSpec commands.
+How each tool runs the review roles: `.claude/rules/multi-tool-agents.md`.
 
 ## Guides
 
@@ -119,7 +122,7 @@ If only one project runs at a time, step 1 is enough: stop the other with `docke
   invariants in the schema, hashed tokens, the three-step pre-launch review, accepted risks.
 - [`docs/multi-controller-setup.md`](docs/multi-controller-setup.md) — a team of sessions on several
   machines: one main controller dispatches and merges, machine controllers run two workers each,
-  workers stop at review PASS. Plan on Opus, code on Sonnet.
+  workers stop at review PASS. One worker plans and codes on Opus; reviews run in fresh contexts.
 
 ## Deploying
 

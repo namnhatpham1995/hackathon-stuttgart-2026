@@ -1,6 +1,6 @@
 ---
 name: proposal-review
-description: Review one OpenSpec change before its code is written - run three proposal-reviewer subagents on Opus in parallel (critic, readiness, codebase), check every code claim they make, and write the merged result to the change's review.md in three sections (owner decisions, plan defects, rejected). Reports only; never edits the change's other artifacts or any code. Use when the user says "proposal-review", asks for a review of a proposal or change before implementation, or after openspec-propose. The full-feature-develop skill runs it before it plans a change's first group.
+description: Review one OpenSpec change before its code is written - run three fresh proposal-reviewer agents in parallel (critic, readiness, codebase), check every code claim they make, and write the merged result to the change's review.md in three sections (owner decisions, plan defects, rejected). Reports only; never edits the change's other artifacts or any code. Use when the user says "proposal-review", asks for a review of a proposal or change before implementation, or after openspec-propose. The full-feature-develop skill runs it before it plans a change's first group.
 argument-hint: "<change name> [again]"
 ---
 
@@ -21,7 +21,7 @@ Read `CLAUDE.md`, `.claude/rules/token-efficient-execution.md` and `.claude/rule
 
 Start three `proposal-reviewer` subagents in one message, one per role: `critic`, `readiness`, `codebase`. Each prompt gives the role, the worktree path, the change folder and that role's report file, and nothing else: not your view of the change, not what the author said about it. They only read, so they may run side by side. Wait for their completion notices; do not poll them.
 
-If this session has no `proposal-reviewer` agent type (it started before the agent was added), start `general-purpose` agents with `model: "opus"` instead and tell each to read `.claude/agents/proposal-reviewer.md` and act as it describes in the given role. An agent that returns `NEEDS_CONTEXT` gets the missing input once. If a role fails or returns `BLOCKED` twice, write the merged file from the other roles and name the missing role at its top; never review the change yourself in its place.
+If this session has no `proposal-reviewer` agent type (it started before the agent was added, or the tool is Cursor or Gemini CLI), start each role as `.claude/rules/multi-tool-agents.md` describes, telling it to read `.claude/agents/proposal-reviewer.md` and act as it describes in the given role; without subagents, run the three one after another. An agent that returns `NEEDS_CONTEXT` gets the missing input once. If a role fails or returns `BLOCKED` twice, write the merged file from the other roles and name the missing role at its top; never review the change yourself in its place.
 
 ## 3. Merge and check
 

@@ -64,5 +64,6 @@ and keep `PRODUCT.md` in step.
 1. `/opsx:propose <idea>` — proposal, design, spec deltas and `tasks.md`, one task group per PR.
    Then `proposal-review` once, before the first group (`full-feature-develop` runs it itself).
 2. `pnpm worktree feat/<change>` — then work only inside that worktree.
-3. `/opsx:apply` (or the `full-feature-develop` skill for plan → build → independent review).
+3. `/opsx:apply` (or the `full-feature-develop` skill for plan → build → independent review, in Claude
+   Code, Cursor or Gemini CLI: `.claude/rules/multi-tool-agents.md`).
 4. Commit per task, push, open the PR into `main`. After merge: `/opsx:archive`.

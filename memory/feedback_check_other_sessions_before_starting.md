@@ -9,4 +9,4 @@ Before starting work on a task group or fix, check that nobody else already owns
 
 **Why:** a local fixer once duplicated a fix that the PR author's session on another machine was already pushing, and parallel test runs overloaded the laptop until pushes needed several attempts.
 
-**How to apply:** after a session's PR merges, run `pnpm worktree remove <branch>` from the main checkout, `git branch -D` only after checking the tip equals the merged PR head (as its own step), then delete that session if it ran on this machine. Leave a session alone while it still works. Related: [[feedback-sessions-default-sonnet]].
+**How to apply:** after a session's PR merges, run `pnpm worktree remove <branch>` from the main checkout, `git branch -D` only after checking the tip equals the merged PR head (as its own step), then delete that session if it ran on this machine. Leave a session alone while it still works. Related: [[feedback-model-top-tier]].
