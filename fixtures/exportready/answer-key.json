@@ -1,0 +1,86 @@
+{
+  "assessmentDate": "2026-11-07",
+  "supplier": "Lotus Mould Co., Ltd.",
+  "partNumber": "CAP-104",
+  "revision": "B",
+  "material": "ABS",
+  "grade": "LM-ABS-01",
+  "packaging": "PKG-07",
+  "packagingRevision": "2",
+  "rows": [
+    {
+      "requirement": "R1: material documentation",
+      "initialPackage": "DOCUMENTED",
+      "afterExplicitReplacementWithRevisionB": "Unchanged"
+    },
+    {
+      "requirement": "R2: submitted certificate",
+      "initialPackage": "EXPIRED",
+      "afterExplicitReplacementWithRevisionB": "Unchanged"
+    },
+    {
+      "requirement": "R3: correct inspection revision",
+      "initialPackage": "MISMATCH",
+      "afterExplicitReplacementWithRevisionB": "DOCUMENTED"
+    },
+    {
+      "requirement": "R4: traceability record",
+      "initialPackage": "MISSING",
+      "afterExplicitReplacementWithRevisionB": "Unchanged"
+    },
+    {
+      "requirement": "R5: packaging acceptance",
+      "initialPackage": "DOCUMENTED",
+      "afterExplicitReplacementWithRevisionB": "Unchanged"
+    }
+  ],
+  "baseline": {
+    "documents": [
+      "01_Lotus_Material_Datasheet.pdf",
+      "02_Lotus_ISO_Certificate_Demo.pdf",
+      "03_CAP104_Inspection_RevA.pdf",
+      "04_Lotus_Packaging_Acceptance.pdf"
+    ],
+    "documentedCount": 2,
+    "issueCount": 3,
+    "findings": {
+      "R1": "DOCUMENTED",
+      "R2": "EXPIRED",
+      "R3": "MISMATCH",
+      "R4": "MISSING",
+      "R5": "DOCUMENTED"
+    }
+  },
+  "correction": {
+    "replace": {
+      "03_CAP104_Inspection_RevA.pdf": "05_CAP104_Inspection_RevB.pdf"
+    },
+    "documents": [
+      "01_Lotus_Material_Datasheet.pdf",
+      "02_Lotus_ISO_Certificate_Demo.pdf",
+      "05_CAP104_Inspection_RevB.pdf",
+      "04_Lotus_Packaging_Acceptance.pdf"
+    ],
+    "documentedCount": 3,
+    "issueCount": 2,
+    "changedRequirements": ["R3"],
+    "findings": {
+      "R1": "DOCUMENTED",
+      "R2": "EXPIRED",
+      "R3": "DOCUMENTED",
+      "R4": "MISSING",
+      "R5": "DOCUMENTED"
+    }
+  },
+  "trap": {
+    "file": "trap_CAP104_Inspection_RevB.pdf",
+    "bodyRevision": "A",
+    "findings": {
+      "R3": "MISMATCH"
+    }
+  },
+  "empty": {
+    "file": "empty.pdf",
+    "result": "incomplete"
+  }
+}
