@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/workspace/page-chrome";
 
@@ -13,7 +15,11 @@ export default function CatalogProductNotFound() {
         title="Product not found"
       />
       <p className="max-w-prose text-muted">
-        This product is not listed, or it belongs to your account.
+        This product is not listed. Your own products are in the{" "}
+        <Link href="/workspace" className="text-accent hover:underline">
+          supplier workspace
+        </Link>
+        .
       </p>
       <Button href="/buyer/products" variant="secondary">
         Find products
