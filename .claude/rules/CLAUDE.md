@@ -13,13 +13,16 @@ reuse instructions already available in the current context unless they change.
 - Task progress handoff: `./.claude/rules/task-progress-handoff.md`
 - Review and audit decisions: `./.claude/rules/review-audit-self-decision.md`
 - Orchestration protocol (only when delegating): `./.claude/rules/orchestration-protocol.md`
+- Cursor, Gemini CLI and Claude Code: which files each loads, models, starting agent roles:
+  `./.claude/rules/multi-tool-agents.md`
 
 ## Skills in this repo
 
 - OpenSpec (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`, `/opsx:explore`, `/opsx:update`,
   `/opsx:sync`): plan every feature as a change under `openspec/changes/` before building it.
-- `full-feature-develop`: one OpenSpec task group from plan to a reviewed PR, with the
-  `task-group-planner` and `independent-pr-reviewer` subagents.
+- `full-feature-develop`: one OpenSpec task group from plan to a reviewed PR: this session plans
+  and implements, a fresh `independent-pr-reviewer` reviews. Runs in Claude Code, Cursor and
+  Gemini CLI.
 - `test-fidelity-review`: finds tests that would still pass if the code were wrong.
 - `impeccable`: all UI work (design, critique, polish, audit). It reads `PRODUCT.md` and
   `DESIGN.md` at the root: create them with `/impeccable init` before the first UI task and keep
@@ -39,18 +42,19 @@ under one main controller: [`docs/multi-controller-setup.md`](../../docs/multi-c
 
 ## Models
 
-Planning and judging run on a stronger model than the one that writes the code, so no session grades
-its own work. Where a tool lets you choose the model, use:
+Planning, coding and judging run on the strongest model of the tool: Opus in Claude Code, the top model in Cursor's
+picker (not Auto), Pro in Gemini CLI (not Flash). No session grades its own work: judging runs in a
+fresh context that never saw the plan or the writing.
 
+- Planning and implementation (plan, code, fixes, commits, pushes): one worker session, top tier.
 - Proposal review (`proposal-reviewer` in three roles, started by the `proposal-review` skill once
-  per change, before its first group is planned): Opus.
-- Planning (`task-group-planner`): Opus.
+  per change, before its first group is planned): fresh contexts, top tier.
 - Independent PR review, including the test fidelity review of the tests the PR adds or changes
-  (`independent-pr-reviewer`, which follows the `test-fidelity-review` skill for them): Opus.
-- Implementation (code, fixes, commits, pushes) in the worker session: Sonnet.
+  (`independent-pr-reviewer`, which follows the `test-fidelity-review` skill for them): a fresh
+  context, top tier.
 
-The Opus roles are agents in `.claude/agents/` whose `model: opus` the harness honours, so a Sonnet
-session that starts them gets Opus.
+The roles are agents in `.claude/agents/` with `model: opus`. How Cursor and Gemini CLI start them:
+`multi-tool-agents.md`.
 
 ## Commits and PRs
 
