@@ -10,6 +10,7 @@
       "src/**/*",
       "scripts/**/*",
       "test/**/*",
+      "roadmap/**/*",
       "*.json",
       "*.ts",
       "*.mjs",
