@@ -85,7 +85,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 - [x] 10.1 Implement `sendBrevoEmail({to, subject, text})` in `src/lib/notify/brevo.ts` (Brevo `POST /v3/smtp/email` over `fetch` with a 15 s timeout; group 17 reuses it) and `sendCompletionEmail(notificationId)` in `src/lib/notify/completion-email.ts` on top of it: claim by update-where, store `messageId` or the error, mark failed with "email not configured" without a key; verify `pnpm typecheck`
   - Note: `notification_status` has no `sending` value, so the claim is `UPDATE … SET attempts = 1 WHERE status = 'pending' AND attempts = 0`. A second call does not send. Missing `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` or `APP_BASE_URL` stores "email not configured".
-- [ ] 10.2 Add the fixed template (subject "Your ExportReady assessment is ready", issue count from the findings, link `${APP_BASE_URL}/workspace/<productId>/report`, no attachments); verify by rendering it for the baseline findings: the text says three documentation issues remain
+- [x] 10.2 Add the fixed template (subject "Your ExportReady assessment is ready", issue count from the findings, link `${APP_BASE_URL}/workspace/<productId>/report`, no attachments); verify by rendering it for the baseline findings: the text says three documentation issues remain
+  - Note: Open issues are findings whose status is not DOCUMENTED. Baseline R2 EXPIRED, R3 MISMATCH and R4 MISSING render "three documentation issues remain". The Brevo body is `textContent` only.
 - [ ] 10.3 Live send to a team-controlled address from a local notification row; verify the inbox receives it, the link opens the report after sign-in, and the row holds the message ID. Record the address used (not the key) as a note
 
 ## 11. Workspace and report UI · wave 2 · M1 · branch feat/workspace-ui
