@@ -88,6 +88,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 - [x] 10.2 Add the fixed template (subject "Your ExportReady assessment is ready", issue count from the findings, link `${APP_BASE_URL}/workspace/<productId>/report`, no attachments); verify by rendering it for the baseline findings: the text says three documentation issues remain
   - Note: Open issues are findings whose status is not DOCUMENTED. Baseline R2 EXPIRED, R3 MISMATCH and R4 MISSING render "three documentation issues remain". The Brevo body is `textContent` only.
 - [ ] 10.3 Live send to a team-controlled address from a local notification row; verify the inbox receives it, the link opens the report after sign-in, and the row holds the message ID. Record the address used (not the key) as a note
+  - Blocked: needs BREVO_API_KEY for the live send
+  - Note: sender and test inbox are both nam95.pn@gmail.com (`BREVO_SENDER_EMAIL`). The send stays gated on the key.
 
 ## 11. Workspace and report UI · wave 2 · M1 · branch feat/workspace-ui
 
