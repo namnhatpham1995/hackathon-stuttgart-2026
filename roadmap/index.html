@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ExportReady roadmap</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3f6f5;
+        --surface: #ffffff;
+        --text: #14221f;
+        --muted: #3e524c;
+        --line: #d5e0dc;
+        --accent: #0c6b52;
+        --bar: #d7e4df;
+        --bar-fill: #0c6b52;
+        --banner-bg: #fff1e6;
+        --banner-text: #6d320c;
+        --banner-line: #e4b898;
+        --notice-bg: #e7f0fb;
+        --notice-text: #1a4478;
+        --done-bg: #e5f5ee;
+        --done-text: #0c5a44;
+        --late-bg: #ffe8d8;
+        --late-text: #7a3410;
+        --track-bg: #e7f0fb;
+        --track-text: #1a4478;
+        --blocked-bg: #fde8e8;
+        --blocked-text: #7f1d1d;
+        --progress-bg: #fff4d6;
+        --progress-text: #6d4a00;
+        --ready-bg: #e5f5ee;
+        --ready-text: #0c5a44;
+        --idle-bg: #eef2f1;
+        --idle-text: #3e524c;
+        --verify-bg: #ece9fb;
+        --verify-text: #3d2f86;
+      }
+
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #101816;
+        --surface: #1a2622;
+        --text: #e8f3ef;
+        --muted: #b7cbc4;
+        --line: #2c403a;
+        --accent: #8ee0c8;
+        --bar: #243530;
+        --bar-fill: #8ee0c8;
+        --banner-bg: #3a271c;
+        --banner-text: #ffe6d2;
+        --banner-line: #8a6248;
+        --notice-bg: #1c2c40;
+        --notice-text: #d6e6fb;
+        --done-bg: #16382c;
+        --done-text: #b7f0d8;
+        --late-bg: #3d2618;
+        --late-text: #ffd7bc;
+        --track-bg: #1c2c40;
+        --track-text: #d6e6fb;
+        --blocked-bg: #3d1c1c;
+        --blocked-text: #ffd0d0;
+        --progress-bg: #3a3014;
+        --progress-text: #ffe7a8;
+        --ready-bg: #16382c;
+        --ready-text: #b7f0d8;
+        --idle-bg: #24302c;
+        --idle-text: #d5e4de;
+        --verify-bg: #2a2642;
+        --verify-text: #ddd6fb;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          color-scheme: dark;
+          --bg: #101816;
+          --surface: #1a2622;
+          --text: #e8f3ef;
+          --muted: #b7cbc4;
+          --line: #2c403a;
+          --accent: #8ee0c8;
+          --bar: #243530;
+          --bar-fill: #8ee0c8;
+          --banner-bg: #3a271c;
+          --banner-text: #ffe6d2;
+          --banner-line: #8a6248;
+          --notice-bg: #1c2c40;
+          --notice-text: #d6e6fb;
+          --done-bg: #16382c;
+          --done-text: #b7f0d8;
+          --late-bg: #3d2618;
+          --late-text: #ffd7bc;
+          --track-bg: #1c2c40;
+          --track-text: #d6e6fb;
+          --blocked-bg: #3d1c1c;
+          --blocked-text: #ffd0d0;
+          --progress-bg: #3a3014;
+          --progress-text: #ffe7a8;
+          --ready-bg: #16382c;
+          --ready-text: #b7f0d8;
+          --idle-bg: #24302c;
+          --idle-text: #d5e4de;
+          --verify-bg: #2a2642;
+          --verify-text: #ddd6fb;
+        }
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; }
+      body {
+        font: 16px/1.45 system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 16px;
+      }
+      h1 { font-size: 1.7rem; line-height: 1.15; margin: 0; }
+      h2 { font-size: 1.15rem; margin: 22px 0 10px; }
+      h3 { font-size: 1.05rem; margin: 0; }
+      p { margin: 0; }
+      .eyebrow, .meta { color: var(--muted); }
+      .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+      button, .banner, .notice, .card, .milestone {
+        border-radius: 12px;
+      }
+      button {
+        min-height: 44px;
+        padding: 0 14px;
+        font: inherit;
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--line);
+      }
+      .banner, .notice { padding: 12px 14px; margin: 0 0 12px; }
+      .banner {
+        background: var(--banner-bg);
+        color: var(--banner-text);
+        border: 1px solid var(--banner-line);
+      }
+      .notice { background: var(--notice-bg); color: var(--notice-text); }
+      .milestones, .groups { display: grid; gap: 12px; }
+      .milestone, .card {
+        min-width: 0;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        padding: 14px;
+      }
+      .card-top, .milestone-top {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .pill {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-weight: 650;
+      }
+      .status-done { background: var(--done-bg); color: var(--done-text); }
+      .status-late { background: var(--late-bg); color: var(--late-text); }
+      .status-on-track { background: var(--track-bg); color: var(--track-text); }
+      .status-blocked { background: var(--blocked-bg); color: var(--blocked-text); }
+      .status-in-progress { background: var(--progress-bg); color: var(--progress-text); }
+      .status-ready-to-merge { background: var(--ready-bg); color: var(--ready-text); }
+      .status-not-started { background: var(--idle-bg); color: var(--idle-text); }
+      .status-merged-verifying { background: var(--verify-bg); color: var(--verify-text); }
+      .meter {
+        height: 10px;
+        margin: 10px 0 6px;
+        background: var(--bar);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .meter span { display: block; height: 100%; background: var(--bar-fill); }
+      .count { font-variant-numeric: tabular-nums; font-weight: 650; }
+      .reason { margin-top: 8px; color: var(--blocked-text); font-weight: 650; }
+      a { color: var(--accent); }
+      code { overflow-wrap: anywhere; }
+      .stack { display: grid; gap: 4px; margin-top: 8px; }
+      @media (min-width: 800px) {
+        .wrap { padding: 28px; }
+        .milestones { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div>
+          <p class="eyebrow">ExportReady</p>
+          <h1>Hackathon roadmap</h1>
+          <p id="updated" class="meta">Last updated —</p>
+        </div>
+        <div class="actions">
+          <button type="button" id="refresh">Refresh</button>
+          <button type="button" id="theme">Dark</button>
+        </div>
+      </header>
+      <p id="banner" class="banner" role="alert" hidden></p>
+      <p id="notice" class="notice" hidden></p>
+      <section id="milestones" class="milestones" aria-label="Milestones"></section>
+      <div id="waves"></div>
+      <noscript>This roadmap needs JavaScript to load progress.</noscript>
+    </div>
+    <script>
+      const updated = document.getElementById("updated");
+      const banner = document.getElementById("banner");
+      const notice = document.getElementById("notice");
+      const milestones = document.getElementById("milestones");
+      const waves = document.getElementById("waves");
+      const themeButton = document.getElementById("theme");
+      const berlinClock = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Berlin",
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      });
+
+      let lastGood = null;
+      let lastFetchedAt = null;
+      let inFlight = false;
+
+      function storageGet(key) {
+        try {
+          return localStorage.getItem(key);
+        } catch {
+          return null;
+        }
+      }
+
+      function storageSet(key, value) {
+        try {
+          localStorage.setItem(key, value);
+        } catch {
+          // Private browsing can reject storage. The choice still applies for this view.
+        }
+      }
+
+      function currentTheme() {
+        if (document.documentElement.dataset.theme) return document.documentElement.dataset.theme;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+
+      function applyTheme(theme) {
+        document.documentElement.dataset.theme = theme;
+        const next = theme === "dark" ? "light" : "dark";
+        themeButton.textContent = next === "dark" ? "Dark" : "Light";
+        themeButton.setAttribute("aria-label", `Switch to ${next} theme`);
+      }
+
+      function berlin(value) {
+        const date = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(date.getTime())) return "unknown time";
+        return `${berlinClock.format(date)} Berlin`;
+      }
+
+      function statusClass(status) {
+        return `status-${String(status).toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "")}`;
+      }
+
+      function groupLabel(numbers) {
+        const sorted = [...numbers].sort((left, right) => left - right);
+        const contiguous = sorted.every((number, index) => index === 0 || number === sorted[index - 1] + 1);
+        if (sorted.length === 0) return "";
+        if (!contiguous) return sorted.join(", ");
+        if (sorted.length === 1) return String(sorted[0]);
+        return `${sorted[0]}–${sorted[sorted.length - 1]}`;
+      }
+
+      function pill(status) {
+        const node = document.createElement("span");
+        node.className = `pill ${statusClass(status)}`;
+        node.textContent = status;
+        return node;
+      }
+
+      function renderMilestone(milestone) {
+        const card = document.createElement("article");
+        card.className = "milestone";
+        const top = document.createElement("div");
+        top.className = "milestone-top";
+        const title = document.createElement("h2");
+        title.textContent = `${milestone.id} ${milestone.title}`;
+        top.append(title, pill(milestone.status));
+        const time = document.createElement("p");
+        time.className = "meta";
+        time.textContent = berlin(milestone.target);
+        const groups = document.createElement("p");
+        groups.className = "meta";
+        groups.textContent = `Groups ${groupLabel(milestone.groups)}`;
+        card.append(top, time, groups);
+        return card;
+      }
+
+      function renderGroup(group) {
+        const card = document.createElement("article");
+        card.className = "card";
+        const top = document.createElement("div");
+        top.className = "card-top";
+        const title = document.createElement("h3");
+        title.textContent = `${group.number}. ${group.title}`;
+        top.append(title, pill(group.status));
+
+        const meta = document.createElement("p");
+        meta.className = "meta";
+        const branch = document.createElement("code");
+        branch.textContent = group.branch || "no branch";
+        const waveLabel = group.wave === null ? "No wave" : `Wave ${group.wave}`;
+        meta.append(`${waveLabel} · ${group.milestone} · `, branch);
+
+        const meter = document.createElement("div");
+        meter.className = "meter";
+        meter.setAttribute("role", "meter");
+        meter.setAttribute("aria-valuemin", "0");
+        meter.setAttribute("aria-valuemax", String(group.total || 1));
+        meter.setAttribute("aria-valuenow", String(group.ticked));
+        meter.setAttribute("aria-label", `${group.ticked} of ${group.total} tasks`);
+        const fill = document.createElement("span");
+        const ratio = group.total === 0 ? 0 : Math.round((group.ticked / group.total) * 100);
+        fill.style.width = `${ratio}%`;
+        meter.append(fill);
+
+        const count = document.createElement("p");
+        count.className = "count";
+        count.textContent = `${group.ticked}/${group.total}`;
+
+        card.append(top, meta, meter, count);
+
+        const stack = document.createElement("div");
+        stack.className = "stack";
+        if (group.pullRequest) {
+          const line = document.createElement("p");
+          const link = document.createElement("a");
+          link.href = group.pullRequest.url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = `PR #${group.pullRequest.number}`;
+          const badge = document.createElement("span");
+          badge.className = "meta";
+          badge.textContent = group.pullRequest.isDraft ? " · Draft" : " · Ready for review";
+          line.append(link, badge);
+          const commit = document.createElement("p");
+          commit.className = "meta";
+          const when = group.pullRequest.lastCommitAt || group.pullRequest.updatedAt;
+          commit.textContent = `Last commit ${berlin(when)}`;
+          stack.append(line, commit);
+        } else {
+          const none = document.createElement("p");
+          none.className = "meta";
+          none.textContent = "No open pull request";
+          stack.append(none);
+        }
+        for (const reason of group.blockedNotes) {
+          if (!reason) continue;
+          const note = document.createElement("p");
+          note.className = "reason";
+          note.textContent = `Blocked: ${reason}`;
+          stack.append(note);
+        }
+        card.append(stack);
+        return card;
+      }
+
+      function render() {
+        milestones.replaceChildren();
+        waves.replaceChildren();
+        if (!lastGood) {
+          const empty = document.createElement("p");
+          empty.textContent = inFlight
+            ? "Loading the roadmap…"
+            : "The roadmap could not be loaded.";
+          waves.append(empty);
+          return;
+        }
+        updated.textContent = `Last updated ${berlin(lastFetchedAt)}`;
+        if (lastGood.notice) {
+          notice.hidden = false;
+          notice.textContent = lastGood.notice;
+        } else {
+          notice.hidden = true;
+          notice.textContent = "";
+        }
+        for (const milestone of lastGood.milestones) milestones.append(renderMilestone(milestone));
+        const byWave = new Map();
+        for (const group of lastGood.groups) {
+          const key = group.wave === null ? "missing" : group.wave;
+          const list = byWave.get(key) ?? [];
+          list.push(group);
+          byWave.set(key, list);
+        }
+        const waveKeys = [...byWave.keys()].sort((left, right) => {
+          if (left === "missing") return 1;
+          if (right === "missing") return -1;
+          return left - right;
+        });
+        for (const wave of waveKeys) {
+          const section = document.createElement("section");
+          const heading = document.createElement("h2");
+          heading.textContent = wave === "missing" ? "Not in the task list" : `Wave ${wave}`;
+          const grid = document.createElement("div");
+          grid.className = "groups";
+          for (const group of byWave.get(wave)) grid.append(renderGroup(group));
+          section.append(heading, grid);
+          waves.append(section);
+        }
+      }
+
+      function showBanner(message) {
+        banner.hidden = false;
+        banner.textContent = message
+          ? `Data may be stale. ${message}`
+          : "Data may be stale.";
+      }
+
+      async function refresh() {
+        if (inFlight) return;
+        inFlight = true;
+        if (!lastGood) render();
+        try {
+          const response = await fetch("/api/progress", { cache: "no-store" });
+          let payload = null;
+          try {
+            payload = await response.json();
+          } catch {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          if (!response.ok) {
+            const detail = typeof payload.error === "string" ? payload.error : `HTTP ${response.status}`;
+            throw new Error(detail);
+          }
+          lastGood = payload;
+          lastFetchedAt = new Date();
+          banner.hidden = true;
+          banner.textContent = "";
+        } catch (error) {
+          showBanner(error instanceof Error ? error.message : "The progress request failed");
+        } finally {
+          inFlight = false;
+          render();
+        }
+      }
+
+      const storedTheme = storageGet("roadmap-theme");
+      if (storedTheme === "light" || storedTheme === "dark") applyTheme(storedTheme);
+      else applyTheme(currentTheme());
+      themeButton.addEventListener("click", () => {
+        const next = currentTheme() === "dark" ? "light" : "dark";
+        applyTheme(next);
+        storageSet("roadmap-theme", next);
+      });
+      document.getElementById("refresh").addEventListener("click", () => {
+        refresh();
+      });
+      refresh();
+      setInterval(refresh, 30000);
+    </script>
+  </body>
+</html>
