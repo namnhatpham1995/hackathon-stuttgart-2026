@@ -121,6 +121,8 @@ export type ConnectionView = ConnectionRecord & {
 export type SharedResult = {
   id: string;
   productId: string;
+  requirementSetKey: string;
+  requirementSetVersion: number;
   assessmentDate: string;
   complete: boolean;
   findings: Finding[];
@@ -717,6 +719,8 @@ export async function getSharedResult(
     .select({
       id: assessmentResult.id,
       productId: assessmentResult.productId,
+      requirementSetKey: product.requirementSetKey,
+      requirementSetVersion: product.requirementSetVersion,
       assessmentDate: assessmentResult.assessmentDate,
       complete: assessmentResult.complete,
       findings: assessmentResult.findings,
@@ -738,6 +742,8 @@ export async function getSharedResult(
   return {
     id: row.id,
     productId: row.productId,
+    requirementSetKey: row.requirementSetKey,
+    requirementSetVersion: row.requirementSetVersion,
     assessmentDate: row.assessmentDate,
     complete: row.complete,
     findings: z.array(findingSchema).parse(row.findings),

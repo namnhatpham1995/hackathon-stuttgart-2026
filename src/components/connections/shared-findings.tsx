@@ -1,9 +1,32 @@
+import { actionPlan, dimensionSummary } from "@/components/workspace/report-summary";
+import { getRequirementSet } from "@/lib/assessment/requirement-sets";
 import { evidenceTypeLabels } from "@/lib/assessment/types";
 import { findingStatusLabel } from "@/lib/connections/labels";
 import type { SharedResult } from "@/lib/connections/service";
 
 /** Read-only findings from the stored result. Filenames are text, never download links. */
 export function SharedFindings({ result }: { result: SharedResult }) {
+  const requirements = (
+    getRequirementSet(result.requirementSetKey, result.requirementSetVersion)?.requirements ?? []
+  ).map((requirement) => ({
+    id: requirement.id,
+    title: requirement.name ?? requirement.id,
+    dimension: requirement.dimension,
+    kind: requirement.kind,
+  }));
+  // The summary helpers read only the id, status and next action of each finding.
+  const summaryFindings = result.findings.map((finding) => ({
+    requirementId: finding.requirementId,
+    status: finding.status,
+    evidenceType: null,
+    observed: null,
+    evidence: [],
+    reason: finding.reason,
+    nextAction: finding.nextAction,
+    authenticityChecked: false as const,
+  }));
+  const dimensions = dimensionSummary(summaryFindings, requirements);
+  const plan = actionPlan(summaryFindings);
   return (
     <section className="min-w-0 space-y-4" aria-label="Shared evidence report">
       {result.complete ? null : (
@@ -14,6 +37,35 @@ export function SharedFindings({ result }: { result: SharedResult }) {
       <p className="text-sm text-muted">
         This is shared evidence for one buyer, not a certification. There is no score.
       </p>
+      {requirements.length > 0 ? (
+        <section className="min-w-0 space-y-2" aria-label="Readiness by dimension">
+          <h2 className="text-sm font-semibold">Readiness by dimension</h2>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {dimensions.map((item) => (
+              <li key={item.dimension} className="rounded-md border border-line p-3 text-sm">
+                <p className="font-medium">{item.label}</p>
+                <p className="text-muted">
+                  {item.documented} documented · {item.open} open
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      <section className="min-w-0 space-y-2" aria-label="Action plan">
+        <h2 className="text-sm font-semibold">Action plan</h2>
+        {plan.length === 0 ? (
+          <p className="text-sm">Every requirement is documented.</p>
+        ) : (
+          <ol className="list-decimal space-y-1 pl-5 text-sm">
+            {plan.map((action) => (
+              <li key={action.requirementId} className="[overflow-wrap:anywhere]">
+                <span className="font-medium">{action.requirementId}:</span> {action.nextAction}
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
       {result.findings.length === 0 ? (
         <p>This result has no findings.</p>
       ) : (
