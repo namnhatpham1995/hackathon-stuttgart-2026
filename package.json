@@ -27,6 +27,7 @@
     "prepare": "node scripts/prepare-git-hooks.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.6.0",
     "@atlaskit/button": "^25.7.0",
     "@atlaskit/lozenge": "^17.0.6",
     "@atlaskit/platform-feature-flags": "2.2.2",
