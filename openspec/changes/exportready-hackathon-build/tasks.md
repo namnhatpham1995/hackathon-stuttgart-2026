@@ -199,15 +199,15 @@ Builds against the stubs from `main` while group 18 fills them. Owns `src/app/bu
 
 ## 20. Organiser test pack TC01 · wave 4 · M4 · branch fix/tc01-test-pack
 
-The organisers' test pack (TC01: buyer requirements R1-R6 plus six evidence PDFs) fails on the demo checklist: it checks ABS and PKG-07 acceptance, not the pack's polypropylene, product specification and packaging specification. Owns `src/lib/assessment/{types,requirement-sets,rules,extract-facts}.ts`, `src/components/workspace/{contract,checklists,upload-card,report-view}.ts(x)`, `src/app/workspace/actions.ts`, `src/lib/products/workspace.ts`, `src/lib/documents/service.ts` (PDF limit), `fixtures/test-pack/**`, `scripts/seed-test-pack.ts`.
+The organisers' test pack (TC01: buyer requirements R1-R6 plus six evidence PDFs) fails on the demo checklist: it checks ABS and PKG-07 acceptance, not the pack's polypropylene, product specification and packaging specification. Owns `src/lib/assessment/{types,requirement-sets,rules,extract-facts}.ts`, `src/components/workspace/{contract,checklists,upload-card,report-view}.ts(x)`, `src/app/workspace/actions.ts`, `src/lib/products/workspace.ts`, `src/components/workspace/{documents,product-workspace,states-gallery}.ts(x)`, `src/lib/documents/service.ts` (PDF limit), `fixtures/test-pack/**`.
 
-- [ ] 20.1 Add the TC01 checklist `neckar-cap-104-qualification` (R1 product identity, R2 material PP, R3 inspection revision B, R4 ISO 9001 in date, R5 material lot to finished batch, R6 packaging specification with carton configuration) with the evidence types product specification, material declaration and packaging specification; make it the default for new products while existing products keep theirs; verify `pnpm typecheck`
-- [ ] 20.2 Compare supplier names without punctuation ("Lotus Mould Co. Ltd." = "Lotus Mould Co., Ltd."), let a scope or standard match word forms ("injection-moulded" covers "injection moulding"), and let "Polypropylene (PP)" match "PP"; verify with 20.5
-- [ ] 20.3 Keep the buyer's own requirements PDF out of the evidence and out of the coverage check, and tell the model to take each requirement's facts only from a document of its evidence type; verify with 20.5
-- [ ] 20.4 Show the product's own checklist on the upload card and the report instead of the fixed demo list, and allow 8 active PDFs so the 7-file pack fits; verify `pnpm typecheck`
-- [ ] 20.5 Rules tests from the TC01 README: the six TC01 facts give six DOCUMENTED findings; packaging revision A does not affect R6; supplier punctuation and "injection-moulded" do not mismatch; a buyer requirements page is recognised; verify `pnpm test src/lib/assessment`
-- [ ] 20.6 `pnpm seed:test-pack` creates the local test supplier `tc01-supplier@example.com` with a CAP-104 product on the TC01 checklist and the seven TC01 PDFs uploaded; verify by signing in on the worktree's dev server
-- [ ] 20.7 (post-merge) Upload TC01 on production and confirm six DOCUMENTED findings
+- [x] 20.1 Add the TC01 checklist `neckar-cap-104-qualification` (R1 product identity, R2 material PP, R3 inspection revision B, R4 ISO 9001 in date, R5 material lot to finished batch, R6 packaging specification with carton configuration) with the evidence types product specification, material declaration and packaging specification; make it the default for new products while existing products keep theirs; verify `pnpm typecheck`
+- [x] 20.2 Compare supplier names without punctuation ("Lotus Mould Co. Ltd." = "Lotus Mould Co., Ltd."), let a scope or standard match word forms ("injection-moulded" covers "injection moulding"), and let "Polypropylene (PP)" match "PP"; verify with 20.5
+- [x] 20.3 Keep the buyer's own requirements PDF out of the evidence and out of the coverage check, and tell the model to take each requirement's facts only from a document of its evidence type; verify with 20.5
+- [x] 20.4 Show the product's own checklist on the upload card and the report instead of the fixed demo list, and allow 8 active PDFs so the 7-file pack fits; verify `pnpm typecheck`
+- [x] 20.5 Rules tests from the TC01 README: the six TC01 facts give six DOCUMENTED findings; packaging revision A does not affect R6; supplier punctuation and "injection-moulded" do not mismatch; a buyer requirements page is recognised; verify `pnpm test src/lib/assessment`
+  - Note: `src/lib/assessment/tc01.test.ts` reads the real TC01 PDFs from `fixtures/test-pack/tc01/`; the model step is not exercised (no Gemini key in local runs).
+- [ ] 20.6 (post-merge) On production, signed in as the owner's test supplier, create the CAP-104 product and upload the seven TC01 PDFs; confirm six DOCUMENTED findings
 
 ## Workflow follow-up
 
