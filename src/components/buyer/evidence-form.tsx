@@ -24,20 +24,25 @@ export function EvidenceForm({ productId }: { productId: string }) {
     event.preventDefault();
     setPending(true);
     setError(null);
-    const result = await requestProductEvidence({
-      productId,
-      buyerOrgName: organisation,
-      message,
-    });
-    setPending(false);
-    if (!result.ok) {
-      setErrors(result.errors);
-      setError(result.error ?? null);
-      focusFirstInvalid(result.errors, fields);
-      return;
+    try {
+      const result = await requestProductEvidence({
+        productId,
+        buyerOrgName: organisation,
+        message,
+      });
+      if (!result.ok) {
+        setErrors(result.errors);
+        setError(result.error ?? null);
+        focusFirstInvalid(result.errors, fields);
+        return;
+      }
+      setSent(true);
+      router.refresh();
+    } catch {
+      setError("The evidence request could not be sent. Your entries are still here. Try again.");
+    } finally {
+      setPending(false);
     }
-    setSent(true);
-    router.refresh();
   }
 
   if (sent) {

@@ -71,7 +71,7 @@ function RequestList({ requests }: { requests: BuyerRequestSummary[] }) {
                 <p className="meta mt-1 break-words text-muted">
                   {request.buyerOrgName}
                   <span aria-hidden="true"> · </span>
-                  <span className="font-mono whitespace-nowrap text-ink">{request.partNumber}</span>
+                  <span className="font-mono break-all text-ink">{request.partNumber}</span>
                   <span aria-hidden="true"> · </span>
                   {request.visibility === "direct" ? "Direct" : "On the board"}
                   <span aria-hidden="true"> · </span>

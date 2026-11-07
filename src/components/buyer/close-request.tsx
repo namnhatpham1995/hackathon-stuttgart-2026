@@ -15,13 +15,18 @@ export function CloseRequestButton({ requestId }: { requestId: string }) {
     event.preventDefault();
     setPending(true);
     setError(null);
-    const result = await closeRequest(requestId);
-    setPending(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await closeRequest(requestId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError("The request could not be closed. Try again.");
+    } finally {
+      setPending(false);
     }
-    router.refresh();
   }
 
   return (

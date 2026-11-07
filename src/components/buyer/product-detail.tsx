@@ -17,7 +17,7 @@ export function ProductDetail({ product, example }: { product: CatalogProduct; e
         title={product.productName}
         meta={
           <>
-            <span className="meta font-mono whitespace-nowrap text-ink">
+            <span className="meta font-mono break-all text-ink">
               {product.partNumber ?? "No part number"}
             </span>
             {example ? <span className="meta text-muted">Example data</span> : null}

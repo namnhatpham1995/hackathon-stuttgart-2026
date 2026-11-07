@@ -85,7 +85,7 @@ export function Catalog({
                     <span className="break-words">{product.productName}</span>
                     <ArrowIcon />
                   </Button>
-                  <p className="meta mt-1 font-mono whitespace-nowrap text-ink">
+                  <p className="meta mt-1 font-mono break-all text-ink">
                     {product.partNumber ?? "No part number"}
                   </p>
                 </div>
