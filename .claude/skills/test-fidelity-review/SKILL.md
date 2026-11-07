@@ -1,6 +1,6 @@
 ---
 name: test-fidelity-review
-description: Review the tests a diff or pull request adds or changes and find the ones that would still pass if the code were wrong - tautological tests, expected values taken from the code under test, mocks asserted against what the test configured, rejection tests that do not say which rejection, assertions that do not reach what the test name claims. Reports only; never deletes, rewrites or commits tests. Use when the user says "test-fidelity-review", asks whether new tests can fail. When full-feature-develop reviews a PR that touches test files, its `independent-pr-reviewer` agent (Opus) follows this procedure.
+description: Review the tests a diff or pull request adds or changes and find the ones that would still pass if the code were wrong - tautological tests, expected values taken from the code under test, mocks asserted against what the test configured, rejection tests that do not say which rejection, assertions that do not reach what the test name claims. Reports only; never deletes, rewrites or commits tests. Use when the user says "test-fidelity-review", asks whether new tests can fail. When full-feature-develop reviews a PR that touches test files, its fresh `independent-pr-reviewer` agent follows this procedure.
 argument-hint: "[PR number | branch | path]"
 ---
 
@@ -9,11 +9,11 @@ would the test fail?** The rules, the examples and the list of patterns that loo
 live in `docs/code-standards.md`, "Test quality". Read that section first; this file only holds the
 procedure. A result of "these tests hold" is valid and common: do not invent findings.
 
-The review of a PR runs on Opus, not on the model that wrote the tests: in `full-feature-develop` the
-`independent-pr-reviewer` agent (`.claude/agents/independent-pr-reviewer.md`, `model: opus`) follows
-this file as part of its review. Run directly, as `/test-fidelity-review`, it runs on the session's
-model; when that is not Opus and the input is a PR, start a `general-purpose` agent with
-`model: "opus"` that follows this file instead.
+The review of a PR runs in a fresh context, never in the session that wrote the tests: in
+`full-feature-develop` the `independent-pr-reviewer` agent (`.claude/agents/independent-pr-reviewer.md`)
+follows this file as part of its review. Run directly on a PR you did not write, as
+`/test-fidelity-review`, it runs in this session on its model (use the top tier); on a PR this session
+wrote, start a fresh agent that follows this file instead (`.claude/rules/multi-tool-agents.md`).
 
 ## Scope
 
