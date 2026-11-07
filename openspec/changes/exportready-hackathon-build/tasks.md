@@ -52,7 +52,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 5. PDF text extraction · wave 2 · M1 · branch feat/pdf-text
 
-- [ ] 5.1 Implement `extractPages` in `src/lib/assessment/pdf-text.ts` with `unpdf`, returning text per page with document ID, filename and 1-based page number, and an `empty` flag when a document yields no text; verify with 5.2
+- [x] 5.1 Implement `extractPages` in `src/lib/assessment/pdf-text.ts` with `unpdf`, returning text per page with document ID, filename and 1-based page number, and an `empty` flag when a document yields no text; verify with 5.2
+  - Note: a document with no non-whitespace text is listed in `emptyDocuments` and contributes no pages. Page numbers stay 1-based.
 - [ ] 5.2 Add `pdf-text.test.ts` reading the fixture files: 01 page 1 contains `LM-ABS-01`, 02 contains `2026-08-01`, 03 contains revision `A`, `empty.pdf` is flagged empty; verify it passes and fails if extraction returns an empty string
 
 ## 6. Gemini fact extraction · wave 2 · M1 · branch feat/gemini-extraction
