@@ -39,6 +39,7 @@ export async function createProduct(
   const product: WorkspaceProduct = {
     id: crypto.randomUUID(),
     name: parsed.data.name,
+    listed: false,
     requirementSetKey: DEMO_REQUIREMENT_SET_KEY,
     requirementSetVersion: DEMO_REQUIREMENT_SET_VERSION,
     fields: {

@@ -279,6 +279,7 @@ function lotusProduct(
   return {
     id,
     name,
+    listed: false,
     requirementSetKey: requirementSet.key,
     requirementSetVersion: requirementSet.version,
     fields: lotusFields,
@@ -327,6 +328,7 @@ const longName = "Nordsee Praezisionskunststoffteile Vertriebsgesellschaft mbH";
 export const longValueProduct: WorkspaceProduct = {
   id: "long-values",
   name: longName,
+  listed: false,
   requirementSetKey: requirementSet.key,
   requirementSetVersion: requirementSet.version,
   fields: {
