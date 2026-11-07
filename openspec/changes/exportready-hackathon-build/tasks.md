@@ -131,7 +131,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
   - Blocked: needs group 11 (PR #11) merged
 - [ ] 13.5 (post-merge) Production click-through of 13.4, closing the tab during processing and reopening after completion; verify the stored report loads, or record the failure honestly as a note
   - Blocked: needs group 11 (PR #11) merged
-- [ ] 13.6 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
+- [x] 13.6 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
+  - Note: Round 1 FAIL (R1-1 photos, R1-2 unnamed incomplete files), fixed in one round. Round 2 PASS. The reviewer ran on Grok because Opus was out of usage.
 
 ## 14. Text assistant · wave 4 · M3 · branch feat/workspace-assistant
 
