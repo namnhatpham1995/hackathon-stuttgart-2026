@@ -1,12 +1,12 @@
 "use client";
 
 import { useActionState } from "react";
+import type { ConnectionRole } from "@/lib/connections/service";
 
 import {
   type ActionState,
   createRequestAction,
   markReadAction,
-  requestEvidenceAction,
   respondAction,
   setListedAction,
   shareAction,
@@ -120,39 +120,6 @@ export function RespondForm({
   );
 }
 
-export function EvidenceForm({ productId }: { productId: string }) {
-  const [state, action, pending] = useActionState(requestEvidenceAction, null);
-
-  return (
-    <form action={action} className="mt-3 flex min-w-0 flex-col gap-3">
-      <input type="hidden" name="productId" value={productId} />
-      <label className="flex flex-col gap-1 text-sm" htmlFor={`org-${productId}`}>
-        Your organisation
-        <input
-          className="field"
-          id={`org-${productId}`}
-          name="buyerOrgName"
-          required
-          maxLength={300}
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm" htmlFor={`evidence-message-${productId}`}>
-        Message
-        <textarea
-          className="field min-h-20 py-2"
-          id={`evidence-message-${productId}`}
-          name="message"
-          maxLength={1000}
-        />
-      </label>
-      <ErrorNote state={state} />
-      <button className="btn-secondary active:scale-[0.98]" type="submit" disabled={pending}>
-        {pending ? "Requesting…" : "Request evidence"}
-      </button>
-    </form>
-  );
-}
-
 export function ShareForm({
   connectionId,
   results,
@@ -218,12 +185,19 @@ export function ListedForm({ productId, listed }: { productId: string; listed: b
   );
 }
 
-export function MarkReadForm({ notificationId }: { notificationId: string }) {
+export function MarkReadForm({
+  notificationId,
+  role,
+}: {
+  notificationId: string;
+  role: ConnectionRole;
+}) {
   const [state, action, pending] = useActionState(markReadAction, null);
 
   return (
     <form action={action}>
       <input type="hidden" name="notificationId" value={notificationId} />
+      <input type="hidden" name="role" value={role} />
       <ErrorNote state={state} />
       <button className="btn-secondary active:scale-[0.98]" type="submit" disabled={pending}>
         {pending ? "Saving…" : "Mark read"}

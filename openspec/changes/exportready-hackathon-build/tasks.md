@@ -273,6 +273,16 @@ User-requested follow-up. One account can switch between Supplier and Buyer. Reu
 - [x] 25.5 Verify the production build, authenticated HTTP entry points and the local pre-push hook, then publish a reviewable PR
   - Browser visual checks are blocked by disabled local browser access in Work settings.
 
+## 26. Separate Buyer and Supplier journeys · wave 4 · M4 · branch fix/workspace-role-separation
+
+Follow-up to group 25. The same account can use both workspaces. Keep each journey inside its own shell, retain explicit return destinations, separate inboxes and counts by the connection party, and move the workspace switcher into the header label position. Use a transparent grey/white passport mark. Existing connection links must still resolve to the signed-in party's workspace. Owns role-scoped connection routes, legacy redirects, connection navigation/actions/inbox queries and related tests, Buyer/Supplier header integration, brand styling, and notes for 19.6 and 17.8.
+
+- [ ] 26.1 Keep buyer requests/reports/inbox under Buyer and supplier board/sharing/inbox under Supplier, with role-checked detail access and direct return links
+- [ ] 26.2 Filter notices and unread counts by workspace, preserving recipient ownership and preventing cross-workspace mark-read changes
+- [ ] 26.3 Place the workspace switcher in the header and remove the passport backing, using a transparent grey/white mark in both themes
+- [ ] 26.4 Add focused routing, action and real-PostgreSQL dual-role regression tests; verify typecheck, lint, production build and the pre-push hook
+- [ ] 26.5 Exercise 19.6 and 17.8 as far as the available local/production environment allows, recording actual evidence and remaining verification limits
+
 ## Workflow follow-up
 
 - After submission, delete `.claude/rules/hackathon-mode.md` and its index line so the normal rules apply again.

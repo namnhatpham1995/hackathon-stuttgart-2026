@@ -33,7 +33,7 @@ export type BuyerRequestConnection = {
   supplierCompany: string | null;
   initiatedBy: "buyer" | "supplier";
   status: BuyerConnectionStatus;
-  /** Set only while the connection is `shared`; links to `/connections/[connectionId]`. */
+  /** Set only while the connection is `shared`; links to `/buyer/connections/[connectionId]`. */
   sharedResultId: string | null;
   updatedAt: Date;
 };

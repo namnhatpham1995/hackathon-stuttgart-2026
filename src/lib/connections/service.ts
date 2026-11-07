@@ -1,4 +1,4 @@
-import { and, count, desc, eq, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db/client";
@@ -116,6 +116,8 @@ export type ConnectionView = ConnectionRecord & {
   supplierCompany: string;
   listed: boolean;
 };
+
+export type ConnectionRole = ConnectionView["role"];
 
 /** The one result stored on the connection. A later assessment is not included. */
 export type SharedResult = {
@@ -751,7 +753,20 @@ export async function getSharedResult(
   };
 }
 
-export async function listInbox(userId: string): Promise<InboxNotice[]> {
+function inboxRoleFilter(userId: string, role: ConnectionRole) {
+  const connections = db
+    .select({ id: requestConnection.id })
+    .from(requestConnection)
+    .innerJoin(buyerRequest, eq(buyerRequest.id, requestConnection.requestId))
+    .innerJoin(product, eq(product.id, requestConnection.productId))
+    .where(role === "buyer" ? eq(buyerRequest.buyerUserId, userId) : eq(product.userId, userId));
+  const connectionNotice = inArray(notification.connectionId, connections);
+  return role === "supplier"
+    ? or(eq(notification.type, "assessment_completed"), connectionNotice)
+    : connectionNotice;
+}
+
+export async function listInbox(userId: string, role: ConnectionRole): Promise<InboxNotice[]> {
   const recipientId = idSchema.parse(userId);
   const rows = await db
     .select({
@@ -763,7 +778,7 @@ export async function listInbox(userId: string): Promise<InboxNotice[]> {
       createdAt: notification.createdAt,
     })
     .from(notification)
-    .where(eq(notification.recipientUserId, recipientId))
+    .where(and(eq(notification.recipientUserId, recipientId), inboxRoleFilter(recipientId, role)))
     .orderBy(desc(notification.createdAt));
 
   return rows.map((row) => ({
@@ -776,29 +791,51 @@ export async function listInbox(userId: string): Promise<InboxNotice[]> {
   }));
 }
 
-export async function unreadCount(userId: string): Promise<number> {
+export async function unreadCount(userId: string, role: ConnectionRole): Promise<number> {
   const recipientId = idSchema.parse(userId);
   const [row] = await db
     .select({ value: count() })
     .from(notification)
-    .where(and(eq(notification.recipientUserId, recipientId), sql`${notification.readAt} is null`));
+    .where(
+      and(
+        eq(notification.recipientUserId, recipientId),
+        inboxRoleFilter(recipientId, role),
+        sql`${notification.readAt} is null`,
+      ),
+    );
   return Number(row?.value ?? 0);
 }
 
-export async function markNoticeRead(userId: string, notificationId: string): Promise<void> {
+export async function markNoticeRead(
+  userId: string,
+  notificationId: string,
+  role: ConnectionRole,
+): Promise<void> {
   const recipientId = idSchema.parse(userId);
   const id = idSchema.parse(notificationId);
   const [existing] = await db
     .select({ id: notification.id, readAt: notification.readAt })
     .from(notification)
-    .where(and(eq(notification.id, id), eq(notification.recipientUserId, recipientId)))
+    .where(
+      and(
+        eq(notification.id, id),
+        eq(notification.recipientUserId, recipientId),
+        inboxRoleFilter(recipientId, role),
+      ),
+    )
     .limit(1);
   if (!existing) throw new ConnectionRequestError(404, "Not found");
   if (existing.readAt) return;
   await db
     .update(notification)
     .set({ readAt: new Date() })
-    .where(and(eq(notification.id, id), eq(notification.recipientUserId, recipientId)));
+    .where(
+      and(
+        eq(notification.id, id),
+        eq(notification.recipientUserId, recipientId),
+        inboxRoleFilter(recipientId, role),
+      ),
+    );
 }
 
 export async function getProductConnections(

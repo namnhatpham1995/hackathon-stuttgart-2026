@@ -17,9 +17,11 @@ import { PanelIcon, ProductIcon, SignOutIcon, ThemeIcon } from "./icons";
 
 export function WorkspaceShell({
   user,
+  unread,
   children,
 }: {
   user: { name: string; email: string };
+  unread: number;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -74,14 +76,18 @@ export function WorkspaceShell({
           <p className="mt-1 text-xs text-muted">Documents &amp; buyer requirements</p>
         </div>
         <nav aria-label="Primary" className="px-3">
-          <NavItem href="/workspace" tone="default">
+          <NavItem
+            href="/workspace"
+            tone="default"
+            current={pathname === "/workspace" || Boolean(productId)}
+          >
             <span className="flex items-center gap-2.5">
               <ProductIcon /> Products
             </span>
           </NavItem>
         </nav>
         <div className="px-3 pb-3">
-          <ConnectionsNav layout="sidebar" />
+          <ConnectionsNav layout="sidebar" unread={unread} />
         </div>
         <div className="mt-auto border-t border-line p-4">
           <div className="flex min-w-0 items-center gap-2.5">
@@ -106,7 +112,7 @@ export function WorkspaceShell({
           <Link href="/workspace" className="inline-flex items-center gap-2 font-medium md:hidden">
             <BrandMark /> TradeReady
           </Link>
-          <span className="meta hidden text-muted md:inline">Supplier workspace</span>
+          <WorkspaceSwitcher className="order-last w-full lg:order-none lg:w-auto" />
           <div className="ml-auto flex items-center gap-3">
             <span className="meta hidden text-muted sm:inline">{user.name}</span>
             <Button
@@ -126,9 +132,8 @@ export function WorkspaceShell({
             </div>
           </div>
         </header>
-        <WorkspaceSwitcher />
         <div className="md:hidden">
-          <ConnectionsNav />
+          <ConnectionsNav unread={unread} />
         </div>
         <main id="workspace-main" className="workspace-main" key={pathname}>
           {children}

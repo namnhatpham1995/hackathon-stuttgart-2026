@@ -1,11 +1,8 @@
 import { NavItem } from "./nav-item";
 
-export function WorkspaceSwitcher() {
+export function WorkspaceSwitcher({ className = "" }: { className?: string }) {
   return (
-    <nav
-      aria-label="Workspaces"
-      className="flex flex-wrap gap-1 border-b border-line bg-paper px-4 py-2 md:px-10"
-    >
+    <nav aria-label="Workspaces" className={`flex flex-wrap gap-1 ${className}`}>
       <NavItem href="/workspace" tone="default">
         Supplier workspace
       </NavItem>

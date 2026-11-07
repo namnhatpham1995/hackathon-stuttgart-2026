@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
-
 import { requireSession } from "@/lib/session";
 
-export default async function ConnectionsIndex() {
+export default async function LegacyConnectionsPage() {
   await requireSession();
-  redirect("/connections/requests");
+  redirect("/workspace/requests");
 }

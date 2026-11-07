@@ -11,7 +11,7 @@
   --theme-rays-opacity: 1;
   --theme-rays-position: rotate(0deg) scale(1);
   --card: oklch(1 0 89.876);
-  --brand-surface: oklch(1 0 0);
+  --brand-filter: brightness(0) opacity(0.65);
   --ink: oklch(0.28559 0.00741 274.703);
   --muted: oklch(0.43891 0.01014 271.182);
   --line: oklch(0.17329 0.0136 159.534 / 0.14118);
@@ -53,6 +53,7 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --brand-filter: brightness(0) invert(1) opacity(0.88);
   --paper: oklch(0.21274 0.0025 247.944);
   --theme-disc-radius: 4.8px;
   --theme-cutout-position: translate(0, 0);
@@ -100,6 +101,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
+    --brand-filter: brightness(0) invert(1) opacity(0.88);
     --paper: oklch(0.21274 0.0025 247.944);
     --theme-disc-radius: 4.8px;
     --theme-cutout-position: translate(0, 0);
@@ -329,8 +331,7 @@ textarea {
   flex-shrink: 0;
   object-fit: contain;
   border-radius: 4px;
-  /* The supplied navy passport needs a light backing in either theme. */
-  background: var(--brand-surface);
+  filter: var(--brand-filter);
 }
 .auth-brand-mark {
   width: 96px;
@@ -338,7 +339,7 @@ textarea {
 }
 .workspace-sidebar :where(nav) > a {
   display: flex;
-  min-height: 38px;
+  min-height: 44px;
   gap: 10px;
 }
 .workspace-sidebar :where(nav) > a[aria-current="page"] {
@@ -347,6 +348,7 @@ textarea {
 }
 .workspace-topbar {
   display: flex;
+  flex-wrap: wrap;
   min-height: 64px;
   align-items: center;
   gap: 16px;

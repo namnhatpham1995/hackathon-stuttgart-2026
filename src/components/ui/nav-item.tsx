@@ -9,14 +9,18 @@ export function NavItem({
   children,
   exact = false,
   tone = "inverse",
+  current: currentOverride,
 }: {
   href: string;
   children: ReactNode;
   exact?: boolean;
   tone?: "inverse" | "default";
+  current?: boolean;
 }) {
   const pathname = usePathname();
-  const current = exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+  const current =
+    currentOverride ??
+    (exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`));
   const palette =
     tone === "inverse"
       ? current
@@ -30,7 +34,7 @@ export function NavItem({
     <Link
       href={href}
       aria-current={current ? "page" : undefined}
-      className={`nav-on-navy flex min-h-9 items-center gap-2 rounded-md px-2.5 text-sm font-medium tracking-normal motion-safe:active:scale-[0.98] ${palette}`}
+      className={`nav-on-navy flex min-h-11 items-center gap-2 rounded-md px-2.5 text-sm font-medium tracking-normal motion-safe:active:scale-[0.98] ${palette}`}
     >
       <span className="min-w-0 flex-1 truncate">{children}</span>
       <NavPending />

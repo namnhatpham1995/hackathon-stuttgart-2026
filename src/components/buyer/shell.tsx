@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { setTheme } from "@/app/workspace/actions";
+import { InboxLink } from "@/components/connections/inbox-link";
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/ui/brand-mark";
 import { WorkspaceSwitcher } from "@/components/ui/workspace-switcher";
@@ -13,9 +14,11 @@ import { signOut } from "@/lib/auth-client";
 
 export function BuyerShell({
   user,
+  unread,
   children,
 }: {
   user: { name: string; email: string };
+  unread: number;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -32,7 +35,10 @@ export function BuyerShell({
   }, []);
 
   const onOverview = pathname === "/buyer";
-  const onRequests = onOverview && hash === "#requests";
+  const onRequests =
+    (onOverview && hash === "#requests") ||
+    pathname.startsWith("/buyer/requests") ||
+    pathname.startsWith("/buyer/connections");
 
   return (
     <div className="min-h-dvh bg-card text-ink">
@@ -43,12 +49,12 @@ export function BuyerShell({
         Skip to content
       </a>
       <header className="border-b border-line bg-card">
-        <div className="flex min-h-16 items-center gap-3 px-4 py-3 md:px-10">
+        <div className="flex min-h-16 flex-wrap items-center gap-3 px-4 py-3 md:px-10">
           <Link href="/buyer" className="inline-flex min-w-0 items-center gap-2 font-medium">
             <BrandMark />
             <span className="truncate">TradeReady</span>
           </Link>
-          <span className="meta hidden text-muted lg:inline">Buyer workspace</span>
+          <WorkspaceSwitcher className="order-last w-full lg:order-none lg:w-auto" />
           <div className="ml-auto flex items-center gap-2">
             <span className="meta hidden max-w-40 truncate text-muted sm:inline">{user.name}</span>
             <ThemeToggle />
@@ -60,7 +66,6 @@ export function BuyerShell({
             </div>
           </div>
         </div>
-        <WorkspaceSwitcher />
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pb-3 md:px-10">
           <nav aria-label="Buyer" className="flex flex-wrap items-center gap-1">
             <BuyerLink href="/buyer" current={onOverview && !onRequests}>
@@ -72,9 +77,10 @@ export function BuyerShell({
             <BuyerLink href="/buyer/products" current={pathname.startsWith("/buyer/products")}>
               Find products
             </BuyerLink>
+            <InboxLink workspace="buyer" unread={unread} />
           </nav>
           <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
-            <Button href="/connections/requests/new" size="sm">
+            <Button href="/buyer/requests/new" size="sm">
               New request
             </Button>
           </div>

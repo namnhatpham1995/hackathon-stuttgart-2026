@@ -65,7 +65,7 @@ export function ProductConnections({ productId }: { productId: string }) {
                 <li key={connection.id} className="min-w-0">
                   <Link
                     className="[overflow-wrap:anywhere] underline"
-                    href={`/connections/${connection.id}`}
+                    href={`/workspace/connections/${connection.id}`}
                   >
                     {connection.buyerOrgName}: {connection.title}
                   </Link>

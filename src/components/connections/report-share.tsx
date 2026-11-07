@@ -46,7 +46,7 @@ export function ReportShare({ resultId }: { resultId: string }) {
       {targets && targets.length === 0 ? (
         <p className="text-sm text-muted">
           No buyer is connected to this product yet.{" "}
-          <Link className="underline" href="/connections/requests">
+          <Link className="underline" href="/workspace/requests">
             Respond to a request on the board
           </Link>
           .
