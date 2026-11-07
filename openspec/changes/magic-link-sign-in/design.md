@@ -55,9 +55,11 @@ The plugin writes a `verification` row whose `identifier` is `magic-link:` plus 
 of the token, and whose `value` is JSON `{ type, email, name }`. Those columns already exist.
 Better Auth rate limits with in-memory storage unless secondary storage is configured (it is
 not). The limiter turns on in production; the plugin allows 5 magic-link requests per 60 seconds.
-The bucket is the client IP when `x-forwarded-for` is a single address. This app does not set
-`trustedProxies`: that list has to be the real proxy hops, and a guessed list would trust a
-spoofed client address. Nothing new is migrated.
+A missing `x-forwarded-for`, more than one address, or a single shared proxy address puts every
+visitor in one bucket of 5 sends per 60 seconds per process, and verify clicks in a second bucket
+of 5, until a captured production header is known. `trustedProxies` stays unset: a guessed hop
+list would trust a spoofed client address. This is recorded in `docs/security-accepted-risks.md`.
+Nothing new is migrated.
 
 ### 4. Sign-in page only
 
@@ -75,9 +77,10 @@ and existing users. Password sign-in still follows `?next=`. Styles reuse `.fiel
   and its sessions (`revokeUnprovenAccountAccess`). Password sign-in is unchanged until then.
   The demo account's password stops working if that address opens a magic link.
 - In-memory rate limits reset on process restart and are not shared across instances.
-  When the client IP is not a single `x-forwarded-for` value, every visitor shares one bucket
-  of 5 magic-link sends per 60 seconds. That is recorded in `docs/security-accepted-risks.md`.
-  `trustedProxies` stays unset until a production header is captured.
+  A missing or multi-value `x-forwarded-for`, or a single shared proxy address, puts every
+  visitor in one bucket of 5 magic-link sends per 60 seconds per process, and verify clicks in
+  a second bucket of 5. That is recorded in `docs/security-accepted-risks.md`. `trustedProxies`
+  stays unset until a production header is captured.
 - Live delivery cannot be checked in this run: there is no `BREVO_API_KEY`.
 
 ## Migration Plan
