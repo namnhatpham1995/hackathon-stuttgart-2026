@@ -124,10 +124,10 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 - [x] 13.1 Implement `runAssessment(jobId)` in `pipeline.ts`: claim, set each stage, extract pages, extract facts, validate citations, decide findings, `completeJob`, then `sendCompletionEmail` after commit; on failure `failJob` with an actionable message; verify with 13.2
   - Note: A non-empty `extractFacts` warning marks the result incomplete, the same `complete: false` path as a PDF with no text. `pipeline.test.ts` mocks that path. The live answer-key run is 13.2. The stored assessment date is the Europe/Berlin calendar date. A completion-email error after commit leaves the stored result.
-- [ ] 13.2 Add `assessment.golden.ts`: baseline 01-04 equals the answer key; replacing 03 with 05 flips only R3; the trap file still gives R3 MISMATCH; `empty.pdf` marks the result incomplete; expected values read from `answer-key.json`; verify `pnpm test:golden` passes twice in a row
-  - Blocked: live golden run by controller (needs GEMINI_API_KEY)
-- [ ] 13.3 Tune only the prompt or rules if 13.2 fails, never the answer key; verify `pnpm test:golden` passes
-  - Blocked: live golden run by controller (needs GEMINI_API_KEY)
+- [x] 13.2 Add `assessment.golden.ts`: baseline 01-04 equals the answer key; replacing 03 with 05 flips only R3; the trap file still gives R3 MISMATCH; `empty.pdf` marks the result incomplete; expected values read from `answer-key.json`; verify `pnpm test:golden` passes twice in a row
+  - Note: Controller ran pnpm test:golden live twice on main 2d8eb0f with gemini-3.6-flash: 4/4 PASS both runs (186 s, 145 s). Docs 01-04 match the answer key, the revision B replacement flips only R3, the revB trap keeps R3 MISMATCH, and empty.pdf marks the result incomplete. No extraction warnings.
+- [x] 13.3 Tune only the prompt or rules if 13.2 fails, never the answer key; verify `pnpm test:golden` passes
+  - Note: Controller ran pnpm test:golden live twice on main 2d8eb0f with gemini-3.6-flash: 4/4 PASS both runs (186 s, 145 s). Docs 01-04 match the answer key, the revision B replacement flips only R3, the revB trap keeps R3 MISMATCH, and empty.pdf marks the result incomplete. No extraction warnings.
 - [ ] 13.4 Local click-through: onboard the Lotus Mould profile, create a product, upload 01-04, Upload and assess, see the R3 citation, the dimension summary and three actions, replace 03 with 05, re-assess and see two actions, receive the email; verify each step and that reload shows the stored report
   - Blocked: needs group 11 (PR #11) merged
 - [ ] 13.5 (post-merge) Production click-through of 13.4, closing the tab during processing and reopening after completion; verify the stored report loads, or record the failure honestly as a note
