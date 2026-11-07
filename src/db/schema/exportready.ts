@@ -15,6 +15,13 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
+import type {
+  AssessedDocument,
+  Finding,
+  ProductFields,
+  StoredSupplierProfile,
+} from "@/lib/assessment/types";
+
 import { user } from "./auth";
 
 const bytea = customType<{ data: Buffer; driverData: Buffer }>({
@@ -41,8 +48,8 @@ export const product = pgTable(
     requirementSetKey: text().notNull(),
     requirementSetVersion: integer().notNull(),
     name: text().notNull(),
-    fields: jsonb().$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
-    profile: jsonb().$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    fields: jsonb().$type<ProductFields>().notNull().default(sql`'{}'::jsonb`),
+    profile: jsonb().$type<StoredSupplierProfile>().notNull().default(sql`'{}'::jsonb`),
     listed: boolean().notNull().default(false),
     ...timestamps,
   },
@@ -135,8 +142,8 @@ export const assessmentResult = pgTable("assessment_result", {
     .references(() => product.id, { onDelete: "cascade" }),
   assessmentDate: date({ mode: "string" }).notNull(),
   complete: boolean().notNull(),
-  findings: jsonb().$type<unknown[]>().notNull(),
-  documents: jsonb().$type<unknown[]>().notNull(),
+  findings: jsonb().$type<Finding[]>().notNull(),
+  documents: jsonb().$type<AssessedDocument[]>().notNull(),
   createdAt: timestamp().defaultNow().notNull(),
 });
 
