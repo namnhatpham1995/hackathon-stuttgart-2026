@@ -69,7 +69,7 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 8. Products and document upload · wave 2 · M1 · branch feat/document-upload
 
-- [ ] 8.1 Implement `src/lib/products/service.ts`: create a product for `neckar-cap-104`, get and list owned products, update allowed fields with origin and the declared supplier profile (both Zod-validated), all filtered by `userId`; verify `pnpm typecheck`; full check in 13.4
+- [x] 8.1 Implement `src/lib/products/service.ts`: create a product for `neckar-cap-104`, get and list owned products, update allowed fields with origin and the declared supplier profile (both Zod-validated), all filtered by `userId`; verify `pnpm typecheck`; full check in 13.4
 - [ ] 8.2 Implement `src/lib/documents/service.ts`: add a pending file (MIME, 4 MB, 5 active PDFs, 2 photos, sha256), list active and pending, replace (new pending linked by `replaces_document_id`), and finalise in one transaction (pending to active, replaced to inactive) returning the active set; verify `pnpm typecheck`; full check in 13.4
 - [ ] 8.3 Add `POST /api/products/[productId]/documents` (multipart, one file, session required, 401 without one, 404 for a foreign product, 413 with a message naming the 4 MB limit); verify with `curl` and a session cookie: a fixture PDF gives 201 and a 5 MB file gives 413
 
