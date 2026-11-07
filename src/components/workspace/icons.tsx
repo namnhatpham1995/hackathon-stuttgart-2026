@@ -153,3 +153,19 @@ export function SignOutIcon() {
     </Icon>
   );
 }
+
+export function SpeakerIcon({ muted = false }: { muted?: boolean }) {
+  return (
+    <Icon>
+      <path d="M7 3 3.5 6H1.5v4h2L7 13V3Z" />
+      {muted ? (
+        <path d="m10 6 4 4m0-4-4 4" />
+      ) : (
+        <>
+          <path d="M10 5a4 4 0 0 1 0 6" />
+          <path d="M12 2.5a7 7 0 0 1 0 11" />
+        </>
+      )}
+    </Icon>
+  );
+}

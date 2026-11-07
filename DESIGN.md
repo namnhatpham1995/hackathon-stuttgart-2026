@@ -173,7 +173,7 @@ components:
 
 TradeReady is a calm supplier workspace for scanning buyer requirements, adding documents, and reading an evidence report. The approved direction combines Vanta and Drata task structure with Atlassian foundations and publicly available Atlaskit components. The Operate surface uses medium density, a left-aligned working list, and progressive disclosure.
 
-Neutral surfaces and hairline dividers carry the structure. Blue identifies actions and selection. Paired semantic colours identify evidence states. The current workspace uses demo assessment data and browser-local product storage. The text assistant is unavailable and its composer is disabled.
+Neutral surfaces and hairline dividers carry the structure. Blue identifies actions and selection. Paired semantic colours identify evidence states. New products, drafts, uploads, and reports use the signed-in account’s stored data. Explicit CAP-104 examples and older browser-local drafts remain available. The text assistant uses the authenticated API and the same stored findings.
 
 **Characteristics**
 
@@ -298,7 +298,7 @@ No-report states show an explanation and an Add documents action for an editable
 
 ### Assistant and theme control
 
-The assistant is closed by default. Its native modal dialog has a minimum 64px header, scrollable content region and bottom composer. The current panel states “Assistant unavailable”, explains the manual path, and disables both message entry and Send.
+The assistant is closed by default. Its native modal dialog has a minimum 64px header, scrollable content region and bottom composer. The panel has a typed composer, conversation history, pending and retry feedback, and an optional speaker control. It accepts messages while an assessment runs. Validated directives close the dialog and open the requested product, upload, report, or replacement view. Speech off skips audio requests and retains the complete reply as text. Speech uses up to the first 600 characters of a reply.
 
 The theme control is a 16px sun/moon SVG in the shared top bar. CSS theme variables set its geometry from the server-rendered theme and system preference. The disc/mask/rays transition over 240ms with `cubic-bezier(0.16, 1, 0.3, 1)`, rays fade over 160ms ease-out. With reduced motion, transitions are removed and the final state renders immediately. Theme choice is persisted in a cookie, no choice follows the system. The accessible name names the destination theme.
 
@@ -309,7 +309,7 @@ The theme control is a 16px sun/moon SVG in the shared top bar. CSS theme variab
 - **Do** use the shared Button, Field, NavItem, and StatusChip primitives, with Atlaskit handling SDK control behaviour.
 - **Do** preserve visible labels, inline error text, first-invalid focus, pending feedback, and reduced-motion behaviour.
 - **Do** keep supplier declarations distinct from evidence and keep field provenance visible while editing.
-- **Do** keep the assistant closed until requested and clearly unavailable while its service is disconnected.
+- **Do** keep the assistant closed until requested and clear about configuration or request failures while preserving typed input.
 - **Do** name actions plainly with “Upload and assess”, “Save draft”, and “Copy request”.
 
 ### Don't
@@ -318,4 +318,4 @@ The theme control is a 16px sun/moon SVG in the shared top bar. CSS theme variab
 - **Don’t** use white text on a saturated status pill or invent a second brand accent.
 - **Don’t** add gradients, glass, glows, coloured shadows, decorative illustrations, emoji, or marketing hero headings to the workspace.
 - **Don’t** use a display serif, another sans-serif identity, or radii above 8px.
-- **Don’t** imply that the demo assessment, browser-local products, disabled assistant, or copy-only request draft are live integrated services.
+- **Don’t** imply that demo assessments or browser-local products use stored account data, or that the copy-only request draft sends a message.

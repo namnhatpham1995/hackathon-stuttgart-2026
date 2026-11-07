@@ -1,6 +1,10 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { z } from "zod";
+import { createProduct as persistProduct, getProduct, updateProduct } from "@/lib/products/service";
+import { loadWorkspaceProduct } from "@/lib/products/workspace";
+import { discardPendingDocument, finaliseDocuments } from "@/lib/documents/service";
 import {
   DEMO_REQUIREMENT_SET_KEY,
   DEMO_REQUIREMENT_SET_VERSION,
@@ -23,7 +27,7 @@ export async function setTheme(theme: "light" | "dark") {
 export async function createProduct(
   input: unknown,
 ): Promise<{ ok: true; product: WorkspaceProduct } | { ok: false; errors: FieldErrors }> {
-  await requireSession();
+  const session = await requireSession();
   const parsed = createProductSchema.safeParse(input);
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
 
@@ -55,7 +59,8 @@ export async function createProduct(
     result: null,
   };
 
-  return { ok: true, product };
+  const stored = await persistProduct(session.user.id, product);
+  return { ok: true, product: { ...product, id: stored.id, stored: true } };
 }
 
 export async function validateDraft(
@@ -67,4 +72,43 @@ export async function validateDraft(
   const parsed = draftSchema.safeParse(input);
   if (!parsed.success) return { ok: false, errors: fieldErrors(parsed.error) };
   return { ok: true, values: parsed.data };
+}
+
+export async function readWorkspace(productId: string) {
+  const session = await requireSession();
+  return loadWorkspaceProduct(session.user.id, z.string().min(1).max(200).parse(productId));
+}
+
+export async function saveWorkspaceDraft(productId: string, input: unknown) {
+  const session = await requireSession();
+  const id = z.string().min(1).max(200).parse(productId);
+  const parsed = draftSchema.safeParse(input);
+  if (!parsed.success) return { ok: false as const, errors: fieldErrors(parsed.error) };
+  const previous = await getProduct(session.user.id, id);
+  if (!previous) throw new Error("Product not found");
+  const { name, ...values } = parsed.data;
+  const fields = Object.fromEntries(
+    Object.entries(values).map(([key, value]) => {
+      const old = previous.fields[key as keyof typeof previous.fields];
+      return [key, old?.value === value ? old : { value, origin: "user" as const }];
+    }),
+  );
+  await updateProduct(session.user.id, id, { name, fields });
+  const product = await loadWorkspaceProduct(session.user.id, id);
+  if (!product) throw new Error("Product not found");
+  return { ok: true as const, product };
+}
+
+export async function finaliseWorkspaceDocuments(productId: string) {
+  const session = await requireSession();
+  return finaliseDocuments(session.user.id, z.string().min(1).max(200).parse(productId));
+}
+
+export async function undoWorkspaceUpload(productId: string, documentId: string) {
+  const session = await requireSession();
+  await discardPendingDocument(
+    session.user.id,
+    z.string().min(1).max(200).parse(productId),
+    z.string().min(1).max(200).parse(documentId),
+  );
 }

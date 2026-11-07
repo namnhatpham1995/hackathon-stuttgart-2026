@@ -1,5 +1,6 @@
 import { fixtureById } from "@/components/workspace/fixtures";
 import { ProductWorkspace } from "@/components/workspace/product-workspace";
+import { loadWorkspaceProduct } from "@/lib/products/workspace";
 import { requireSession } from "@/lib/session";
 
 export default async function ProductPage({
@@ -9,14 +10,16 @@ export default async function ProductPage({
   params: Promise<{ productId: string }>;
   searchParams: Promise<{ replace?: string }>;
 }) {
-  await requireSession();
+  const session = await requireSession();
   const { productId } = await params;
   const { replace } = await searchParams;
+
+  const stored = await loadWorkspaceProduct(session.user.id, productId);
 
   return (
     <ProductWorkspace
       productId={productId}
-      initial={fixtureById(productId)}
+      initial={stored ?? fixtureById(productId)}
       replaceDocumentId={replace}
     />
   );

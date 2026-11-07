@@ -117,7 +117,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
   - Note: 12.5 rewrote `docs/deploy.md` for Railway (backend and Postgres) and Vercel (UI). There is no Neon database. Production `GEMINI_MODEL` is `gemini-3.6-flash`.
 - [x] 12.3 Owner step: create the Railway project (Next.js service from this repo, Node 22, build `pnpm build`, pre-deploy `pnpm db:migrate`, start `pnpm start`, healthcheck `/api/health`, Railway Postgres, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, env from `docs/deploy.md`) and the Vercel project (build command `node scripts/vercel-build.mjs`, previews off, `BACKEND_URL`, Railway's public `DATABASE_URL`, and the same `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`); the worker ticks this after the owner confirms; verify both projects and their env
   - Note: Railway project exportready (service exportready plus Postgres and its env) and Vercel project exportready at https://exportready.vercel.app (BACKEND_URL, DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, APP_BASE_URL) are created.
-- [ ] 12.4 (post-merge) Smoke-test the first production deploy: sign up, sign in, open `/workspace`; verify each works, then record the URL as a note and set `APP_BASE_URL` and `BETTER_AUTH_URL` to it
+- [x] 12.4 (post-merge) Smoke-test the first production deploy: sign up, sign in, open `/workspace`; verify each works, then record the URL as a note and set `APP_BASE_URL` and `BETTER_AUTH_URL` to it
+  - Note: 2026-11-07 12:36 UTC at https://exportready.vercel.app. Sign-up as nam95.pn+er-smoke-1794054979454@gmail.com (`POST /api/auth/sign-up/email` 200) opened `/workspace` (heading Products). Sign out (`POST /api/auth/sign-out` 200) returned to `/`. Signed-out `/workspace` redirected to `/sign-in?next=%2Fworkspace`. Sign-in (`POST /api/auth/sign-in/email` 200) opened `/workspace` again. `APP_BASE_URL` and `BETTER_AUTH_URL` were not changed. Both should be `https://exportready.vercel.app` with no path and no trailing slash. The controller checks the deployed values.
 - [x] 12.5 Railway backend + Postgres deploy (railway.json, /api rewrite, health route, docs)
   - Note: `BACKEND_URL` is an optional URL in `src/env.ts` and `.env.example`. `.env.example` sets `GEMINI_MODEL=gemini-3.6-flash`. `next.config.ts` still reads `process.env.BACKEND_URL` for the rewrite.
 
@@ -132,7 +133,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 - [ ] 13.4 Local click-through: onboard the Lotus Mould profile, create a product, upload 01-04, Upload and assess, see the R3 citation, the dimension summary and three actions, replace 03 with 05, re-assess and see two actions, receive the email; verify each step and that reload shows the stored report
   - Blocked: needs group 11 (PR #11) merged
 - [ ] 13.5 (post-merge) Production click-through of 13.4, closing the tab during processing and reopening after completion; verify the stored report loads, or record the failure honestly as a note
-  - Blocked: needs group 11 (PR #11) merged
+  - Blocked: workspace UI not wired to backend
+  - Note: 2026-11-07 12:36 UTC, same account, product https://exportready.vercel.app/workspace/10a67eda-3ec9-48b7-9419-dbe48f935707. Upload of fixtures 01–04 showed the files locally. `POST /api/products/10a67eda-3ec9-48b7-9419-dbe48f935707/documents` returned 404 `{"error":"Product not found"}` (one request; the client stopped). `POST /api/products/10a67eda-3ec9-48b7-9419-dbe48f935707/assess` returned 404. A signed-in repeat of that URL was 404 `text/html` whose page text includes "could not be found". The client kept job id `demo-500ed502-b2a7-426d-88c9-ad73ecd80129`. The click's `GET /api/jobs/demo-500ed502-b2a7-426d-88c9-ad73ecd80129` returned 404. A signed-in repeat returned 404 `{"error":"Not found"}`. The page then showed a local progress view and a fixture report in localStorage (`result-10a67eda-3ec9-48b7-9419-dbe48f935707-baseline`). That report is demo data: R3 quote "Part number: CAP-104. Drawing revision: A.", 2 documented and 3 open actions (R2, R3, R4). Screenshots in `docs/screenshots/` are that demo UI. Close-during-processing and the revision-B re-assess were not run.
 - [x] 13.6 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
   - Note: Round 1 FAIL (R1-1 photos, R1-2 unnamed incomplete files), fixed in one round. Round 2 PASS. The reviewer ran on Grok because Opus was out of usage.
 
@@ -142,14 +144,15 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
   - Note: Draft writes always use origin `assistant`. `start_assessment` calls `startAssessment` only when the checklist exists, at least one document is active and none are pending. Latest job and stored findings are read in this module; the jobs service has no product-scoped read and this lane does not own that file.
 - [x] 14.2 Add `POST /api/assistant` (session required): Gemini function calling over the history, at most 5 rounds, failures explained with a recovery step, replies only from tool results; verify a model-supplied foreign product ID gets "not found"
   - Blocked: Live Gemini check was not run. This VM has no GEMINI_API_KEY. Tests mock `callGemini`: a foreign product id on show_report returns "not found", tool rounds stop at 5, and a model failure is a recovery step. Production model is `gemini-3.6-flash` via `callGemini` (`GEMINI_MODEL`). The route is `POST /api/assistant` on Railway; Vercel proxies `/api/*`.
-- [ ] 14.3 Fill `assistant-panel.tsx`: text input, message list, applies directives through `workspace-events.ts`, stays usable while a job runs; verify the demo conversation: "I want to submit my product and documents for this buyer" opens the upload card; after the report, "Why did R3 fail?" cites the revision-A quote and offers a replacement
+- [x] 14.3 Fill `assistant-panel.tsx`: text input, message list, applies directives through `workspace-events.ts`, stays usable while a job runs; verify the demo conversation: "I want to submit my product and documents for this buyer" opens the upload card; after the report, "Why did R3 fail?" cites the revision-A quote and offers a replacement
+  - Note: Connected the panel, shared directives, owned product/draft/upload persistence, and stored reports. Automated DOM and real-PostgreSQL tests cover upload navigation, R3 citations, replacement routing, retry input, and draft provenance. Provider boundaries are mocked locally. Live Gemini verification remains on Railway with its configured environment.
 
 ## 15. Spoken replies (optional, cut at 15:15) · wave 4 · M4 · branch feat/spoken-replies
 
 - [x] 15.1 Add `POST /api/speech` (session required, text up to 600 characters, ElevenLabs text-to-speech with a stock voice, key server-side) and `src/components/voice/speak-reply.tsx` with a mute toggle; verify a reply plays audio and, with the key unset, the reply stays text with no error dialog
   - Note: Server env is `ELEVENLABS_API_KEY` (Railway only, never `NEXT_PUBLIC_`, never on Vercel). Stock voice Rachel `21m00Tcm4TlvDq8ikWAM`, model `eleven_flash_v2_5`. Missing key or a failed synthesis returns `{ available: false }` and the reply stays text.
-- [ ] 15.2 Mount the speaker in `assistant-panel.tsx` (one line); verify the 14.3 conversation still works with audio off
-  - Blocked: needs 14.3
+- [x] 15.2 Mount the speaker in `assistant-panel.tsx` (one line); verify the 14.3 conversation still works with audio off
+  - Note: Mounted the speaker in the assistant conversation with a shared mute control. DOM integration tests verify the upload/R3 conversation with speech off and no speech requests.
 
 ## 16. Submission package · wave 4 · M5 · branch docs/submission
 

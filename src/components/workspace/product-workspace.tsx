@@ -1,8 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import {
+  finaliseWorkspaceDocuments,
+  readWorkspace,
+  undoWorkspaceUpload,
+} from "@/app/workspace/actions";
 import { Button } from "@/components/ui/button";
 import type { ProductDocument, WorkspaceProduct } from "./contract";
 import { classifyFile, packFromFilenames, rejectionForFile } from "./documents";
@@ -27,6 +32,8 @@ export function ProductWorkspace({
   replaceDocumentId?: string;
 }) {
   const router = useRouter();
+  const search = useSearchParams();
+  const [uploading, setUploading] = useState(false);
   const [product, setProduct] = useState<WorkspaceProduct | null>(initial);
   const [ready, setReady] = useState(Boolean(initial));
   const [replacingId, setReplacingId] = useState<string | null>(replaceDocumentId ?? null);
@@ -38,12 +45,18 @@ export function ProductWorkspace({
   const files = useRef(new Map<string, File>());
 
   useEffect(() => {
+    if (initial?.stored) {
+      setProduct(initial);
+      setJob(initial.job ? { ...initial.job, pack: "baseline" } : null);
+      setReady(true);
+      return;
+    }
     const saved = readProduct(productId);
     if (saved) setProduct(saved);
     setReady(true);
     const stored = readJob(productId);
     if (stored) setJob(stored);
-  }, [productId]);
+  }, [productId, initial]);
 
   useEffect(() => {
     if (!replaceDocumentId) return;
@@ -59,39 +72,62 @@ export function ProductWorkspace({
   }, []);
 
   useEffect(() => {
+    const view = search.get("view");
+    if (view === "uploads") revealUpload();
+    if (view === "product") {
+      const draft = document.getElementById("product-draft");
+      const details = draft?.closest("details");
+      if (details) details.open = true;
+      draft?.scrollIntoView({ block: "start" });
+    }
     return subscribeWorkspaceDirective((directive) => {
-      if (directive.action === "navigate_workspace") {
-        if (directive.view === "report") router.push(reportHref(productId, job?.pack));
-        if (directive.view === "uploads") revealUpload();
-        if (directive.view === "product") {
-          document.getElementById("product-draft")?.scrollIntoView({ block: "start" });
-        }
-        return;
-      }
-      if (directive.action === "show_upload_card") {
+      if (
+        directive.type === "show_upload_card" &&
+        (!directive.productId || directive.productId === productId)
+      )
         revealUpload();
-        return;
-      }
-      if (directive.action === "show_report") {
-        router.push(reportHref(productId, job?.pack));
-        return;
-      }
-      if (directive.action === "request_replacement") {
-        setReplacingId(directive.documentId);
-        revealUpload();
-      }
     });
-  }, [job?.pack, productId, revealUpload, router]);
+  }, [search, revealUpload, productId]);
 
   function update(next: WorkspaceProduct) {
-    writeProduct(next);
+    if (!next.stored) writeProduct(next);
     setProduct(next);
   }
 
-  function addFiles(selected: File[], requirementId?: string) {
+  async function addFiles(selected: File[], requirementId?: string) {
     if (!product) return;
     if (replacingId && selected.length !== 1) {
       setUploadError("Choose one file to replace this document. The batch was not changed.");
+      return;
+    }
+    if (product.stored) {
+      setUploading(true);
+      setUploadError(null);
+      const documents = [...product.documents];
+      try {
+        for (const file of selected) {
+          const rejection = rejectionForFile(file, documents, replacingId);
+          if (rejection) throw new Error(rejection);
+          const body = new FormData();
+          body.set("file", file);
+          if (replacingId) body.set("replacesDocumentId", replacingId);
+          const response = await fetch(`/api/products/${productId}/documents`, {
+            method: "POST",
+            body,
+          });
+          if (!response.ok) throw new Error(await readError(response, file.name));
+          const document = (await response.json()) as ProductDocument;
+          documents.push({ ...document, requirementId });
+          update({ ...product, documents: [...documents] });
+        }
+        setReplacingId(null);
+      } catch (error) {
+        setUploadError(
+          error instanceof Error ? error.message : "The file could not be uploaded. Try again.",
+        );
+      } finally {
+        setUploading(false);
+      }
       return;
     }
     const messages: string[] = [];
@@ -127,6 +163,32 @@ export function ProductWorkspace({
 
   async function assess() {
     if (!product) return;
+    if (product.stored) {
+      setAssessing(true);
+      setUploadError(null);
+      try {
+        const documents = await finaliseWorkspaceDocuments(productId);
+        update({ ...product, documents });
+        const response = await fetch("/api/jobs", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ productId }),
+        });
+        if (!response.ok)
+          throw new Error(
+            "The assessment could not start. Your files are saved. Try Upload and assess again.",
+          );
+        const started = (await response.json()) as { id: string };
+        setJob({ id: started.id, startedAt: Date.now(), pack: "baseline" });
+      } catch (error) {
+        setUploadError(
+          error instanceof Error ? error.message : "The assessment could not start. Try again.",
+        );
+      } finally {
+        setAssessing(false);
+      }
+      return;
+    }
     const pending = product.documents.filter((document) => document.state === "pending");
     if (pending.length === 0) return;
     setAssessing(true);
@@ -226,16 +288,32 @@ export function ProductWorkspace({
         documents={product.documents}
         replacing={replacing}
         highlighted={highlighted}
-        pending={assessing}
+        pending={uploading || assessing}
         error={uploadError}
-        onAdd={addFiles}
+        onAdd={(selected, requirementId) => void addFiles(selected, requirementId)}
         findings={job ? undefined : product.result?.findings}
         onStartReplace={(id) => {
           setReplacingId(id);
           setHighlighted(true);
         }}
         onCancelReplace={() => setReplacingId(null)}
+        canAssess={
+          product.stored && product.documents.some((document) => document.kind === "evidence")
+        }
         onRemovePending={(id) => {
+          if (product.stored) {
+            setUploading(true);
+            void undoWorkspaceUpload(productId, id)
+              .then(() => {
+                update({
+                  ...product,
+                  documents: product.documents.filter((document) => document.id !== id),
+                });
+              })
+              .catch(() => setUploadError("The upload could not be undone. Try again."))
+              .finally(() => setUploading(false));
+            return;
+          }
           update({
             ...product,
             documents: product.documents.filter((document) => document.id !== id),
@@ -250,6 +328,19 @@ export function ProductWorkspace({
           jobId={job.id}
           startedAt={job.startedAt}
           onComplete={() => {
+            if (product.stored) {
+              void readWorkspace(productId)
+                .then((stored) => {
+                  if (stored) update(stored);
+                  setJob(null);
+                  router.push(`/workspace/${productId}/report`);
+                  router.refresh();
+                })
+                .catch(() =>
+                  setUploadError("The saved report could not be opened. Refresh this page."),
+                );
+              return;
+            }
             const withResult = { ...product, result: buildResult(product.id, job.pack) };
             update(withResult);
             clearJob(productId);

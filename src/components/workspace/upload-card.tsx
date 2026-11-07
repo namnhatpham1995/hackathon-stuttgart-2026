@@ -17,6 +17,7 @@ export function UploadCard({
   pending,
   error,
   findings,
+  canAssess = false,
   onAdd,
   onStartReplace,
   onCancelReplace,
@@ -30,6 +31,7 @@ export function UploadCard({
   pending: boolean;
   error: string | null;
   findings?: readonly Finding[];
+  canAssess?: boolean;
   onAdd: (files: File[], requirementId?: string) => void;
   onStartReplace: (id: string) => void;
   onCancelReplace: () => void;
@@ -46,7 +48,9 @@ export function UploadCard({
   const photos = photoSlots(documents);
   const pendingDocs = documents.filter((document) => document.state === "pending");
   const assignedIds = new Set(
-    requirementSet.requirements.map((requirement) => linkedDocument(requirement.id, documents)?.id),
+    requirementSet.requirements.map(
+      (requirement) => linkedDocument(requirement.id, documents, findings)?.id,
+    ),
   );
   const additionalDocuments = currentDocuments(documents).filter(
     (document) => !assignedIds.has(document.id),
@@ -105,7 +109,7 @@ export function UploadCard({
       </div>
       <ul className="divide-y divide-line">
         {requirementSet.requirements.map((requirement) => {
-          const linked = linkedDocument(requirement.id, documents);
+          const linked = linkedDocument(requirement.id, documents, findings);
           const finding = findings?.find(
             (item) =>
               item.requirementId === requirement.id &&
@@ -301,7 +305,7 @@ export function UploadCard({
         <Button
           type="button"
           pending={pending}
-          disabled={pendingDocs.length === 0}
+          disabled={!canAssess && pendingDocs.length === 0}
           onClick={onAssess}
         >
           {pending ? "Uploading…" : "Upload and assess"}
@@ -311,10 +315,19 @@ export function UploadCard({
   );
 }
 
-function linkedDocument(requirementId: string, documents: readonly ProductDocument[]) {
+function linkedDocument(
+  requirementId: string,
+  documents: readonly ProductDocument[],
+  findings?: readonly Finding[],
+) {
   const usable = currentDocuments(documents).filter((document) => document.kind === "evidence");
   const matches = (document: ProductDocument) =>
     document.requirementId === requirementId ||
+    Boolean(
+      findings
+        ?.find((finding) => finding.requirementId === requirementId)
+        ?.evidence.some((citation) => citation.documentId === document.id),
+    ) ||
     matchesRequirement(requirementId, document) ||
     Boolean(
       document.replacesDocumentId &&
