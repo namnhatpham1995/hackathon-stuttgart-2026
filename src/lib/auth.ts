@@ -38,6 +38,9 @@ export const auth = betterAuth({
   // nextCookies() must stay last: it lets server actions set the session cookie.
   plugins: [
     magicLink({
+      // The email already carries the raw URL. The database stores only the hash
+      // (security guide: one-time tokens are not readable).
+      storeToken: "hashed",
       sendMagicLink: async ({ email, url }) => {
         await sendMagicLinkEmail({ email, url });
       },

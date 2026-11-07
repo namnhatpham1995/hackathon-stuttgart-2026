@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
+vi.hoisted(() => {
+  delete process.env.BREVO_API_KEY;
+  delete process.env.BREVO_SENDER_EMAIL;
+});
+
 import { auth } from "../auth";
 import { sendMagicLinkEmail } from "./magic-link-email";
 

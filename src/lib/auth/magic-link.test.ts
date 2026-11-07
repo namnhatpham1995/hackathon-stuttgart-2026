@@ -6,7 +6,7 @@ vi.mock("@/lib/notify/brevo", () => ({
 }));
 
 import { db } from "@/db/client";
-import { session, user } from "@/db/schema";
+import { session, user, verification } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { sendBrevoEmail } from "@/lib/notify/brevo";
 
@@ -33,6 +33,11 @@ async function requestLink(email: string) {
   expect(url.searchParams.get("callbackURL")).toBe("/workspace");
   const token = url.searchParams.get("token");
   expect(token).toEqual(expect.any(String));
+  const pending = (await db.select().from(verification)).filter((row) => row.value.includes(email));
+  expect(pending).toHaveLength(1);
+  expect(pending[0]?.identifier.startsWith("magic-link:")).toBe(true);
+  expect(pending[0]?.identifier).not.toBe(`magic-link:${token}`);
+  expect(pending[0]?.identifier.includes(token ?? "")).toBe(false);
   return token ?? "";
 }
 

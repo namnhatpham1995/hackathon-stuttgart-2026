@@ -31,7 +31,8 @@ shown by `sign-in/page.tsx`. `sendBrevoEmail` in `src/lib/notify/brevo.ts` calls
 `magicLink({ sendMagicLink })` from `better-auth/plugins`, with `magicLinkClient()` on
 `createAuthClient`. Do not set `disableSignUp` (default false: unknown emails become users on
 verify, with `emailVerified: true`). Do not set `expiresIn` (plugin default 300 seconds).
-`storeToken` stays `"plain"`. `nextCookies()` stays the last plugin.
+`storeToken` is `"hashed"` (SHA-256). The message already contains the raw URL, so the
+`verification` row does not. `nextCookies()` stays the last plugin.
 
 The verify URL is built by the plugin from `baseURL` (`BETTER_AUTH_URL`) plus the auth base path,
 so it is `BETTER_AUTH_URL/api/auth/magic-link/verify?...&callbackURL=/workspace`.
@@ -50,11 +51,13 @@ stores `name` only for a brand-new user and the `user.name` column is required.
 
 ### 3. No schema change
 
-The plugin writes a `verification` row whose `identifier` is `magic-link:<token>` and whose
-`value` is JSON `{ type, email, name }`. Those columns already exist. Better Auth rate limits
-with in-memory storage unless secondary storage is configured (it is not). The limiter turns on
-in production; the plugin allows 5 magic-link requests per 60 seconds per IP. Nothing new is
-migrated.
+The plugin writes a `verification` row whose `identifier` is `magic-link:` plus the SHA-256
+of the token, and whose `value` is JSON `{ type, email, name }`. Those columns already exist.
+Better Auth rate limits with in-memory storage unless secondary storage is configured (it is
+not). The limiter turns on in production; the plugin allows 5 magic-link requests per 60 seconds.
+The bucket is the client IP when `x-forwarded-for` is a single address. This app does not set
+`trustedProxies`: that list has to be the real proxy hops, and a guessed list would trust a
+spoofed client address. Nothing new is migrated.
 
 ### 4. Sign-in page only
 
@@ -66,7 +69,8 @@ and existing users. Password sign-in still follows `?next=`. Styles reuse `.fiel
 ## Risks / Trade-offs
 
 - A failed send still leaves a verification row, because the plugin inserts it before
-  `sendMagicLink`. The row expires with the token and is never emailed.
+  `sendMagicLink`. The stored identifier is a hash, so the row cannot be exchanged for a session
+  without the token that was never emailed.
 - Opening a link for a password account whose email is not verified deletes that password
   and its sessions (`revokeUnprovenAccountAccess`). Password sign-in is unchanged until then.
   The demo account's password stops working if that address opens a magic link.
