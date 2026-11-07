@@ -3,6 +3,7 @@ import type { Content } from "@google/genai";
 import { callGemini } from "@/lib/assessment/gemini";
 import type { WorkspaceDirective } from "@/lib/assessment/types";
 
+import { describePage, type SiteDirective, siteMapText } from "./site-map";
 import { agentTools, executeAgentTool } from "./tools";
 
 /** One Gemini call per round. A sixth tool request is not sent. */
@@ -11,12 +12,16 @@ const MAX_ROUNDS = 5;
 type Executed = {
   name: string;
   output: Record<string, unknown>;
-  directive?: WorkspaceDirective;
+  directive?: WorkspaceDirective | SiteDirective;
 };
 
-function systemInstruction(productId: string): string {
+export type AssistantDirective = WorkspaceDirective | SiteDirective;
+
+function systemInstruction(productId: string | null, path: string): string {
   return [
-    "You are the TradeReady workspace assistant for the signed-in supplier.",
+    "You are the TradeReady assistant for the signed-in user, who may act as a supplier or as a buyer.",
+    siteMapText,
+    describePage(path),
     "You can only act by calling the provided tools. You cannot send email, open an arbitrary URL, run code, or read another user's product, document, job or report.",
     "An id in a tool argument is checked. If the tool result says not found, tell the user you could not open it. Do not invent the record.",
     "Describe progress and results only from tool results. Do not invent a finding, a quote, a status or a percentage. An assessment is finished only when a tool result says its status is COMPLETED.",
@@ -24,7 +29,9 @@ function systemInstruction(productId: string): string {
     "When a tool result includes a recovery step, tell the user that step.",
     "If the user asks for something you cannot do, say so and call no tool.",
     "Do not poll for job status. One status read is enough. The page updates the job on its own.",
-    `The product open in the workspace is ${productId}. Use it unless the user names a different product they own.`,
+    productId
+      ? `The product open in the workspace is ${productId}. Use it unless the user names a different product they own.`
+      : "No product is open. A product action needs one: tell the user to open a product first, or call list_products and navigate_workspace after they choose. You may still explain the site and open its pages with navigate_site.",
   ].join(" ");
 }
 
@@ -45,6 +52,8 @@ function actionSentence(item: Executed): string {
     if (item.directive.view === "uploads") return "Opened the uploads view.";
     if (item.directive.view === "report") return "Opened the report view.";
   }
+  if (item.name === "navigate_site") return "Opened the page.";
+  if (item.name === "list_products") return "Listed your products.";
   if (item.name === "show_upload_card") {
     return "The upload card is waiting for you to choose files.";
   }
@@ -92,19 +101,20 @@ function replyForTurn(modelText: string | null, executed: Executed[], stopped: b
 
 export async function runAssistantTurn(input: {
   userId: string;
-  productId: string;
+  productId: string | null;
+  page?: { path: string };
   messages: { role: "user" | "model"; text: string }[];
-}): Promise<{ reply: string; directives: WorkspaceDirective[] }> {
+}): Promise<{ reply: string; directives: AssistantDirective[] }> {
   const contents: Content[] = input.messages.map((message) => ({
     role: message.role,
     parts: [{ text: message.text }],
   }));
-  const directives: WorkspaceDirective[] = [];
+  const directives: AssistantDirective[] = [];
   const executed: Executed[] = [];
 
   for (let round = 1; round <= MAX_ROUNDS; round += 1) {
     const response = await callGemini({
-      systemInstruction: systemInstruction(input.productId),
+      systemInstruction: systemInstruction(input.productId, input.page?.path ?? ""),
       contents,
       temperature: 0,
       tools: agentTools,

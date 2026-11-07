@@ -2,18 +2,17 @@
 
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { setTheme } from "@/app/workspace/actions";
-import { Button } from "@/components/ui/button";
+import { AssistantDock } from "@/components/assistant/assistant-dock";
+import { clearAssistantHistory } from "@/components/assistant/assistant-history";
+import { ConnectionsNav } from "@/components/connections/connections-nav";
 import { BrandMark } from "@/components/ui/brand-mark";
+import { Button } from "@/components/ui/button";
 import { NavItem } from "@/components/ui/nav-item";
 import { WorkspaceSwitcher } from "@/components/ui/workspace-switcher";
-import { ConnectionsNav } from "@/components/connections/connections-nav";
 import { signOut } from "@/lib/auth-client";
-
-import { AssistantPanel } from "@/components/assistant/assistant-panel";
-import { subscribeWorkspaceDirective } from "./workspace-events";
-import { PanelIcon, ProductIcon, SignOutIcon, ThemeIcon } from "./icons";
+import { ProductIcon, SignOutIcon, ThemeIcon } from "./icons";
 
 export function WorkspaceShell({
   user,
@@ -25,38 +24,8 @@ export function WorkspaceShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const params = useParams();
   const productId = typeof params.productId === "string" ? params.productId : undefined;
-  const [assistantOpen, setAssistantOpen] = useState(false);
-  const assistantDialog = useRef<HTMLDialogElement>(null);
-  const assistantTrigger = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (assistantOpen) assistantDialog.current?.showModal();
-    else assistantDialog.current?.close();
-  }, [assistantOpen]);
-
-  useEffect(
-    () =>
-      subscribeWorkspaceDirective((directive) => {
-        if (!productId) return;
-        setAssistantOpen(false);
-        const base = `/workspace/${encodeURIComponent(directive.productId ?? productId)}`;
-        if (directive.type === "show_report") {
-          router.push(`${base}/report?result=${encodeURIComponent(directive.resultId)}`);
-        } else if (directive.type === "request_replacement") {
-          router.push(`${base}?replace=${encodeURIComponent(directive.documentId)}#upload-card`);
-        } else if (directive.type === "navigate" && directive.view === "report") {
-          router.push(`${base}/report`);
-        } else if (directive.type === "navigate" && directive.view === "product") {
-          router.push(`${base}?view=product#product-draft`);
-        } else {
-          router.push(`${base}?view=uploads#upload-card`);
-        }
-      }),
-    [productId, router],
-  );
 
   return (
     <div className="workspace-shell min-h-dvh bg-card text-ink">
@@ -115,17 +84,7 @@ export function WorkspaceShell({
           <WorkspaceSwitcher className="order-last w-full lg:order-none lg:w-auto" />
           <div className="ml-auto flex items-center gap-3">
             <span className="meta hidden text-muted sm:inline">{user.name}</span>
-            <Button
-              ref={assistantTrigger}
-              type="button"
-              variant="secondary"
-              size="sm"
-              aria-haspopup="dialog"
-              aria-expanded={assistantOpen}
-              onClick={() => setAssistantOpen(true)}
-            >
-              <PanelIcon /> Assistant
-            </Button>
+            <AssistantDock />
             <ThemeToggle />
             <div className="md:hidden">
               <SignOut compact />
@@ -139,24 +98,6 @@ export function WorkspaceShell({
           {children}
         </main>
       </div>
-      <dialog
-        ref={assistantDialog}
-        aria-label="Assistant"
-        className="assistant-dialog"
-        onCancel={() => setAssistantOpen(false)}
-        onClose={() => {
-          setAssistantOpen(false);
-          assistantTrigger.current?.focus();
-        }}
-      >
-        <div className="h-full">
-          <AssistantPanel
-            key={productId ?? "workspace"}
-            productId={productId}
-            onCollapse={() => setAssistantOpen(false)}
-          />
-        </div>
-      </dialog>
     </div>
   );
 }
@@ -210,6 +151,7 @@ function SignOut({ compact = false }: { compact?: boolean }) {
       pending={pending}
       onClick={async () => {
         setPending(true);
+        clearAssistantHistory();
         await signOut();
         router.push("/");
         router.refresh();

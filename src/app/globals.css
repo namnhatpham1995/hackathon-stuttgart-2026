@@ -346,6 +346,22 @@ textarea {
   background: var(--selected);
   color: var(--selected-ink);
 }
+.buyer-navigation-dialog {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(280px, calc(100vw - 32px));
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+.buyer-navigation-dialog::backdrop {
+  background: var(--blanket);
+}
 .workspace-topbar {
   display: flex;
   flex-wrap: wrap;

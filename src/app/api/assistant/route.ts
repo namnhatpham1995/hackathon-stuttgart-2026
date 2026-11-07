@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { runAssistantTurn } from "@/lib/agent/conversation";
+import { pagePathSchema } from "@/lib/agent/site-map";
 import { GeminiCallError } from "@/lib/assessment/gemini";
 import { auth } from "@/lib/auth";
 import { getProduct } from "@/lib/products/service";
@@ -14,7 +15,10 @@ const messageSchema = z.object({
 
 const bodySchema = z
   .object({
-    productId: z.string().trim().min(1).max(200),
+    page: z.object({
+      path: pagePathSchema,
+      productId: z.string().trim().min(1).max(200).optional(),
+    }),
     messages: z.array(messageSchema).min(1).max(40),
   })
   .superRefine((body, ctx) => {
@@ -62,13 +66,19 @@ export async function POST(request: Request) {
   const parsed = bodySchema.safeParse(payload);
   if (!parsed.success) return noStore({ error: "Invalid request" }, 400);
 
-  const owned = await getProduct(session.user.id, parsed.data.productId);
-  if (!owned) return noStore({ error: "Not found" }, 404);
+  const productId = parsed.data.page.productId;
+  let ownedId: string | null = null;
+  if (productId) {
+    const owned = await getProduct(session.user.id, productId);
+    if (!owned) return noStore({ error: "Not found" }, 404);
+    ownedId = owned.id;
+  }
 
   try {
     const turn = await runAssistantTurn({
       userId: session.user.id,
-      productId: owned.id,
+      productId: ownedId,
+      page: { path: parsed.data.page.path },
       messages: parsed.data.messages,
     });
     return noStore(turn, 200);

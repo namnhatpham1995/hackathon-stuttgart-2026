@@ -6,13 +6,19 @@ const navigation = vi.hoisted(() => ({ pathname: "/workspace" }));
 vi.mock("next/navigation", () => ({
   usePathname: () => navigation.pathname,
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  useParams: () => ({}),
+}));
+
+vi.mock("@/lib/auth-client", () => ({
+  signOut: vi.fn(),
+  useSession: () => ({ data: { user: { id: "qa-user" } } }),
 }));
 
 import { BuyerShell } from "@/components/buyer/shell";
 import { WorkspaceSwitcher } from "@/components/ui/workspace-switcher";
 import { ConnectionsNav } from "./connections-nav";
 
-test("buyer navigation and workspace switching stay in the buyer header", () => {
+test("buyer navigation stays vertical while workspace switching stays in the header", () => {
   navigation.pathname = "/buyer/inbox";
   const container = document.createElement("div");
   container.innerHTML = renderToStaticMarkup(
@@ -21,9 +27,10 @@ test("buyer navigation and workspace switching stay in the buyer header", () => 
     </BuyerShell>,
   );
   expect(container.querySelector('nav[aria-label="Workspaces"]')?.closest("header")).not.toBeNull();
-  const buyerNav = container.querySelector('nav[aria-label="Buyer"]');
+  const buyerNav = container.querySelector('aside nav[aria-label="Buyer"]');
+  expect(buyerNav?.classList.contains("flex-col")).toBe(true);
   expect(
-    [...container.querySelectorAll('nav[aria-label="Buyer"] a')].map((link) =>
+    [...container.querySelectorAll('aside nav[aria-label="Buyer"] a')].map((link) =>
       link.getAttribute("href"),
     ),
   ).toEqual(["/buyer", "/buyer#requests", "/buyer/products", "/buyer/inbox"]);

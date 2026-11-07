@@ -10,7 +10,10 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/workspace/owned-product/report",
 }));
 vi.mock("@/app/workspace/actions", () => ({ setTheme: vi.fn() }));
-vi.mock("@/lib/auth-client", () => ({ signOut: vi.fn() }));
+vi.mock("@/lib/auth-client", () => ({
+  signOut: vi.fn(),
+  useSession: () => ({ data: { user: { id: "user-a" } } }),
+}));
 
 import { WorkspaceShell } from "./shell";
 import { publishWorkspaceDirective } from "./workspace-events";
@@ -34,22 +37,18 @@ test("assistant directives navigate from the report and close the dialog", async
         </WorkspaceShell>,
       ),
     );
-    expect(
-      container.querySelector('nav[aria-label="Workspaces"]')?.closest("header"),
-    ).not.toBeNull();
-    expect(
-      container.querySelector('nav[aria-label="Primary"] a')?.getAttribute("aria-current"),
-    ).toBe("page");
-    const trigger = container.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"]');
+    const trigger = container.querySelector<HTMLButtonElement>(
+      'button[aria-controls="assistant-panel"]',
+    );
     await act(async () => trigger?.click());
-    expect(container.querySelector("dialog")?.open).toBe(true);
+    expect(container.querySelector("#assistant-panel")?.hasAttribute("hidden")).toBe(false);
     await act(async () =>
       publishWorkspaceDirective({ type: "request_replacement", documentId: "inspection/a" }),
     );
     expect(push).toHaveBeenLastCalledWith(
       "/workspace/owned-product?replace=inspection%2Fa#upload-card",
     );
-    expect(container.querySelector("dialog")?.open).toBe(false);
+    expect(container.querySelector("#assistant-panel")?.hasAttribute("hidden")).toBe(true);
     await act(async () => publishWorkspaceDirective({ type: "show_upload_card" }));
     expect(push).toHaveBeenLastCalledWith("/workspace/owned-product?view=uploads#upload-card");
     await act(async () =>
