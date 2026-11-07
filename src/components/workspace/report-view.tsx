@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import Tabs, { Tab, TabList, TabPanel } from "@atlaskit/tabs";
+import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
 import { AttentionBanner } from "./attention-banner";
 import type { AssessmentResult, SupplierProfile, WorkspaceProduct } from "./contract";
-import { requirementSet } from "./fixtures";
-import { askAssistant, MetaItem, OverflowMenu, PageHeader } from "./page-chrome";
+import { fixtureById, requirementNames, requirementSet } from "./fixtures";
+import { ChevronIcon, DocumentIcon } from "./icons";
+import { MetaItem, PageHeader, ProductNav } from "./page-chrome";
 import {
   actionPlan,
   coveragePhrase,
@@ -39,27 +41,21 @@ export function ReportView({
   product: WorkspaceProduct;
   readOnly?: boolean;
 }) {
-  const result = product.result;
-  if (!result) {
+  if (!product.result) {
     return (
-      <section className="max-w-3xl">
-        <h1 className="page-title">Evidence report</h1>
-        <p className="mt-3 max-w-prose text-muted">
-          No report is stored for this product yet. Add the buyer’s documents and choose Upload and
-          assess. One assessment starts for the whole batch.
+      <section className="max-w-xl space-y-4 py-8">
+        <DocumentIcon />
+        <h1 className="page-title">No evidence report yet</h1>
+        <p className="text-muted">
+          Add documents to the product, then choose Upload and assess to create an evidence report.
         </p>
         {readOnly ? null : (
-          <div className="mt-6">
-            <Button href={`/workspace/${product.id}#upload-card`} variant="secondary">
-              Go to documents
-            </Button>
-          </div>
+          <Button href={`/workspace/${product.id}#upload-card`}>Add documents</Button>
         )}
       </section>
     );
   }
-
-  return <ReportBody product={product} result={result} readOnly={readOnly} />;
+  return <ReportBody product={product} result={product.result} readOnly={readOnly} />;
 }
 
 function ReportBody({
@@ -73,19 +69,17 @@ function ReportBody({
 }) {
   const summary = dimensionSummary(result.findings, requirementSet.requirements);
   const actions = actionPlan(result.findings);
-  const expired = result.findings.some((finding) => finding.status === "EXPIRED");
   const draft = documentRequestDraft({
     productName: product.name,
     supplierName: product.fields.supplierName?.value ?? product.profile.companyName,
     partNumber: product.fields.partNumber?.value ?? "",
     findings: result.findings,
   });
-
   const open = summary.reduce((sum, count) => sum + count.open, 0);
-  const [tab, setTab] = useState<"findings" | "plan" | "request">("findings");
+  const tabId = useId();
 
   return (
-    <article className="space-y-4">
+    <article>
       <PageHeader
         crumbs={[
           { href: "/workspace", label: "Products" },
@@ -95,149 +89,164 @@ function ReportBody({
         title="Evidence report"
         meta={
           <>
+            <MetaItem>{product.profile.companyName}</MetaItem>
+            {fixtureById(product.id) ? <MetaItem>Demo data</MetaItem> : null}
             <MetaItem>
-              <span className="rounded-full bg-paper px-2 py-0.5 text-[13px] font-medium">
-                {result.complete ? "Processing complete" : "Processing incomplete"}
+              <span className="font-mono">
+                {product.fields.partNumber?.value ?? "—"} · Rev{" "}
+                {product.fields.revision?.value ?? "—"}
               </span>
             </MetaItem>
-            <MetaItem>{formatDate(result.assessmentDate)}</MetaItem>
-            <MetaItem>{open === 1 ? "1 open" : `${open} open`}</MetaItem>
+            <MetaItem>Assessed {formatDate(result.assessmentDate)}</MetaItem>
           </>
         }
         actions={
           readOnly ? null : (
-            <>
-              <OverflowMenu
-                items={[
-                  { label: "Back to product", href: `/workspace/${product.id}` },
-                  { label: "Documents", href: `/workspace/${product.id}#upload-card` },
-                ]}
-              />
-              <Button type="button" variant="secondary" size="sm" onClick={askAssistant}>
-                Ask assistant
-              </Button>
-            </>
+            <Button href={`/workspace/${product.id}#upload-card`} variant="secondary">
+              Update documents
+            </Button>
           )
         }
       />
-      <p className="meta max-w-3xl text-muted">
-        {product.name}. This is an evidence review of the documents on file. It is not a
-        certification, a supplier rating, or a compliance decision. Reading a certificate does not
-        authenticate it.
-      </p>
-
-      {result.complete ? null : (
-        <AttentionBanner title="Processing incomplete">
-          {result.incompleteFiles.length > 0
-            ? `${result.incompleteFiles.join(", ")} could not be read. Requirements that file might have supported are marked Needs review, not Missing. Replace the file and assess again.`
-            : "At least one file could not be read. Requirements it might have supported are marked Needs review, not Missing. Replace the file and assess again."}
-        </AttentionBanner>
-      )}
-
-      {expired ? (
-        <AttentionBanner title="Submitted certificate expired">
-          A submitted certificate’s validity ended before {formatDate(result.assessmentDate)}. It
-          stays on this report as Expired. Provide a current certificate.
-        </AttentionBanner>
-      ) : null}
-
-      <div className="mx-auto max-w-3xl">
-        <div
-          role="tablist"
-          aria-label="Report sections"
-          className="flex gap-1 border-b border-line"
-        >
-          {(
-            [
-              ["findings", "Findings"],
-              ["plan", "Action plan"],
-              ["request", "Request draft"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={tab === id}
-              className={`min-h-10 border-b-2 px-3 text-sm font-medium ${
-                tab === id
-                  ? "border-accent text-ink"
-                  : "border-transparent text-muted hover:text-ink"
-              }`}
-              onClick={() => setTab(id)}
-            >
-              {label}
-            </button>
-          ))}
+      {readOnly ? (
+        <div className="mt-6 border-b border-line pb-3 text-[13px] text-muted">
+          Shared evidence report · Read only
         </div>
-
-        {tab === "findings" ? (
-          <div className="mt-2">
-            {summary.map((count) => {
-              const requirements = requirementSet.requirements.filter(
-                (requirement) => requirement.dimension === count.dimension,
-              );
-              return (
+      ) : (
+        <ProductNav productId={product.id} current="report" />
+      )}
+      <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="section-title">Buyer requirement review</h2>
+          <p className="meta mt-1.5 text-muted">
+            Neckar Maschinenbau GmbH · {requirementSet.requirements.length} requirements
+          </p>
+        </div>
+        <p className="text-[13px] text-muted">
+          <span className="font-medium text-ink">
+            {result.findings.filter((finding) => finding.status === "DOCUMENTED").length} documented
+          </span>
+          <span className="mx-2">·</span>
+          {open} open {open === 1 ? "action" : "actions"}
+        </p>
+      </div>
+      {!result.complete ? (
+        <div className="mt-5">
+          <AttentionBanner title="Processing incomplete">
+            {result.incompleteFiles.length > 0
+              ? `${result.incompleteFiles.join(", ")} could not be read. Replace the file and assess again. Affected requirements need review.`
+              : "At least one file could not be read. Replace it and assess again. Affected requirements need review."}
+          </AttentionBanner>
+        </div>
+      ) : null}
+      <div className="report-tabs mt-6">
+        <Tabs id={tabId}>
+          <TabList>
+            <Tab>
+              Findings <span className="ml-2 text-xs text-muted">{result.findings.length}</span>
+            </Tab>
+            <Tab>
+              Action plan <span className="ml-2 text-xs text-muted">{actions.length}</span>
+            </Tab>
+            <Tab>Request draft</Tab>
+          </TabList>
+          <TabPanel>
+            <div className="mt-5 w-full overflow-hidden rounded-md border border-line">
+              <div className="evidence-heading" aria-hidden="true">
+                <span>Requirement</span>
+                <span>Status</span>
+                <span className="file-heading">Source document</span>
+                <span className="text-right">Action</span>
+              </div>
+              {summary.map((count) => (
                 <section key={count.dimension}>
-                  <h2 className="meta flex items-baseline justify-between gap-4 px-3 pt-4 pb-1 font-medium text-muted">
+                  <h3 className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-paper px-5 py-2.5 text-xs font-medium">
                     <span>{count.label}</span>
-                    <span>{coveragePhrase(count.documented, count.open)}</span>
-                  </h2>
-                  <div className="divide-y divide-line border-y border-line">
-                    {requirements.map((requirement) => {
-                      const finding = result.findings.find(
-                        (item) => item.requirementId === requirement.id,
-                      );
-                      if (!finding) return null;
-                      return (
-                        <FindingRow
-                          key={requirement.id}
-                          productId={product.id}
-                          title={requirement.title}
-                          finding={finding}
-                          readOnly={readOnly}
-                        />
-                      );
-                    })}
+                    <span className="font-normal text-muted">
+                      {coveragePhrase(count.documented, count.open)}
+                    </span>
+                  </h3>
+                  <div className="divide-y divide-line">
+                    {requirementSet.requirements
+                      .filter((requirement) => requirement.dimension === count.dimension)
+                      .map((requirement) => {
+                        const finding = result.findings.find(
+                          (item) => item.requirementId === requirement.id,
+                        );
+                        return finding ? (
+                          <FindingRow
+                            key={requirement.id}
+                            productId={product.id}
+                            title={requirementNames[requirement.id] ?? requirement.title}
+                            requirement={requirement.title}
+                            finding={finding}
+                            readOnly={readOnly}
+                          />
+                        ) : null;
+                      })}
                   </div>
                 </section>
-              );
-            })}
-          </div>
-        ) : null}
-
-        {tab === "plan" ? (
-          <div className="px-3 py-4">
-            {actions.length === 0 ? (
-              <p className="text-sm text-muted">Every requirement in this report is documented.</p>
-            ) : (
-              <ol className="list-decimal space-y-4 pl-5">
-                {actions.map((action) => (
-                  <li key={action.requirementId}>
-                    <p className="text-sm">{action.nextAction}</p>
-                    <p className="meta mt-1 font-mono text-muted">{action.requirementId}</p>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </div>
-        ) : null}
-
-        {tab === "request" ? (
-          <div className="px-3 py-4">
-            <RequestDraft draft={draft} />
-          </div>
-        ) : null}
-
-        <details className="mt-6 border-t border-line pt-3">
-          <summary className="cursor-pointer text-sm font-medium">
-            Supplier profile, declared by supplier
-          </summary>
-          <div className="pt-3">
-            <ProfileBlock profile={product.profile} />
-          </div>
-        </details>
+              ))}
+            </div>
+          </TabPanel>
+          <TabPanel>
+            <div className="w-full py-5">
+              {actions.length === 0 ? (
+                <div className="py-6">
+                  <h3 className="section-title">No open actions</h3>
+                  <p className="mt-2 text-muted">Every requirement in this report is documented.</p>
+                </div>
+              ) : (
+                <ol className="divide-y divide-line rounded-md border border-line">
+                  {actions.map((action, index) => (
+                    <li key={action.requirementId} className="flex items-start gap-4 px-5 py-5">
+                      <span className="mt-0.5 text-[13px] text-muted">{index + 1}.</span>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-medium">
+                          {requirementNames[action.requirementId]}
+                        </h3>
+                        <p className="mt-2 max-w-[75ch] text-[13px] leading-relaxed text-muted">
+                          {action.nextAction}
+                        </p>
+                        {readOnly ? null : (
+                          <div className="mt-3">
+                            <Button
+                              href={`/workspace/${product.id}#upload-card`}
+                              variant="secondary"
+                              size="sm"
+                            >
+                              Update document
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted">{action.requirementId}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          </TabPanel>
+          <TabPanel>
+            <div className="w-full py-6">
+              <RequestDraft draft={draft} />
+            </div>
+          </TabPanel>
+        </Tabs>
       </div>
+      <details className="mt-6 border-t border-line py-4">
+        <summary className="cursor-pointer text-[13px] font-medium">
+          Supplier profile <span className="ml-2 font-normal text-muted">Declared by supplier</span>
+        </summary>
+        <div className="pt-4">
+          <ProfileBlock profile={product.profile} />
+        </div>
+      </details>
+      <p className="meta max-w-[85ch] border-t border-line pt-4 leading-relaxed text-muted">
+        This report reviews the documents provided against buyer requirements. It is not a
+        certification, a supplier rating, or a compliance decision. Certificate authenticity has not
+        been checked.
+      </p>
     </article>
   );
 }
@@ -245,61 +254,90 @@ function ReportBody({
 function FindingRow({
   productId,
   title,
+  requirement,
   finding,
   readOnly,
 }: {
   productId: string;
   title: string;
+  requirement: string;
   finding: AssessmentResult["findings"][number];
   readOnly: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const detailsId = useId();
   const unresolved = finding.status !== "DOCUMENTED";
   const citation = finding.evidence[0];
   return (
     <div>
-      <div className="flex min-h-12 items-center gap-3 px-3">
+      <div className="evidence-row">
         <button
           type="button"
-          className="flex min-w-0 flex-1 items-center gap-3 py-2 text-left hover:bg-paper"
+          className="evidence-row-title min-h-8 rounded-sm"
           aria-expanded={expanded}
+          aria-controls={detailsId}
           data-expand={finding.requirementId}
           onClick={() => setExpanded((value) => !value)}
         >
-          <StatusChip status={finding.status} />
-          <span className="shrink-0 font-mono text-sm">{finding.requirementId}</span>
-          <span className="min-w-0 truncate text-sm">{title}</span>
+          <span className="disclosure">
+            <ChevronIcon />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[13px] font-medium">{title}</span>
+            <span className="mt-1 block text-xs text-muted">{finding.requirementId}</span>
+          </span>
         </button>
-        {readOnly || !unresolved ? null : (
-          <Button
-            href={
-              citation
-                ? `/workspace/${productId}?replace=${citation.documentId}#upload-card`
-                : `/workspace/${productId}#upload-card`
-            }
-            variant="secondary"
-            size="sm"
-          >
-            {citation ? "Replace" : "Add file"}
-          </Button>
-        )}
-      </div>
-      {expanded ? (
-        <div className="space-y-2 border-t border-line bg-paper px-3 py-3 text-sm">
-          <p className="meta text-muted">
-            {finding.evidenceType ? evidenceLabels[finding.evidenceType] : "No evidence submitted"}
-          </p>
-          <p>{finding.reason}</p>
-          {unresolved && finding.nextAction ? <p>{finding.nextAction}</p> : null}
-          {citation ? (
-            <p className="font-mono text-[13px] break-all">
-              {citation.filename}, page {citation.page}. “{citation.quote}”
-            </p>
-          ) : (
-            <p className="text-muted">No citation. Nothing was invented for a missing record.</p>
+        <div className="row-status">
+          <StatusChip status={finding.status} />
+        </div>
+        <div className="evidence-file" title={citation?.filename}>
+          {citation ? <DocumentIcon /> : null}
+          <span className="truncate">{citation?.filename ?? "No evidence submitted"}</span>
+        </div>
+        <div className="row-action justify-self-end">
+          {readOnly || !unresolved ? null : (
+            <Button
+              href={
+                citation
+                  ? `/workspace/${productId}?replace=${citation.documentId}#upload-card`
+                  : `/workspace/${productId}#upload-card`
+              }
+              variant="secondary"
+              size="sm"
+            >
+              {citation ? "Replace" : "Add file"}
+            </Button>
           )}
         </div>
-      ) : null}
+      </div>
+      <div id={detailsId} hidden={!expanded} className="evidence-detail">
+        <p className="evidence-detail-label">Buyer requirement</p>
+        <p className="mt-1.5">{requirement}</p>
+        <p className="evidence-detail-label mt-4">Finding</p>
+        <p className="mt-1.5">{finding.reason}</p>
+        {finding.evidence.map((evidence) => (
+          <figure
+            key={`${evidence.documentId}-${evidence.page}-${evidence.quote}`}
+            className="mt-4"
+          >
+            <figcaption className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+              <DocumentIcon />
+              <span className="break-all">{evidence.filename}</span>
+              <span>· Page {evidence.page}</span>
+              {finding.evidenceType ? (
+                <span>· {evidenceLabels[finding.evidenceType] ?? finding.evidenceType}</span>
+              ) : null}
+            </figcaption>
+            <blockquote className="evidence-quote font-mono">“{evidence.quote}”</blockquote>
+          </figure>
+        ))}
+        {unresolved && finding.nextAction ? (
+          <div className="mt-5">
+            <p className="evidence-detail-label">Next action</p>
+            <p className="mt-1.5">{finding.nextAction}</p>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -307,7 +345,6 @@ function FindingRow({
 function RequestDraft({ draft }: { draft: string }) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   async function copy() {
     setError(null);
     try {
@@ -315,26 +352,27 @@ function RequestDraft({ draft }: { draft: string }) {
       setCopied(true);
     } catch {
       setCopied(false);
-      setError("Copy failed. Select the draft and copy it yourself. ExportReady does not send it.");
+      setError("Copy failed. Select the text below and copy it manually.");
     }
   }
-
   return (
-    <section className="space-y-3">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 className="section-title">Document request</h2>
-        <Button type="button" variant="secondary" onClick={() => void copy()}>
+    <section className="max-w-3xl space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="section-title">Document request</h3>
+          <p className="meta mt-1.5 text-muted">
+            Copy this draft to request the outstanding documents.
+          </p>
+        </div>
+        <Button type="button" variant="secondary" size="sm" onClick={() => void copy()}>
           {copied ? "Copied" : "Copy request"}
         </Button>
       </div>
-      <p className="text-sm text-muted">
-        The same open items as the action plan, ready to paste. ExportReady does not send this.
-      </p>
       <textarea
         readOnly
         value={draft}
         aria-label="Document request draft"
-        className="field min-h-48 w-full py-3 font-sans text-sm"
+        className="field min-h-80 w-full resize-y py-4 font-sans text-[13px] leading-relaxed"
       />
       {error ? (
         <p role="alert" className="text-sm text-danger">
@@ -357,19 +395,16 @@ function ProfileBlock({ profile }: { profile: SupplierProfile }) {
     ["Target market", profile.targetMarket],
   ];
   return (
-    <section className="space-y-3">
-      <h2 className="section-title">Supplier profile</h2>
-      <p className="text-sm text-muted">
-        Declared by supplier. These values are not evidence for any requirement.
-      </p>
-      <dl className="divide-y divide-line border-y border-line">
-        {rows.map(([label, value]) => (
-          <div key={label} className="grid gap-1 py-3 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4">
-            <dt className="text-sm text-muted">{label}</dt>
-            <dd className="min-w-0 break-words">{value}</dd>
-          </div>
-        ))}
-      </dl>
-    </section>
+    <dl className="max-w-3xl divide-y divide-line">
+      {rows.map(([label, value]) => (
+        <div
+          key={label}
+          className="grid gap-1 py-3 text-[13px] sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-4"
+        >
+          <dt className="text-muted">{label}</dt>
+          <dd className="min-w-0 break-words">{value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

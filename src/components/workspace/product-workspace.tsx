@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import type { ProductDocument, WorkspaceProduct } from "./contract";
 import { classifyFile, packFromFilenames, rejectionForFile } from "./documents";
 import { DraftForm } from "./draft-form";
-import { buildResult, type EvidencePack } from "./fixtures";
-import { askAssistant, MetaItem, OverflowMenu, PageHeader } from "./page-chrome";
-import { ProductConnections } from "./product-connections";
+import { buildResult, type EvidencePack, fixtureById } from "./fixtures";
+import { MetaItem, PageHeader, ProductNav } from "./page-chrome";
+import { ProductConnections } from "@/components/connections/product-connections";
 import { ProgressView } from "./progress-view";
 import { readProduct, writeProduct } from "./store";
 import { UploadCard } from "./upload-card";
@@ -88,7 +88,7 @@ export function ProductWorkspace({
     writeProduct(next);
   }
 
-  function addFiles(selected: File[]) {
+  function addFiles(selected: File[], requirementId?: string) {
     if (!product) return;
     if (replacingId && selected.length !== 1) {
       setUploadError("Choose one file to replace this document. The batch was not changed.");
@@ -107,6 +107,7 @@ export function ProductWorkspace({
       const id = crypto.randomUUID();
       documents.push({
         id,
+        requirementId,
         filename: file.name,
         mimeType: classified.mimeType,
         kind: classified.kind,
@@ -187,18 +188,18 @@ export function ProductWorkspace({
   const open = product.result?.findings.filter((finding) => finding.status !== "DOCUMENTED").length;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="workspace-content space-y-6">
       <PageHeader
         crumbs={[{ href: "/workspace", label: "Products" }, { label: product.name }]}
         title={product.name}
         meta={
           <>
-            <span className="rounded-full border border-line bg-card px-2 py-0.5 text-[13px] font-medium">
-              {product.result ? "Report stored" : "In progress"}
-            </span>
+            <MetaItem>{product.profile.companyName}</MetaItem>
+            {fixtureById(product.id) ? <MetaItem>Demo data</MetaItem> : null}
             <MetaItem>
               <span className="font-mono">
-                {product.fields.partNumber?.value ?? "No part number"}
+                {product.fields.partNumber?.value ?? "No part number"} · Rev{" "}
+                {product.fields.revision?.value ?? "—"}
               </span>
             </MetaItem>
             {open !== undefined ? (
@@ -207,16 +208,18 @@ export function ProductWorkspace({
           </>
         }
         actions={
-          <>
-            <OverflowMenu
-              items={[{ label: "Evidence report", href: `/workspace/${product.id}/report` }]}
-            />
-            <Button type="button" variant="secondary" size="sm" onClick={askAssistant}>
-              Ask assistant
+          product.result ? (
+            <Button href={`/workspace/${product.id}/report`} variant="secondary">
+              View report
             </Button>
-          </>
+          ) : null
         }
       />
+      <ProductNav productId={product.id} current="documents" />
+      <p className="meta text-muted">
+        Requested by <span className="font-medium text-ink">Neckar Maschinenbau GmbH</span> · Buyer
+        requirements v{product.requirementSetVersion}
+      </p>
       <UploadCard
         documents={product.documents}
         replacing={replacing}
@@ -224,11 +227,10 @@ export function ProductWorkspace({
         pending={assessing}
         error={uploadError}
         onAdd={addFiles}
-        findings={product.result?.findings}
+        findings={job ? undefined : product.result?.findings}
         onStartReplace={(id) => {
           setReplacingId(id);
           setHighlighted(true);
-          requestAnimationFrame(() => inputRef.current?.click());
         }}
         onCancelReplace={() => setReplacingId(null)}
         onRemovePending={(id) => {
@@ -254,10 +256,9 @@ export function ProductWorkspace({
         />
       ) : null}
       <details className="rounded-md border border-line bg-card px-4 py-3">
-        <summary className="cursor-pointer text-sm font-medium">
-          Product details, declared by supplier
-        </summary>
+        <summary className="cursor-pointer text-sm font-medium">Product details</summary>
         <div className="mt-4 space-y-4">
+          <p className="meta text-muted">Declared by supplier</p>
           <ProfileSummary product={product} />
           <DraftForm product={product} onSaved={update} />
           <ProductConnections productId={product.id} />

@@ -6,6 +6,14 @@ import type {
   WorkspaceProduct,
 } from "./contract";
 
+export const requirementNames: Record<string, string> = {
+  R1: "Part documentation",
+  R2: "ISO 9001 certificate",
+  R3: "Inspection report",
+  R4: "Traceability record",
+  R5: "Packaging acceptance",
+};
+
 /** Next actions for the unresolved demo findings. The report-summary test repeats these literals. */
 export const NEXT_ACTION = {
   R2: "Provide a current ISO 9001 certificate for Lotus Mould Co., Ltd. covering injection moulding, because the submitted certificate expired on 2026-08-01.",

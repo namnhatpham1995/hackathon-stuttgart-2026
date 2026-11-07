@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import type { WorkspaceProduct } from "./contract";
-import { ReportShare } from "./report-share";
+import { ReportShare } from "@/components/connections/report-share";
 import { ReportView } from "./report-view";
 import { readProduct } from "./store";
 
@@ -47,7 +47,7 @@ export function ReportScreen({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="workspace-content space-y-8">
       <ReportView product={product} readOnly={readOnly} />
       {readOnly || !product.result ? null : <ReportShare resultId={product.result.id} />}
     </div>

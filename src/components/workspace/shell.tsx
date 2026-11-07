@@ -1,14 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { setTheme } from "@/app/workspace/actions";
 import { Button } from "@/components/ui/button";
 import { NavItem } from "@/components/ui/nav-item";
+import { ConnectionsNav } from "@/components/connections/connections-nav";
 import { signOut } from "@/lib/auth-client";
 
 import { AssistantPanel } from "./assistant-panel";
-import { ConnectionsNav } from "./connections-nav";
+import { DocumentIcon, PanelIcon, ProductIcon, SignOutIcon, ThemeIcon } from "./icons";
 
 export function WorkspaceShell({
   user,
@@ -19,86 +21,123 @@ export function WorkspaceShell({
 }) {
   const pathname = usePathname();
   const [assistantOpen, setAssistantOpen] = useState(false);
-  const productSegment = pathname.match(/^\/workspace\/([^/]+)/)?.[1];
-  const productId =
-    productSegment && productSegment !== "states" ? decodeURIComponent(productSegment) : null;
+  const assistantDialog = useRef<HTMLDialogElement>(null);
+  const assistantTrigger = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    function onFocus() {
-      setAssistantOpen(true);
-    }
-    window.addEventListener("exportready:focus-assistant", onFocus);
-    return () => window.removeEventListener("exportready:focus-assistant", onFocus);
+    const open = () => setAssistantOpen(true);
+    window.addEventListener("exportready:focus-assistant", open);
+    return () => window.removeEventListener("exportready:focus-assistant", open);
   }, []);
 
+  useEffect(() => {
+    if (assistantOpen) assistantDialog.current?.showModal();
+    else assistantDialog.current?.close();
+  }, [assistantOpen]);
+
   return (
-    <div className="min-h-dvh bg-paper text-ink">
+    <div className="workspace-shell min-h-dvh bg-card text-ink">
       <a
         href="#workspace-main"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-card focus:px-3 focus:py-2"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-card focus:px-4 focus:py-3"
       >
         Skip to content
       </a>
-      <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-card px-4 py-2">
-        <p className="text-sm font-semibold text-accent">ExportReady</p>
-        <nav aria-label="Primary" className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
-          <NavItem href="/workspace" exact tone="default">
-            Products
-          </NavItem>
-          {productId ? (
-            <>
-              <NavItem href={`/workspace/${productId}`} exact tone="default">
-                Product
-              </NavItem>
-              <NavItem href={`/workspace/${productId}/report`} exact tone="default">
-                Report
-              </NavItem>
-            </>
-          ) : null}
-        </nav>
-        <div className="ml-auto flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setAssistantOpen((value) => !value)}
-          >
-            {assistantOpen ? "Hide assistant" : "Assistant"}
-          </Button>
-          <ThemeToggle />
-          <span className="meta hidden text-muted sm:inline">{user.name}</span>
-          <SignOut />
+      <aside className="workspace-sidebar">
+        <Link href="/workspace" className="workspace-brand">
+          <DocumentIcon />
+          <span>TradeReady</span>
+        </Link>
+        <div className="px-4 pt-6 pb-3">
+          <p className="meta font-medium text-ink">Supplier workspace</p>
+          <p className="mt-1 text-xs text-muted">Documents &amp; buyer requirements</p>
         </div>
-      </header>
-      <ConnectionsNav />
-      <div className={assistantOpen ? "xl:grid xl:grid-cols-[280px_minmax(0,1fr)]" : undefined}>
-        {assistantOpen ? (
-          <aside
-            aria-label="Assistant"
-            className="min-w-0 border-b border-line xl:sticky xl:top-0 xl:h-[calc(100dvh-3.25rem)] xl:overflow-y-auto xl:border-r xl:border-b-0"
-          >
-            <AssistantPanel onCollapse={() => setAssistantOpen(false)} />
-          </aside>
-        ) : null}
-        <main id="workspace-main" className="min-w-0 px-4 py-4 sm:px-6">
+        <nav aria-label="Primary" className="px-3">
+          <NavItem href="/workspace" tone="default">
+            <span className="flex items-center gap-2.5">
+              <ProductIcon /> Products
+            </span>
+          </NavItem>
+          <ConnectionsNav />
+        </nav>
+        <div className="mt-auto border-t border-line p-4">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span
+              className="grid size-8 shrink-0 place-items-center rounded-md border border-line bg-card text-xs font-medium"
+              aria-hidden="true"
+            >
+              {user.name.slice(0, 2).toUpperCase()}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-[13px] font-medium">{user.name}</p>
+              <p className="truncate text-xs text-muted">{user.email}</p>
+            </div>
+          </div>
+          <div className="mt-4 flex items-center justify-between gap-2">
+            <SignOut />
+          </div>
+        </div>
+      </aside>
+      <div className="min-w-0">
+        <header className="workspace-topbar">
+          <Link href="/workspace" className="inline-flex items-center gap-2 font-medium md:hidden">
+            <DocumentIcon /> TradeReady
+          </Link>
+          <span className="meta hidden text-muted md:inline">Supplier workspace</span>
+          <div className="ml-auto flex items-center gap-3">
+            <span className="meta hidden text-muted sm:inline">{user.name}</span>
+            <Button
+              ref={assistantTrigger}
+              type="button"
+              variant="secondary"
+              size="sm"
+              aria-haspopup="dialog"
+              aria-expanded={assistantOpen}
+              onClick={() => setAssistantOpen(true)}
+            >
+              <PanelIcon /> Assistant
+            </Button>
+            <ThemeToggle />
+            <div className="md:hidden">
+              <SignOut compact />
+            </div>
+          </div>
+        </header>
+        <main id="workspace-main" className="workspace-main" key={pathname}>
           {children}
         </main>
       </div>
+      <dialog
+        ref={assistantDialog}
+        aria-label="Assistant"
+        className="assistant-dialog"
+        onCancel={() => setAssistantOpen(false)}
+        onClose={() => {
+          setAssistantOpen(false);
+          assistantTrigger.current?.focus();
+        }}
+      >
+        <div className="h-full">
+          <AssistantPanel onCollapse={() => setAssistantOpen(false)} />
+        </div>
+      </dialog>
     </div>
   );
 }
 
 function ThemeToggle() {
   const [label, setLabel] = useState("Dark theme");
-
   useEffect(() => {
-    const explicit = document.documentElement.dataset.theme;
-    const dark =
-      explicit === "dark" ||
-      (!explicit && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    setLabel(dark ? "Light theme" : "Dark theme");
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    function updateLabel() {
+      const explicit = document.documentElement.dataset.theme;
+      const dark = explicit === "dark" || (!explicit && media.matches);
+      setLabel(dark ? "Light theme" : "Dark theme");
+    }
+    updateLabel();
+    media.addEventListener("change", updateLabel);
+    return () => media.removeEventListener("change", updateLabel);
   }, []);
-
   function toggle() {
     const explicit = document.documentElement.dataset.theme;
     const dark =
@@ -109,22 +148,28 @@ function ThemeToggle() {
     void setTheme(next);
     setLabel(next === "dark" ? "Light theme" : "Dark theme");
   }
-
   return (
-    <Button type="button" variant="secondary" size="sm" onClick={toggle}>
-      {label}
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={toggle}
+      aria-label={label}
+      title={label}
+      className="min-w-8"
+    >
+      <ThemeIcon />
     </Button>
   );
 }
 
-function SignOut() {
+function SignOut({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
-
   return (
     <Button
       type="button"
-      variant="secondary"
+      variant="ghost"
       size="sm"
       pending={pending}
       onClick={async () => {
@@ -134,7 +179,8 @@ function SignOut() {
         router.refresh();
       }}
     >
-      Sign out
+      {compact ? <SignOutIcon /> : null}
+      <span className={compact ? "sr-only" : undefined}>Sign out</span>
     </Button>
   );
 }

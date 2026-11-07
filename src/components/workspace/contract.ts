@@ -139,6 +139,7 @@ export type DocumentKind = "evidence" | "photo";
 export type DocumentState = "pending" | "active" | "inactive";
 
 export type ProductDocument = {
+  requirementId?: string;
   id: string;
   filename: string;
   mimeType: "application/pdf" | "image/jpeg" | "image/png";

@@ -19,7 +19,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: { default: "ExportReady", template: "%s · ExportReady" },
+  title: { default: "TradeReady", template: "%s · TradeReady" },
   description:
     "Buyer-specific evidence reports for supplier documents. An evidence review, not a certification.",
 };

@@ -1,21 +1,14 @@
 "use client";
 
-import { type RefObject, useState } from "react";
+import { type RefObject, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-import { FILE_LIMITS, type Finding, type ProductDocument } from "./contract";
+import { DIMENSION_LABELS, FILE_LIMITS, type Finding, type ProductDocument } from "./contract";
 import { evidenceSlots, formatBytes, photoSlots } from "./documents";
-import { requirementSet } from "./fixtures";
+import { requirementNames, requirementSet } from "./fixtures";
+import { ChevronIcon, DocumentIcon, UploadIcon } from "./icons";
 import { StatusChip } from "./status-chip";
-
-const shortNames: Record<string, string> = {
-  R1: "Part documentation",
-  R2: "ISO 9001 certificate",
-  R3: "Inspection report",
-  R4: "Traceability record",
-  R5: "Packaging acceptance",
-};
 
 export function UploadCard({
   documents,
@@ -37,7 +30,7 @@ export function UploadCard({
   pending: boolean;
   error: string | null;
   findings?: readonly Finding[];
-  onAdd: (files: File[]) => void;
+  onAdd: (files: File[], requirementId?: string) => void;
   onStartReplace: (id: string) => void;
   onCancelReplace: () => void;
   onRemovePending: (id: string) => void;
@@ -48,6 +41,7 @@ export function UploadCard({
   const [openRow, setOpenRow] = useState<string | null>(null);
   const [skipped, setSkipped] = useState<Record<string, boolean>>({});
   const fileInput = inputRef;
+  const targetRequirement = useRef<string | undefined>(undefined);
   const pdfs = evidenceSlots(documents);
   const photos = photoSlots(documents);
   const pendingDocs = documents.filter((document) => document.state === "pending");
@@ -55,11 +49,13 @@ export function UploadCard({
   const photosFull = photos >= FILE_LIMITS.maxPhotos;
 
   function take(files: FileList | File[] | null) {
-    if (!files || files.length === 0) return;
-    onAdd(Array.from(files));
+    if (pending || !files || files.length === 0) return;
+    onAdd(Array.from(files), targetRequirement.current);
+    targetRequirement.current = undefined;
   }
 
-  function pick(replacingId: string | null) {
+  function pick(replacingId: string | null, requirementId?: string) {
+    targetRequirement.current = requirementId;
     if (replacingId) onStartReplace(replacingId);
     else onCancelReplace();
     requestAnimationFrame(() => fileInput.current?.click());
@@ -69,6 +65,7 @@ export function UploadCard({
     <fieldset
       id="upload-card"
       aria-label="Upload documents"
+      disabled={pending}
       className={`min-w-0 rounded-md border bg-card ${highlighted || dragOver ? "border-accent" : "border-line"}`}
       onDragOver={(event) => {
         event.preventDefault();
@@ -79,68 +76,123 @@ export function UploadCard({
         event.preventDefault();
         setDragOver(false);
         onCancelReplace();
+        targetRequirement.current = undefined;
         take(event.dataTransfer.files);
       }}
     >
-      <div className="border-b border-line px-4 py-3">
-        <h2 className="section-title">Documents for this buyer</h2>
-        <p className="meta mt-1 text-muted">
-          One file per requirement. Up to 5 PDFs and 2 photos, 4 MB each. Photos are not evidence.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line px-5 py-5">
+        <div>
+          <h2 className="section-title">Buyer requirements</h2>
+          <p className="meta mt-1.5 text-muted">
+            Add evidence for each requirement. You can return to this later.
+          </p>
+        </div>
+        <Button type="button" variant="secondary" size="sm" onClick={() => pick(null)}>
+          <UploadIcon /> Add files
+        </Button>
       </div>
-
+      <div className="evidence-heading" aria-hidden="true">
+        <span>Requirement</span>
+        <span>Status</span>
+        <span className="file-heading">Attached document</span>
+        <span className="text-right">Action</span>
+      </div>
       <ul className="divide-y divide-line">
         {requirementSet.requirements.map((requirement) => {
-          const finding = findings?.find((item) => item.requirementId === requirement.id);
           const linked = linkedDocument(requirement.id, documents);
+          const finding = findings?.find(
+            (item) =>
+              item.requirementId === requirement.id &&
+              (!linked ||
+                item.evidence.some(
+                  (citation) =>
+                    citation.documentId === linked.id || citation.filename === linked.filename,
+                )),
+          );
+          const expanded = openRow === requirement.id;
+          const waiting = linked?.state === "pending";
           return (
             <li key={requirement.id}>
-              <div className="flex min-h-12 items-center gap-3 px-3">
+              <div className="evidence-row">
                 <button
                   type="button"
-                  className="flex min-w-0 flex-1 items-center gap-3 rounded-sm py-2 text-left hover:bg-paper"
-                  aria-expanded={openRow === requirement.id}
+                  className="evidence-row-title min-h-8 rounded-sm"
+                  aria-expanded={expanded}
+                  aria-controls={`requirement-${requirement.id}`}
                   data-expand={requirement.id}
-                  onClick={() =>
-                    setOpenRow((current) => (current === requirement.id ? null : requirement.id))
-                  }
+                  onClick={() => setOpenRow(expanded ? null : requirement.id)}
                 >
-                  {finding ? <StatusChip status={finding.status} /> : null}
-                  <span className="shrink-0 text-sm font-medium">
-                    {shortNames[requirement.id] ?? requirement.id}
+                  <span className="disclosure">
+                    <ChevronIcon />
                   </span>
-                  <span className="meta min-w-0 truncate font-mono text-muted">
-                    {linked ? linked.filename : "No file"}
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-medium">
+                      {requirementNames[requirement.id] ?? requirement.id}
+                    </span>
+                    <span className="mt-1 block text-xs text-muted">
+                      {requirement.id} · {DIMENSION_LABELS[requirement.dimension]}
+                    </span>
                   </span>
                 </button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => pick(linked?.id ?? null)}
-                >
-                  {linked ? "Replace" : "Upload file"}
-                </Button>
+                <div className="row-status">
+                  {waiting ? (
+                    <span className="text-xs font-medium text-accent">Ready to assess</span>
+                  ) : finding ? (
+                    <StatusChip status={finding.status} />
+                  ) : (
+                    <span className="text-xs text-muted">
+                      {linked
+                        ? "Not assessed"
+                        : skipped[requirement.id]
+                          ? "Unavailable"
+                          : "No file"}
+                    </span>
+                  )}
+                </div>
+                <div className="evidence-file" title={linked?.filename}>
+                  {linked ? <DocumentIcon /> : null}
+                  <span className="truncate">
+                    {linked?.filename ??
+                      (skipped[requirement.id] ? "Marked as unavailable" : "No document added")}
+                  </span>
+                </div>
+                <div className="row-action justify-self-end">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() =>
+                      waiting && linked
+                        ? onRemovePending(linked.id)
+                        : pick(linked?.id ?? null, requirement.id)
+                    }
+                  >
+                    {waiting ? "Undo" : linked ? "Replace" : "Upload file"}
+                  </Button>
+                </div>
               </div>
-              {openRow === requirement.id ? (
-                <div className="space-y-2 border-t border-line bg-paper px-3 py-3">
-                  <p className="meta text-muted">
-                    {finding?.evidenceType ?? "No evidence type yet"}
-                  </p>
-                  <p className="text-sm">
-                    {finding?.reason ??
-                      "This file is not part of a stored report yet. Choose Upload and assess when the batch is ready."}
-                  </p>
-                  {finding?.nextAction ? <p className="text-sm">{finding.nextAction}</p> : null}
-                  {skipped[requirement.id] ? (
-                    <p className="meta text-muted">
-                      No file will be attached for this row. The batch is unchanged.
-                    </p>
-                  ) : null}
+              <div
+                id={`requirement-${requirement.id}`}
+                hidden={!expanded}
+                className="evidence-detail"
+              >
+                <p className="evidence-detail-label">Buyer requirement</p>
+                <p className="mt-1.5">{requirement.title}</p>
+                <p className="mt-4">
+                  {waiting
+                    ? "This document is ready. Choose Upload and assess to check the updated batch."
+                    : (finding?.reason ??
+                      "Add a document, then choose Upload and assess to check it against this requirement.")}
+                </p>
+                {!waiting && finding?.nextAction ? (
+                  <p className="mt-3 font-medium">{finding.nextAction}</p>
+                ) : null}
+                {!linked ? (
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
+                    className="mt-3"
                     onClick={() =>
                       setSkipped((current) => ({
                         ...current,
@@ -148,20 +200,14 @@ export function UploadCard({
                       }))
                     }
                   >
-                    I don’t have this
+                    {skipped[requirement.id] ? "I have this document" : "I don’t have this"}
                   </Button>
-                </div>
-              ) : null}
+                ) : null}
+              </div>
             </li>
           );
         })}
       </ul>
-
-      <div className="flex justify-end border-t border-line px-4 py-2">
-        <Button type="button" variant="secondary" size="sm" onClick={() => pick(null)}>
-          Add additional
-        </Button>
-      </div>
 
       <input
         ref={fileInput}
@@ -189,8 +235,7 @@ export function UploadCard({
       {replacing ? (
         <p className="meta flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2">
           <span>
-            Replacing <span className="font-mono">{replacing.filename}</span>. The current file
-            stays stored.
+            Replacing <span>{replacing.filename}</span>. The current file stays stored.
           </span>
           <Button type="button" variant="ghost" size="sm" onClick={onCancelReplace}>
             Cancel replace
@@ -202,43 +247,54 @@ export function UploadCard({
           {error}
         </p>
       ) : null}
-      {pendingDocs.length > 0 ? (
+      {pendingDocs.some(
+        (document) =>
+          !requirementSet.requirements.some(
+            (requirement) => linkedDocument(requirement.id, documents)?.id === document.id,
+          ),
+      ) ? (
         <ul className="divide-y divide-line border-t border-line">
-          {pendingDocs.map((document) => (
-            <li
-              key={document.id}
-              className="flex flex-wrap items-center justify-between gap-2 px-4 py-2"
-            >
-              <span className="min-w-0 font-mono text-[13px] break-all">
-                {document.filename}
-                <span className="meta ml-2 font-sans text-muted">
-                  {formatBytes(document.sizeBytes)} · waiting
-                </span>
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onRemovePending(document.id)}
+          {pendingDocs
+            .filter(
+              (document) =>
+                !requirementSet.requirements.some(
+                  (requirement) => linkedDocument(requirement.id, documents)?.id === document.id,
+                ),
+            )
+            .map((document) => (
+              <li
+                key={document.id}
+                className="flex flex-wrap items-center justify-between gap-2 px-4 py-2"
               >
-                Remove
-              </Button>
-            </li>
-          ))}
+                <span className="min-w-0 text-[13px] break-all">
+                  {document.filename}
+                  <span className="meta ml-2 font-sans text-muted">
+                    {formatBytes(document.sizeBytes)} · waiting
+                  </span>
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onRemovePending(document.id)}
+                >
+                  Undo
+                </Button>
+              </li>
+            ))}
         </ul>
       ) : null}
-      <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-line px-5 py-4">
         <p className="meta text-muted">
-          {pdfs} of 5 PDFs · {photos} of 2 photos
+          {pdfs} / 5 PDFs · {photos} / 2 photos · 4 MB per file
         </p>
         <Button
           type="button"
-          size="sm"
           pending={pending}
           disabled={pendingDocs.length === 0}
           onClick={onAssess}
         >
-          Upload and assess
+          {pending ? "Uploading…" : "Upload and assess"}
         </Button>
       </div>
     </fieldset>
@@ -249,10 +305,26 @@ function linkedDocument(requirementId: string, documents: readonly ProductDocume
   const usable = documents.filter(
     (document) => document.state !== "inactive" && document.kind === "evidence",
   );
-  return usable.find((document) => matchesRequirement(requirementId, document)) ?? null;
+  const matches = (document: ProductDocument) =>
+    document.requirementId === requirementId ||
+    matchesRequirement(requirementId, document) ||
+    Boolean(
+      document.replacesDocumentId &&
+        documents.some(
+          (previous) =>
+            previous.id === document.replacesDocumentId &&
+            matchesRequirement(requirementId, previous),
+        ),
+    );
+  return (
+    usable.find((document) => document.state === "pending" && matches(document)) ??
+    usable.find(matches) ??
+    null
+  );
 }
 
 function matchesRequirement(requirementId: string, document: ProductDocument) {
+  if (document.requirementId) return document.requirementId === requirementId;
   const name = document.filename.toLowerCase();
   if (requirementId === "R1")
     return document.id === "doc-datasheet" || name.includes("datasheet") || name.startsWith("01_");

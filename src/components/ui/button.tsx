@@ -1,13 +1,18 @@
 "use client";
 
+import AtlaskitButton from "@atlaskit/button/new";
+import { setBooleanFeatureFlagResolver } from "@atlaskit/platform-feature-flags";
 import Link, { useLinkStatus } from "next/link";
 import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
+
+// This app uses stable SDK variants without Atlassian’s internal feature-gate service.
+setBooleanFeatureFlagResolver(() => false);
 
 type Variant = "primary" | "secondary" | "ghost";
 
 const variants: Record<Variant, string> = {
   primary: "bg-accent text-accent-ink hover:bg-accent-hover",
-  secondary: "border border-line bg-card text-ink hover:bg-paper",
+  secondary: "bg-paper text-ink hover:bg-line",
   ghost: "bg-transparent text-ink hover:bg-paper",
 };
 
@@ -61,18 +66,21 @@ export function Button(props: ButtonProps | LinkButtonProps) {
     ...rest
   } = buttonProps;
 
+  const appearance = variant === "primary" ? "primary" : variant === "ghost" ? "subtle" : "default";
   return (
-    <button
-      ref={ref}
-      type={type}
-      className={classes}
-      disabled={disabled || pending}
-      aria-busy={pending || undefined}
-      {...rest}
-    >
-      {children}
-      {pending ? <span className="sr-only">Working</span> : null}
-    </button>
+    <span className={`ads-button ads-button-${size} ${className}`}>
+      <AtlaskitButton
+        ref={ref}
+        type={type}
+        appearance={appearance}
+        isDisabled={disabled || pending}
+        isLoading={pending}
+        aria-busy={pending || undefined}
+        {...rest}
+      >
+        <span className="inline-flex items-center justify-center gap-1.5">{children}</span>
+      </AtlaskitButton>
+    </span>
   );
 }
 

@@ -9,6 +9,8 @@ import { Field, TextArea } from "@/components/ui/field";
 
 import type { WorkspaceProduct } from "./contract";
 import { listedFixtures } from "./fixtures";
+import { ArrowIcon, DocumentIcon, PlusIcon } from "./icons";
+import { PageHeader } from "./page-chrome";
 import { type FieldErrors, fieldErrors, focusFirstInvalid, profileSchema } from "./schemas";
 import { mergeProducts, writeProduct } from "./store";
 
@@ -38,22 +40,23 @@ export function WorkspaceHome() {
   }, []);
 
   return (
-    <div className="max-w-4xl space-y-10">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="page-title">Products</h1>
-          <p className="max-w-prose text-sm text-muted">
-            Describe a product, add the buyer’s documents, and read the evidence report. The sample
-            CAP-104 products are the demo. Products you create stay in this browser until the
-            product service is connected.
-          </p>
-        </div>
-        {creating ? null : (
-          <Button type="button" onClick={() => setCreating(true)}>
-            New product
-          </Button>
-        )}
-      </header>
+    <div className="workspace-content space-y-7">
+      <PageHeader
+        crumbs={[{ label: "Workspace" }, { label: "Products" }]}
+        title="Products"
+        meta={
+          <span className="meta text-muted">
+            Prepare documents against your buyer’s requirements.
+          </span>
+        }
+        actions={
+          creating ? undefined : (
+            <Button type="button" onClick={() => setCreating(true)}>
+              <PlusIcon /> New product
+            </Button>
+          )
+        }
+      />
 
       {creating ? (
         <Onboarding
@@ -65,7 +68,7 @@ export function WorkspaceHome() {
         />
       ) : null}
 
-      {products.length === 0 ? (
+      {creating ? null : products.length === 0 ? (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">No products yet</h2>
           <p className="max-w-prose text-muted">
@@ -77,7 +80,18 @@ export function WorkspaceHome() {
           </Button>
         </section>
       ) : (
-        <ProductTable products={products} />
+        <div>
+          <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
+            <h2 className="text-sm font-medium">
+              All products <span className="ml-2 font-normal text-muted">{products.length}</span>
+            </h2>
+            <span className="meta text-muted">Supplier evidence</span>
+          </div>
+          <ProductTable products={products} />
+          <p className="meta mt-5 max-w-[75ch] text-muted">
+            CAP-104 products contain demo data. Products you create are saved in this browser.
+          </p>
+        </div>
       )}
     </div>
   );
@@ -85,62 +99,97 @@ export function WorkspaceHome() {
 
 function ProductTable({ products }: { products: WorkspaceProduct[] }) {
   return (
-    <>
-      <ul className="divide-y divide-line border-y border-line md:hidden">
+    <div className="overflow-hidden rounded-b-md border-x border-b border-line">
+      <ul className="divide-y divide-line md:hidden">
         {products.map((product) => (
-          <li key={product.id} className="space-y-1 py-3">
-            <Button
-              href={`/workspace/${product.id}`}
-              variant="ghost"
-              className="h-auto justify-start px-0"
-            >
-              {product.name}
-            </Button>
-            <p className="font-mono text-sm break-all">{product.fields.partNumber?.value ?? "—"}</p>
-            <p className="text-sm text-muted">{openItems(product)}</p>
+          <li key={product.id} className="px-4 py-4">
+            <div className="flex items-start gap-3">
+              <DocumentIcon />
+              <div className="min-w-0 flex-1">
+                <Button
+                  href={`/workspace/${product.id}`}
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto justify-start px-0 text-left"
+                >
+                  {product.name}
+                </Button>
+                <p className="meta mt-1 text-muted">{product.profile.companyName}</p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 pl-7 text-xs text-muted">
+              <span className="font-mono">
+                {product.fields.partNumber?.value ?? "—"} · Rev{" "}
+                {product.fields.revision?.value ?? "—"}
+              </span>
+              <span>{openItems(product)}</span>
+            </div>
           </li>
         ))}
       </ul>
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-line text-muted">
-            <tr>
-              <th className="py-2 pr-4 font-medium">Product</th>
-              <th className="py-2 pr-4 font-medium">Part</th>
-              <th className="py-2 pr-4 font-medium">Market</th>
-              <th className="py-2 font-medium">Open items</th>
+      <table className="hidden w-full table-fixed text-left text-[13px] md:table">
+        <thead className="border-b border-line bg-paper text-xs text-muted">
+          <tr>
+            <th className="w-[36%] px-5 py-3 font-medium">Product</th>
+            <th className="w-[18%] px-4 py-3 font-medium">Part / revision</th>
+            <th className="w-[18%] px-4 py-3 font-medium">Target market</th>
+            <th className="px-4 py-3 font-medium">Evidence review</th>
+            <th className="w-10">
+              <span className="sr-only">Open product</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line">
+          {products.map((product) => (
+            <tr key={product.id} className="hover:bg-paper">
+              <td className="px-5 py-5">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="mt-2 text-muted">
+                    <DocumentIcon />
+                  </span>
+                  <div className="min-w-0">
+                    <Button
+                      href={`/workspace/${product.id}`}
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto justify-start px-0 text-left"
+                    >
+                      {product.name}
+                    </Button>
+                    <p className="mt-0.5 text-xs text-muted">{product.profile.companyName}</p>
+                  </div>
+                </div>
+              </td>
+              <td className="break-words px-4 py-5">
+                <span className="font-mono">{product.fields.partNumber?.value ?? "—"}</span>
+                <p className="mt-1 text-xs text-muted">
+                  Revision {product.fields.revision?.value ?? "—"}
+                </p>
+              </td>
+              <td className="break-words px-4 py-5 text-muted">{product.profile.targetMarket}</td>
+              <td className="px-4 py-5">
+                <p className="font-medium">{openItems(product)}</p>
+                <p className="mt-1 text-xs text-muted">
+                  {product.result
+                    ? `${product.result.findings.filter((finding) => finding.status === "DOCUMENTED").length} documented`
+                    : "Add documents to begin"}
+                </p>
+              </td>
+              <td className="pr-4 text-muted">
+                <ArrowIcon />
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => (
-              <tr key={product.id} className="border-b border-line">
-                <td className="py-3 pr-4">
-                  <Button
-                    href={`/workspace/${product.id}`}
-                    variant="ghost"
-                    className="h-auto justify-start px-0"
-                  >
-                    {product.name}
-                  </Button>
-                </td>
-                <td className="py-3 pr-4 font-mono break-all">
-                  {product.fields.partNumber?.value ?? "—"}
-                </td>
-                <td className="py-3 pr-4 break-words">{product.profile.targetMarket}</td>
-                <td className="py-3">{openItems(product)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
 function openItems(product: WorkspaceProduct) {
   if (!product.result) return "No report yet";
   const open = product.result.findings.filter((finding) => finding.status !== "DOCUMENTED").length;
-  return open === 1 ? "1 open" : `${open} open`;
+  return open === 1 ? "1 open action" : `${open} open actions`;
 }
 
 function Onboarding({
@@ -156,11 +205,11 @@ function Onboarding({
   const [profile, setProfile] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<FieldErrors>({});
   const [pending, setPending] = useState(false);
-  const seenStep = useRef(step);
 
+  const focusedStep = useRef<number | null>(null);
   useEffect(() => {
-    if (seenStep.current === step) return;
-    seenStep.current = step;
+    if (focusedStep.current === step) return;
+    focusedStep.current = step;
     heading.current?.focus();
   }, [step]);
 

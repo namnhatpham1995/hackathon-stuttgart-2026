@@ -1,4 +1,4 @@
-import type { SVGProps } from "react";
+import { type SVGProps, useId } from "react";
 
 function Icon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -89,6 +89,75 @@ export function CollapseIcon() {
   return (
     <Icon>
       <path d="M10 3.5 6.5 8 10 12.5" />
+    </Icon>
+  );
+}
+
+export function DocumentIcon() {
+  return (
+    <Icon>
+      <path d="M9 2H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6L9 2Z" />
+      <path d="M9 2v4h4M5.5 9h5M5.5 11.5h3" />
+    </Icon>
+  );
+}
+
+export function ProductIcon() {
+  return (
+    <Icon>
+      <path d="m8 2 5.5 3v6L8 14l-5.5-3V5L8 2Z" />
+      <path d="m2.5 5 5.5 3 5.5-3M8 8v6M5.25 3.5l5.5 3" />
+    </Icon>
+  );
+}
+
+export function PanelIcon() {
+  return (
+    <Icon>
+      <rect x="2" y="2.5" width="12" height="11" rx="1" />
+      <path d="M9.5 2.5v11M5 6l1.5 2L5 10" />
+    </Icon>
+  );
+}
+
+export function ArrowIcon() {
+  return (
+    <Icon>
+      <path d="M3 8h10M9 4l4 4-4 4" />
+    </Icon>
+  );
+}
+
+export function CloseIcon() {
+  return (
+    <Icon>
+      <path d="m4 4 8 8M12 4l-8 8" />
+    </Icon>
+  );
+}
+
+export function ThemeIcon() {
+  const maskId = useId();
+  return (
+    <Icon className="theme-icon size-4 shrink-0">
+      <defs>
+        <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="16" height="16">
+          <rect width="16" height="16" fill="white" stroke="none" />
+          <circle className="theme-cutout" cx="11" cy="5" r="4" fill="black" stroke="none" />
+        </mask>
+      </defs>
+      <circle className="theme-disc" cx="8" cy="8" r="3.25" mask={`url(#${maskId})`} />
+      <g className="theme-rays">
+        <path d="M8 1v1.25M8 13.75V15M1 8h1.25M13.75 8H15M3.05 3.05l.9.9M12.05 12.05l.9.9M3.05 12.95l.9-.9M12.05 3.95l.9-.9" />
+      </g>
+    </Icon>
+  );
+}
+
+export function SignOutIcon() {
+  return (
+    <Icon>
+      <path d="M6 2.5H3v11h3M6 8h8M11 5l3 3-3 3" />
     </Icon>
   );
 }

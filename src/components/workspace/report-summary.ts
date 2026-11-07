@@ -63,7 +63,7 @@ export function documentRequestDraft(input: {
     `Supplier: ${input.supplierName}`,
     `Part: ${input.partNumber}`,
     "",
-    "Please send the documents below. This draft is for you to copy. ExportReady does not send it.",
+    "Please send the documents below. This draft is for you to copy. TradeReady does not send it.",
     "",
   ];
   if (actions.length === 0) {
