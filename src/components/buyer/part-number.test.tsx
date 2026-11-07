@@ -18,13 +18,15 @@ test("catalogue, detail and request part numbers allow an unbroken 80-character 
   const request = { ...exampleRequest, partNumber, connections: [] };
   const views = [
     <Catalog
+      key="catalogue"
       products={[product]}
       example={false}
       values={{ q: "", productCategory: "", country: "" }}
       error={null}
     />,
-    <ProductDetail product={product} example={false} />,
+    <ProductDetail key="detail" product={product} example={false} />,
     <RequestsHome
+      key="requests"
       overview={{ openRequests: 1, connectedSuppliers: 0, sharedReports: 0 }}
       requests={[request]}
       example={false}
