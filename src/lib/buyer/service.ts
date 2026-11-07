@@ -275,7 +275,16 @@ export async function getCatalogProduct(
 
 /** Closes the caller's own open request; false when it is not theirs or already closed. */
 export async function closeMyRequest(userId: string, requestId: string): Promise<boolean> {
-  void userId;
-  void requestId;
-  throw new Error("not implemented: closeMyRequest");
+  const updated = await db
+    .update(buyerRequest)
+    .set({ status: "closed" })
+    .where(
+      and(
+        eq(buyerRequest.id, requestId),
+        eq(buyerRequest.buyerUserId, userId),
+        eq(buyerRequest.status, "open"),
+      ),
+    )
+    .returning({ id: buyerRequest.id });
+  return updated.length === 1;
 }

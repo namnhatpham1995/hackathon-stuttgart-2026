@@ -184,7 +184,7 @@ The contract (`src/lib/buyer/service.ts` types and signatures, `/buyer` in `src/
   - Note: `connectedSuppliers` is distinct products and `sharedReports` is shared connections, both across every request the caller owns, including closed ones. Connections on a request are newest `updated_at` first.
 - [x] 18.2 Implement `searchCatalog` and `getCatalogProduct`: only products with `listed = true` and another owner; case-insensitive text match on name, part number and company, exact match on category and country; the caller's own connection to each product, if any; never select documents, results, fields other than the part number, or any email; verify `pnpm typecheck`
   - Note: text search matches if any of name, part number or company contains the query. When several of the caller's connections point at one product, `myConnection` is the latest `updated_at`.
-- [ ] 18.3 (optional, cut first) Implement `closeMyRequest` with an update-where on the caller's own open request; verify with 18.4
+- [x] 18.3 (optional, cut first) Implement `closeMyRequest` with an update-where on the caller's own open request; verify with 18.4
 - [ ] 18.4 Add `src/lib/buyer/service.test.ts` on real PostgreSQL, expected values from the buyer-supplier-connections spec: a second buyer's requests and connections never appear in `listMyRequests`; an unlisted product and the caller's own listed product are absent from `searchCatalog` and give null from `getCatalogProduct`; `sharedResultId` is null on a connection that is not shared; no returned value contains a user's email (serialise and search for the seeded addresses); verify each case fails when its filter is removed, then restore
 
 ## 19. Buyer workspace pages · wave 4 · M4 · branch feat/buyer-workspace-ui
