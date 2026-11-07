@@ -12,17 +12,26 @@ This is the Stuttgart hackathon build for 2026-11-07. The description below matc
 
 Live app: <https://tradeready-production.up.railway.app>
 
-**As a buyer (fastest).** Sign in with the buyer account given in the submission form. Open **Find products** (the catalog), choose **Cover Cap CAP-104**, and press **Request evidence**. The supplier's reply and any shared report then show under that connection.
+**No account needed in advance:** on [/sign-in](https://tradeready-production.up.railway.app/sign-in), enter your email and open the magic link we send you (or sign up with email and password).
 
-**As a supplier (fresh account).** Create an account at `/sign-up` and open the supplier workspace (`/workspace`):
+**Supplier side.**
 
-1. Create a product, for example Cover Cap, part number CAP-104.
-2. Upload the seven PDFs `TC01_01` to `TC01_07` from [`fixtures/test-pack/tc01/`](fixtures/test-pack/tc01/) (the organisers' test case 1, a complete pack).
-3. Run the check and wait for the report. The complete TC01 pack should give six `DOCUMENTED` findings.
-4. Press **List for buyers** so the product appears in the buyer catalog.
-5. When a buyer requests evidence, share the completed report on that connection.
+1. Download the sample PDFs (the organisers' test case 1, a complete fictional pack). The same links are in the app under **Download sample PDFs (test case 1)** on the upload card.
+   - <https://tradeready-production.up.railway.app/samples/tc01/TC01_01_Buyer_Requirements_CAP-104.pdf>
+   - <https://tradeready-production.up.railway.app/samples/tc01/TC01_02_Product_Specification_RevB.pdf>
+   - <https://tradeready-production.up.railway.app/samples/tc01/TC01_03_Material_Declaration_CAP104.pdf>
+   - <https://tradeready-production.up.railway.app/samples/tc01/TC01_04_Inspection_Report_RevB.pdf>
+   - <https://tradeready-production.up.railway.app/samples/tc01/TC01_05_ISO9001_Certificate_Current_Sample.pdf>
+   - <https://tradeready-production.up.railway.app/samples/tc01/TC01_06_Traceability_Record_CAP104.pdf>
+   - <https://tradeready-production.up.railway.app/samples/tc01/TC01_07_Packaging_Specification_CAP104.pdf>
+2. In the supplier workspace (`/workspace`), create the product Cover Cap, part number CAP-104.
+3. Upload all seven PDFs.
+4. Press **Upload and assess** and wait for the report. Expect six `DOCUMENTED` findings.
+5. Press **List for buyers** so the product appears in the buyer catalog.
 
-One account can switch between both workspaces, but it never sees its own products in the buyer catalog. To try both sides, use two accounts.
+**Buyer side.** Sign in with a second email address (the magic link works the same way). Open **Find products**, choose **Cover Cap CAP-104**, and press **Request evidence**. Back as the supplier, share the completed report on that connection. The buyer then sees it under **View report**.
+
+One account can switch between both workspaces, but it never sees its own products in the buyer catalog. That is why the buyer side needs a second email address.
 
 ## What it does
 
