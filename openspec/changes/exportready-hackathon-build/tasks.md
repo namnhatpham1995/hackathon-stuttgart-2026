@@ -138,8 +138,10 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 15. Spoken replies (optional, cut at 15:15) · wave 4 · M4 · branch feat/spoken-replies
 
-- [ ] 15.1 Add `POST /api/speech` (session required, text up to 600 characters, ElevenLabs text-to-speech with a stock voice, key server-side) and `src/components/voice/speak-reply.tsx` with a mute toggle; verify a reply plays audio and, with the key unset, the reply stays text with no error dialog
+- [x] 15.1 Add `POST /api/speech` (session required, text up to 600 characters, ElevenLabs text-to-speech with a stock voice, key server-side) and `src/components/voice/speak-reply.tsx` with a mute toggle; verify a reply plays audio and, with the key unset, the reply stays text with no error dialog
+  - Note: Server env is `ELEVENLABS_API_KEY` (Railway only, never `NEXT_PUBLIC_`, never on Vercel). Stock voice Rachel `21m00Tcm4TlvDq8ikWAM`, model `eleven_flash_v2_5`. Missing key or a failed synthesis returns `{ available: false }` and the reply stays text.
 - [ ] 15.2 Mount the speaker in `assistant-panel.tsx` (one line); verify the 14.3 conversation still works with audio off
+  - Blocked: needs 14.3
 
 ## 16. Submission package · wave 4 · M5 · branch docs/submission
 
