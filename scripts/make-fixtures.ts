@@ -222,6 +222,33 @@ const demoDocuments: readonly Fixture[] = [
   },
 ];
 
+// The filename says RevB. The body identifies revision A, and never says revision B.
+const trapDocuments: readonly Fixture[] = [
+  {
+    filename: "trap_CAP104_Inspection_RevB.pdf",
+    mustInclude: [SUPPLIER, "CAP-104", "revision A", "Part number: CAP-104. Drawing revision: A."],
+    mustExclude: ["revision B", "RevB", "LM-ABS-01", "PKG-07"],
+    lines: [
+      "Inspection report",
+      `Supplier: ${SUPPLIER}`,
+      "Part number: CAP-104. Drawing revision: A.",
+      "Date: 2026-10-20",
+      "This inspection report identifies CAP-104 revision A.",
+      "Sample measurement table",
+      "Dimension            Nominal mm    Measured mm",
+      "Overall diameter     42.0          41.7",
+      "Height               18.0          18.2",
+      "Wall thickness       2.0           1.9",
+    ],
+  },
+  {
+    filename: "empty.pdf",
+    text: false,
+    lines: [],
+    mustInclude: [],
+  },
+];
+
 const TRACEABILITY = /\b(batch|batches|lot|lots|shipment|shipments|traceability|resin)\b/i;
 
 function assertFixture(fixture: Fixture): void {
@@ -250,8 +277,12 @@ function writeFixtures(fixtures: readonly Fixture[]): string[] {
     const pdf = buildOnePagePdf(fixture.lines, { text: fixture.text !== false });
     const file = path.join(dir, fixture.filename);
     writeFileSync(file, pdf);
-    if (!pdf.subarray(0, 5).toString("ascii").startsWith("%PDF-")) {
+    const raw = pdf.toString("latin1");
+    if (!raw.startsWith("%PDF-")) {
       throw new Error(`${fixture.filename} does not start with %PDF-`);
+    }
+    if (fixture.text === false && (raw.includes("Tj") || raw.includes(FOOTER))) {
+      throw new Error(`${fixture.filename} has selectable text`);
     }
     written.push(file);
   }
@@ -280,5 +311,7 @@ const isDirectRun =
 if (isDirectRun) {
   const sample = selfCheck();
   console.log(`self-check wrote ${sample}`);
-  for (const file of writeFixtures(demoDocuments)) console.log(`wrote ${file}`);
+  for (const file of writeFixtures([...demoDocuments, ...trapDocuments])) {
+    console.log(`wrote ${file}`);
+  }
 }
