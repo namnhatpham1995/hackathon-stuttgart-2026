@@ -127,6 +127,7 @@ function ProductTable({ products }: { products: WorkspaceProduct[] }) {
                 {product.fields.revision?.value ?? "—"}
               </span>
               <span>{openItems(product)}</span>
+              <span>{product.listed ? "Listed" : "Not listed"}</span>
             </div>
           </li>
         ))}
@@ -160,7 +161,9 @@ function ProductTable({ products }: { products: WorkspaceProduct[] }) {
                     >
                       {product.name}
                     </Button>
-                    <p className="mt-0.5 text-xs text-muted">{product.profile.companyName}</p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {product.profile.companyName} · {product.listed ? "Listed" : "Not listed"}
+                    </p>
                   </div>
                 </div>
               </td>
