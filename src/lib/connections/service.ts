@@ -24,12 +24,7 @@ import { createProduct, ProductRequestError } from "@/lib/products/service";
 import { deliverConnectionNotices } from "./notify";
 
 const requiredText = z.string().trim().min(1).max(300);
-const optionalMessage = z
-  .string()
-  .trim()
-  .max(1000)
-  .optional()
-  .transform((value) => (value ? value : undefined));
+const optionalMessage = z.string().trim().max(1000).optional();
 
 const idSchema = z.string().trim().min(1).max(200);
 const initiatedBySchema = z.enum(["buyer", "supplier"]);
@@ -286,7 +281,7 @@ export async function createBuyerRequest(
       partNumber: parsed.partNumber,
       requirementSetKey: parsed.requirementSetKey,
       requirementSetVersion: parsed.requirementSetVersion,
-      message: parsed.message ?? null,
+      message: parsed.message || null,
       visibility: "open",
       status: "open",
     })
@@ -456,7 +451,7 @@ export async function respondToRequest(
           productId,
           initiatedBy: "supplier",
           status: "in_progress",
-          message: parsed.message ?? null,
+          message: parsed.message || null,
         })
         .returning();
       if (!connection) throw new ConnectionRequestError(400, "The connection could not be saved");
@@ -515,7 +510,7 @@ export async function requestEvidence(
         partNumber,
         requirementSetKey: listing.requirementSetKey,
         requirementSetVersion: listing.requirementSetVersion,
-        message: parsed.message ?? null,
+        message: parsed.message || null,
         visibility: "direct",
         status: "open",
       });
@@ -529,7 +524,7 @@ export async function requestEvidence(
           productId: listing.id,
           initiatedBy: "buyer",
           status: "requested",
-          message: parsed.message ?? null,
+          message: parsed.message || null,
         })
         .returning();
       if (!connection) throw new ConnectionRequestError(400, "The connection could not be saved");
