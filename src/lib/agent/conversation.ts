@@ -1,7 +1,6 @@
 import type { Content } from "@google/genai";
-
-import { callGemini } from "@/lib/assessment/gemini";
 import type { WorkspaceDirective } from "@/lib/assessment/types";
+import { callAssistantModel } from "./model";
 
 import type { ConfirmDirective } from "./confirm-action";
 import { describePage, type SiteDirective, siteMapText } from "./site-map";
@@ -124,7 +123,7 @@ export async function runAssistantTurn(input: {
   const executed: Executed[] = [];
 
   for (let round = 1; round <= MAX_ROUNDS; round += 1) {
-    const response = await callGemini({
+    const response = await callAssistantModel({
       systemInstruction: systemInstruction(input.productId, input.page?.path ?? ""),
       contents,
       temperature: 0,
