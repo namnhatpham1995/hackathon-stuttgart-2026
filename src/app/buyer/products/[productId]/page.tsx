@@ -14,7 +14,11 @@ export async function generateMetadata({
   params: Promise<{ productId: string }>;
 }): Promise<Metadata> {
   const { productId } = await params;
-  return { title: productIdSchema.safeParse(productId).success ? "Product" : "Product not found" };
+  const parsed = productIdSchema.safeParse(productId);
+  if (!parsed.success) return { title: "Product not found" };
+  const session = await requireSession();
+  const { product } = await loadCatalogProduct(session.user.id, parsed.data);
+  return { title: product?.productName ?? "Product not found" };
 }
 
 export default async function CatalogProductPage({

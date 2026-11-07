@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 
 import { requestProductEvidence } from "@/app/buyer/actions";
 import { Button } from "@/components/ui/button";
 import { Field, TextArea } from "@/components/ui/field";
-import { focusFirstInvalid } from "@/components/workspace/schemas";
 
 const fields = ["buyerOrgName", "message"] as const;
 
@@ -19,6 +18,15 @@ export function EvidenceForm({ productId }: { productId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    const name = fields.find((field) => errors[field]);
+    if (name) {
+      document.querySelector<HTMLElement>(`[name="${name}"]`)?.focus();
+      return;
+    }
+    if (error) document.getElementById("evidence-request-error")?.focus();
+  }, [errors, error]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -33,7 +41,6 @@ export function EvidenceForm({ productId }: { productId: string }) {
       if (!result.ok) {
         setErrors(result.errors);
         setError(result.error ?? null);
-        focusFirstInvalid(result.errors, fields);
         return;
       }
       setSent(true);
@@ -79,7 +86,7 @@ export function EvidenceForm({ productId }: { productId: string }) {
         />
       </fieldset>
       {error ? (
-        <p role="alert" className="text-sm text-danger">
+        <p id="evidence-request-error" role="alert" tabIndex={-1} className="text-sm text-danger">
           {error}
         </p>
       ) : null}
