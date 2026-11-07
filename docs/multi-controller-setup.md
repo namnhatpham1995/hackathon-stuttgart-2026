@@ -28,7 +28,7 @@ Use it when more than two sessions work at once. For a solo weekend, one session
 | Owner | Sets the dispatch order and standing orders; answers owner-only decisions; promotes to production | — |
 | Main controller | Syncs `main`, picks the next approved item, dispatches, reads reports, verifies, merges, has workers clean up, keeps the decision log | Write code, run suites, write proposals or audits itself (a free worker does) |
 | Machine controller | Forwards briefs to its idle workers, relays PR numbers and PASS reports, checks its workers' run folders, runs cleanup after a merge | Merge (unless it is the main controller), start work nobody dispatched, ask the owner directly while decisions route to the main controller |
-| Worker | One task group in its own worktree: plan (Opus) → code (Sonnet) → push → independent review (Opus) → fix, up to 3 rounds; stops at PASS, unmerged | Merge, start a second task, wait silently for a reply |
+| Worker | One task group in its own worktree: plan and code (Opus) → push → independent review (fresh context, Opus) → fix, up to 3 rounds; stops at PASS, unmerged | Merge, start a second task, wait silently for a reply |
 | Cleaner (optional) | A small model on low effort that tells the main controller to clear itself when its context gets long (§7) | Anything else |
 
 Only the main controller merges. Workers refuse to merge on a controller's paraphrase of the owner's
@@ -41,8 +41,8 @@ On every machine:
 1. Clone the repo, `pnpm install`, `pnpm dev:setup` (database, hooks, memory seeds).
 2. Start one session named `[Mx] Controller` in the main checkout, with Remote Control on, so other
    machines can reach it through `ListAgents` / `SendMessage`.
-3. Start two worker sessions named `[Mx] Worker 1 · idle` and `[Mx] Worker 2 · idle` on Sonnet
-   (`claude-sonnet-5-5`), Remote Control on. They are reused for every task and never deleted.
+3. Start two worker sessions named `[Mx] Worker 1 · idle` and `[Mx] Worker 2 · idle` on Opus
+   (`claude-opus-5-5`), Remote Control on. They are reused for every task and never deleted.
 4. Tell the controller its role in its first message: which machine it is, who the main controller
    is, the dispatch order, the owner-only list and that decisions route to the main controller. It
    writes these into its own memory.
@@ -89,8 +89,8 @@ change is a new task: clear.
 ```text
 Task: <change> group <n> (<title>) — or: fix <what>, <where seen>.
 Branch: pnpm worktree <type>/<slug>   (first action, before any edit)
-Run: the full-feature-develop skill for this group. Planner and reviewers run on Opus (their agents
-set it); you implement on Sonnet.
+Run: the full-feature-develop skill for this group. You plan and implement on Opus; the reviewers
+run in fresh contexts (their agents set Opus).
 Decisions: ordinary gaps in the change are yours: decide, record each with its reason in design.md
 or a task note, and list them under "Decisions" in the PR body. Ask the main controller (not the
 owner) only before a migration or anything that would reverse a recorded owner decision.
@@ -108,7 +108,7 @@ Owner rules to keep: <quoted owner rules that touch this task>.
 
 A PASS report is a claim. Before merging, the main controller checks for itself:
 
-1. The latest review report says PASS, and a test-fidelity result exists for the head, run on Opus.
+1. The latest review report says PASS, and a test-fidelity result exists for the head, run in a fresh context on Opus.
 2. The PR head on GitHub equals the reviewed full sha, or the later commits are tests-only
    (`git show --stat`).
 3. The head contains the current base: `git fetch && git merge-base --is-ancestor origin/main <head>`.

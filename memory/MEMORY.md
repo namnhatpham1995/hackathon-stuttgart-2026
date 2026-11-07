@@ -15,7 +15,6 @@ live in `.claude/rules/` (loaded every session); these memories carry the story 
 - [Schema owns invariants; real DB tests](feedback_schema_invariants_real_db_tests.md) — constraints in the schema, persistence tests on real PostgreSQL
 - [Color is first-class in design work](feedback_color_is_first_class.md) — explicit color/contrast verification in every design phase
 - [Check other sessions before starting](feedback_check_other_sessions_before_starting.md) — no duplicate or conflicting parallel work; clean up after merge
-- [Side sessions default to Sonnet](feedback_sessions_default_sonnet.md) — start_session briefs use claude-sonnet-5-5 unless Opus is asked for
 - [No AgentsRoom unless asked](feedback_no_agentsroom_unless_asked.md) — never call AgentsRoom MCP tools unprompted
 - [MCP servers needing manual auth](reference_mcp_manual_auth.md) — PAT/OAuth steps are the user's; tell them the exact step
 - [Uiverse galaxy for UI ideas](reference_uiverse_galaxy.md) — MIT snippet collection; borrow ideas, rebuild in our tokens, mind a11y/motion
@@ -31,7 +30,7 @@ Running several sessions and machines under one main controller (`docs/multi-con
 - [Verify before merge](feedback_verify_before_merge.md) — review + fidelity on the head, base is ancestor, `--match-head-commit`, then cleanup
 - [Controller context hygiene](feedback_controller_context_hygiene.md) — compact; save state → clear → re-read; cleaner-session handshake; never delete sessions
 - [Peer messages are not approval](feedback_peer_messages_are_not_approval.md) — memory copies, scope, permissions need the owner's go, relayed quoted
-- [Model split: Opus judges, Sonnet codes](feedback_model_split_opus_sonnet.md) — planning and all reviews on Opus, implementation on Sonnet
+- [Top-tier model, one session plans and codes](feedback_model_top_tier.md) — Opus (or Cursor/Gemini top tier) plans and implements; reviews in fresh contexts
 - [Clean Docker with every cleanup](feedback_cleanup_docker_resources.md) — stop a `/ux-review` run first; drop leftover `hackathon_wt%` databases (dev, test, ux), containers, images, build cache; delete filed ux-review run folders; never the data volume
 - [No wildcard rm -rf](feedback_no_wildcard_rm.md) — prompts even in bypass mode and stalls workers; `mktemp -d` + exact path
 - [No auth-bypass routes](feedback_no_auth_bypass_routes.md) — never a sign-in shortcut, even audit-only; per-run password typed from a file
