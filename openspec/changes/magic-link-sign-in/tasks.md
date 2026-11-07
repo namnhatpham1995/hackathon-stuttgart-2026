@@ -6,4 +6,5 @@
   - Note: `storeToken` is `hashed`. The verify URL in the email is unchanged. The `verification` identifier does not contain the raw token.
 - [x] 1.2 Add the sign-in-only form (email, `Email me a sign-in link`, check-your-inbox state, `callbackURL` `/workspace`) using the existing field and button styles. Verify the sign-in render includes the button and the sign-up render does not, and the form source sets `callbackURL` to `/workspace` and does not import `brevo.ts`
 - [x] 1.3 Add a real-PostgreSQL flow test with `sendBrevoEmail` mocked: a new email's verify creates one verified user and redirects to `BETTER_AUTH_URL/workspace`; the same token does not create a second user; an existing password user can still sign in with the password before the link, and the link signs in that same row. Verify the test fails if the redirect target is not `/workspace`
-- [ ] 1.4 One independent review, fix blocking findings in one round; verify the report says PASS
+- [x] 1.4 One independent review, fix blocking findings in one round; verify the report says PASS
+  - Note: Round 4 PASS. R1-1 stored the token as a hash. R1-2 is an accepted risk: a missing, multi-value, or single shared-proxy `x-forwarded-for` shares one bucket of 5.
