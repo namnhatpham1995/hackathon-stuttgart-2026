@@ -26,6 +26,7 @@ const envSchema = z.object({
   GEMINI_MODEL: optional,
   ANTHROPIC_API_KEY: optional,
   ANTHROPIC_MODEL: optional,
+  ANTHROPIC_WORKSPACE_ID: optional,
   /** Railway origin. Set on Vercel only; unset locally and on Railway. */
   BACKEND_URL: optionalUrl,
   BREVO_API_KEY: optional,
@@ -41,6 +42,7 @@ const featureEnv = [
   "GEMINI_MODEL",
   "ANTHROPIC_API_KEY",
   "ANTHROPIC_MODEL",
+  "ANTHROPIC_WORKSPACE_ID",
   "BREVO_API_KEY",
   "BREVO_SENDER_EMAIL",
   "APP_BASE_URL",
