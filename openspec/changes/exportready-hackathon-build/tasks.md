@@ -173,6 +173,27 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 - [ ] 17.7 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
 - [ ] 17.8 (post-merge) Production click-through of 17.6 with two fresh accounts; verify every step, or record the failure honestly as a note
 
+## 18. Buyer workspace backend · wave 4 · M4 · branch feat/buyer-workspace-backend
+
+The contract (`src/lib/buyer/service.ts` types and signatures, `/buyer` in `src/proxy.ts`) is already on `main`. Fill the stub bodies; do not change an exported type or signature, since group 19 builds against them in parallel. Owns `src/lib/buyer/**`; reads the schema directly and never edits `src/lib/connections/**`.
+
+- [ ] 18.1 Implement `listMyRequests` and `getBuyerOverview` in `src/lib/buyer/service.ts`: only `buyer_request` rows whose `buyer_user_id` is the caller, newest first, each with its connections (product name, part number from `product.fields`, supplier company from `product.profile.companyName`, status, initiated by, `shared_result_id` only while `shared`); the overview counts open requests, distinct connected products and shared connections; verify `pnpm typecheck`
+- [ ] 18.2 Implement `searchCatalog` and `getCatalogProduct`: only products with `listed = true` and another owner; case-insensitive text match on name, part number and company, exact match on category and country; the caller's own connection to each product, if any; never select documents, results, fields other than the part number, or any email; verify `pnpm typecheck`
+- [ ] 18.3 (optional, cut first) Implement `closeMyRequest` with an update-where on the caller's own open request; verify with 18.4
+- [ ] 18.4 Add `src/lib/buyer/service.test.ts` on real PostgreSQL, expected values from the buyer-supplier-connections spec: a second buyer's requests and connections never appear in `listMyRequests`; an unlisted product and the caller's own listed product are absent from `searchCatalog` and give null from `getCatalogProduct`; `sharedResultId` is null on a connection that is not shared; no returned value contains a user's email (serialise and search for the seeded addresses); verify each case fails when its filter is removed, then restore
+
+## 19. Buyer workspace pages · wave 4 · M4 · branch feat/buyer-workspace-ui
+
+Builds against the stubs from `main` while group 18 fills them. Owns `src/app/buyer/**` and `src/components/buyer/**`, plus one link line in `src/components/connections/connections-nav.tsx` once group 17 is on `main`. Reuses group 17's pages by linking to them (`/connections/requests/new`, `/connections/[connectionId]`) and its `requestEvidence` service, rather than rebuilding them.
+
+- [ ] 19.1 Add `src/app/buyer/layout.tsx` (`requireSession()`, a header with Overview, My requests, Find products, a "New request" link to `/connections/requests/new` and a "Supplier workspace" link to `/workspace`); verify a signed-out visit to `/buyer` goes to sign-in
+- [ ] 19.2 Build `/buyer` (overview counts and the "My requests" list: each request with its connected suppliers, a status chip per connection and "View report" linking to `/connections/[connectionId]` when shared; empty state linking to "New request" and "Find products"); verify `pnpm typecheck`
+- [ ] 19.3 Build `/buyer/products` (search box plus category and country filters as a GET form, `searchParams` parsed with `catalogSearchInput`; cards with product name, part number and the profile labelled "declared by supplier") and `/buyer/products/[productId]` (404 when `getCatalogProduct` returns null); "Request evidence" posts to a server action in `src/app/buyer/actions.ts` (session, Zod) that calls `requestEvidence` from `src/lib/connections/service.ts`; an existing connection shows its status instead of the button; verify `pnpm typecheck`
+- [ ] 19.4 (optional, cut first) A "Close request" button on open requests calling `closeMyRequest` through a server action; verify the closed request leaves the board
+- [ ] 19.5 Add the "Buyer workspace" link to `/buyer` in `connections-nav.tsx` (one line, after group 17 merges); verify the supplier workspace shows it
+- [ ] 19.6 After groups 17 and 18 are on `main`, merge `origin/main` and click through with two accounts: the supplier lists the CAP-104 product; the buyer finds it at `/buyer/products` by searching "CAP-104", presses "Request evidence", sees it under "My requests" as requested; the supplier shares the baseline result; the buyer's list shows "shared" and "View report" opens it; check 375 px and 1280 px in light and dark; verify each step
+  - Note: until 17 and 18 merge, add a `Blocked:` note on this task only and finish 19.1-19.5.
+
 ## Workflow follow-up
 
 - After submission, delete `.claude/rules/hackathon-mode.md` and its index line so the normal rules apply again.
