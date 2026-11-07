@@ -34,6 +34,17 @@ also production, so the plan has to keep every merge point green.
   - Brevo completion email after the result is stored,
   - a text assistant that drives the same services through Gemini function calling,
   - optional ElevenLabs spoken replies, time-boxed and cut first.
+- **From the passport idea** (`docs/exportready-passport-idea.md`), kept inside the plan's limits:
+  - readiness dimensions (Quality, Product and material, Traceability, Packaging and logistics) as
+    labels that group requirements, with documented and open counts per dimension and no score,
+  - a supplier profile at onboarding (company, country, product category, capabilities, target
+    market), shown as declared by the supplier and never treated as evidence,
+  - an improvement action plan on the report, plus a copyable document-request draft built from the
+    unresolved findings,
+  - submission content: a 6-slide deck, tagline, business model, README with screenshots, demo URL
+    and team contributions, and customer-discovery notes.
+- **Kept out from the idea**: numeric readiness scores, public shareable passports, buyer-entered
+  requirements, compliance conclusions and Supabase.
 - **Production deploy from `main`**: a Vercel project for the app with managed Postgres; migrations
   run only on production builds.
 
@@ -45,8 +56,9 @@ also production, so the plan has to keep every merge point green.
   open pull requests.
 - `evidence-assessment`: turns an active document set and a buyer requirement set into per-requirement
   findings (DOCUMENTED, MISSING, MISMATCH, EXPIRED, NEEDS_REVIEW) with validated source citations.
-- `supplier-workspace`: a signed-in user's private product draft, document uploads, finalised upload
-  batches, document replacement and the evidence report view.
+- `supplier-workspace`: a signed-in user's private supplier profile and product draft, document
+  uploads, finalised upload batches, document replacement, and the evidence report with its
+  dimension summary and improvement action plan.
 - `assessment-jobs`: the job lifecycle from finalised batch to stored result: idempotent start, real
   stage status, failure states and owner-only access.
 - `completion-email`: one transactional email per completed job to the user's account address,

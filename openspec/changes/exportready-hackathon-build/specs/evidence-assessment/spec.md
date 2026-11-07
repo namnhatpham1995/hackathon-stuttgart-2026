@@ -17,6 +17,15 @@ readiness percentage, "verified" badge or compliance conclusion.
 - **WHEN** the demo requirement set R1-R5 is assessed
 - **THEN** the result holds exactly five findings, one per requirement, and no overall score
 
+### Requirement: Every requirement belongs to one readiness dimension
+Each requirement in a requirement set SHALL carry exactly one readiness dimension label: Quality,
+Product and material, Traceability, or Packaging and logistics. A dimension is a grouping only. No
+score, weight or pass mark SHALL be derived from it.
+
+#### Scenario: Demo requirement set dimensions
+- **WHEN** the demo requirement set is loaded
+- **THEN** R1 is Product and material, R2 and R3 are Quality, R4 is Traceability and R5 is Packaging and logistics
+
 ### Requirement: Baseline demo package matches the answer key
 Assessing the four initial demo documents against R1-R5 on assessment date 2026-11-07 SHALL give R1
 DOCUMENTED, R2 EXPIRED, R3 MISMATCH, R4 MISSING and R5 DOCUMENTED. The expected outcomes SHALL NOT be

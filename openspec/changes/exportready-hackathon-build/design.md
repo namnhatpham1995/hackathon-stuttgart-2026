@@ -94,7 +94,10 @@ every other row reaches a user through `product`.
 - **`product`**: `id text pk`; `user_id text not null references user(id) on delete cascade`;
   `requirement_set_key text not null`; `requirement_set_version integer not null`; `name text not null`;
   `fields jsonb not null default '{}'`, holding `{supplierName, partNumber, revision, material,
-  packaging}` as `{value, origin: "user"|"assistant"|"document"}`, validated with Zod; timestamps.
+  packaging}` as `{value, origin: "user"|"assistant"|"document"}`, validated with Zod;
+  `profile jsonb not null default '{}'`, holding the declared supplier profile `{companyName, country,
+  productCategory, capabilities: string[], targetMarket}`, validated with Zod and never read by the
+  assessment; timestamps.
   Index on `user_id`.
 - **`document`**: `id text pk`; `product_id text not null references product(id) on delete cascade`;
   `filename text not null`; `mime_type text not null check in ('application/pdf','image/jpeg','image/png')`;
@@ -126,7 +129,9 @@ The job and result tables reference each other (`assessment_job.result_id` and
 insert the result, then update the job to COMPLETED with its `result_id`.
 
 The requirement set is code, not a table: `src/lib/assessment/requirement-sets.ts` exports
-`neckar-cap-104` v1 with R1-R5, each with `kind` and expected values (part `CAP-104`, revision `B`,
+`neckar-cap-104` v1 with R1-R5, each with `kind`, a `dimension` (`quality`, `product_material`,
+`traceability`, `packaging_logistics`; R1 product_material, R2 and R3 quality, R4 traceability, R5
+packaging_logistics) and expected values (part `CAP-104`, revision `B`,
 material `ABS`, grade `LM-ABS-01`, supplier `Lotus Mould Co., Ltd.`, packaging `PKG-07` rev `2`).
 Alternative considered: a table. Rejected because there is no editor UI, and seeding production adds a
 deploy step.
@@ -171,6 +176,14 @@ and service function takes the session's `userId` and filters by `product.user_i
 - Rules decide every status. A requirement with no valid observation in a complete set is MISSING. An
   incomplete set gives NEEDS_REVIEW. Identity checks (supplier, part) run before the revision check, so
   a wrong part never counts as support.
+- The dimension summary, action plan and document-request draft are pure functions of the stored
+  findings and the requirement set (`src/components/workspace/report-summary.ts`, owned by group 11),
+  with no extra model call. The same findings therefore always give the same plan, and the assistant
+  can quote it.
+- Ideas from `docs/exportready-passport-idea.md` that are left out: numeric readiness scores (the spec
+  forbids a score), public shareable passports (reports are private; an expiring share link would need
+  a new table and a security review), buyer-entered requirements (no editor today), compliance
+  conclusions, and Supabase (the stack is Postgres with Drizzle and Neon).
 - Alternative considered: let Gemini output statuses. Rejected because R2 and R3 are what the demo
   shows, and code makes them deterministic and testable without an API key.
 
@@ -317,6 +330,7 @@ History lives in the panel's state only. The source of truth is the database.
 | Same snapshot started twice returns one job; direct duplicate insert is rejected by the unique index | 9 | real PG |
 | Another user's job returns 404 | 9 | real PG |
 | Roadmap parser: ticks, Blocked notes, heading metadata, status rules | 2 | pure |
+| Report summary: dimension counts and action plan for the baseline and the corrected findings | 11 | pure |
 | Golden baseline: documents 01-04 match the answer key | 13 | live Gemini, `pnpm test:golden` |
 | Golden correction: replacing 03 with 05 flips only R3 | 13 | live Gemini, `pnpm test:golden` |
 

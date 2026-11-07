@@ -20,6 +20,16 @@ products, documents, jobs and results owned by that user.
 - **WHEN** a signed-in user requests a product ID owned by someone else
 - **THEN** the app responds as if the product does not exist
 
+### Requirement: Supplier profile is declared, not evidenced
+At onboarding a user SHALL be able to enter a supplier profile (company name, country, product
+category, manufacturing capabilities, target export market) for the product. The workspace and report
+SHALL label these values "declared by supplier", and the assessment SHALL NOT use them as evidence for
+any requirement.
+
+#### Scenario: Declared capability does not support a finding
+- **WHEN** the profile declares "traceability by resin batch" and no document contains a traceability record
+- **THEN** R4 is still MISSING and the profile shows the capability as declared by the supplier
+
 ### Requirement: Product draft records value origin
 A user SHALL be able to create a product draft for a requirement set and edit its supplier, part
 number, revision, material and packaging fields. Each stored field value SHALL record whether it was
@@ -59,6 +69,28 @@ was. It SHALL state that the report is not a certification.
 #### Scenario: Open a finding's source
 - **WHEN** the user opens the R3 finding
 - **THEN** they see the revision-A report's filename, page 1 and the exact quoted passage
+
+### Requirement: Report summarises evidence coverage by dimension
+The report SHALL show, for each readiness dimension, how many of its requirements are DOCUMENTED and
+how many are open (any other status). It SHALL NOT show a percentage, score, rating or overall
+readiness verdict.
+
+#### Scenario: Baseline dimension summary
+- **WHEN** the baseline demo report is shown
+- **THEN** Product and material shows 1 documented and 0 open, Quality 0 documented and 2 open, Traceability 0 documented and 1 open, Packaging and logistics 1 documented and 0 open
+
+### Requirement: Report gives an improvement action plan
+The report SHALL list one action per unresolved finding, ordered by requirement, each naming what to
+provide and why, taken from that finding's next action. It SHALL offer a document-request draft that
+the user can copy, listing the same items. The draft SHALL NOT be sent by the app.
+
+#### Scenario: Baseline action plan
+- **WHEN** the baseline demo report is shown
+- **THEN** the action plan lists three actions, for R2, R3 and R4, and the copyable draft names the same three documents
+
+#### Scenario: After correction
+- **WHEN** the corrected report is shown
+- **THEN** the action plan lists two actions, for R2 and R4
 
 ### Requirement: Progress reflects real job state
 The workspace SHALL show the current job's actual stage from stored state, refreshed without a page
