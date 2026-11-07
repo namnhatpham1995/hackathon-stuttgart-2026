@@ -26,7 +26,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 3. Assessment contract · wave 1 · M0 · branch feat/assessment-contract
 
-- [ ] 3.1 Add `@google/genai` and `unpdf` with `pnpm add`; verify `pnpm install --frozen-lockfile` and `pnpm typecheck` pass
+- [x] 3.1 Add `@google/genai` and `unpdf` with `pnpm add`; verify `pnpm install --frozen-lockfile` and `pnpm typecheck` pass
+  - Note: `@google/genai` 3.0.0 and `unpdf` 2.1.0. `pnpm-workspace.yaml` sets `protobufjs: false` so `pnpm install` does not stop on its postinstall; the client ships generated code.
 - [ ] 3.2 Add `GEMINI_API_KEY`, `GEMINI_MODEL`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `APP_BASE_URL`, `ELEVENLABS_API_KEY` to `src/env.ts` as optional, plus a `requireEnv(name)` helper that throws a clear message when a feature needs a missing one, and placeholders to `.env.example`; verify `pnpm dev` starts with none of them set
 - [ ] 3.3 Add `src/db/schema/exportready.ts` with the seven tables (including `buyer_request`, `request_connection`, `product.listed` and the widened `notification`), checks, unique indexes and foreign keys exactly as design.md Decision 2, export it from `index.ts`, and run `pnpm db:generate` once; verify `pnpm db:migrate` applies cleanly on a fresh database
 - [ ] 3.4 Add a real-PostgreSQL test that updating a job to COMPLETED without `result_id` is rejected by the check constraint; verify it fails when the check is removed from the schema, then restore it

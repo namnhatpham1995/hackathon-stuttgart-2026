@@ -3,6 +3,9 @@ allowBuilds:
   sharp: true
   "@tailwindcss/oxide": true
   unrs-resolver: true
+  # @google/genai depends on protobufjs, whose postinstall is not needed at runtime
+  # (the client ships generated code). Name it so pnpm install does not stop.
+  protobufjs: false
 
 # Keep Linux native binaries in the lockfile even when it is regenerated on Windows or macOS, so a
 # Linux host (CI, Railway, Vercel) can install with --frozen-lockfile.
