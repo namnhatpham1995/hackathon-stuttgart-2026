@@ -8,6 +8,22 @@ TradeReady is a supplier and buyer workspace for one checklist. A supplier uploa
 
 This is the Stuttgart hackathon build for 2026-11-07. The description below matches `main` at `535a091`. App code is the same as the test run on `218f79f`. `535a091` only renames the public Railway host in the docs.
 
+## Try it (for judges)
+
+Live app: <https://tradeready-production.up.railway.app>
+
+**As a buyer (fastest).** Sign in with the buyer account given in the submission form. Open **Find products** (the catalog), choose **Cover Cap CAP-104**, and press **Request evidence**. The supplier's reply and any shared report then show under that connection.
+
+**As a supplier (fresh account).** Create an account at `/sign-up` and open the supplier workspace (`/workspace`):
+
+1. Create a product, for example Cover Cap, part number CAP-104.
+2. Upload the seven PDFs `TC01_01` to `TC01_07` from [`fixtures/test-pack/tc01/`](fixtures/test-pack/tc01/) (the organisers' test case 1, a complete pack).
+3. Run the check and wait for the report. The complete TC01 pack should give six `DOCUMENTED` findings.
+4. Press **List for buyers** so the product appears in the buyer catalog.
+5. When a buyer requests evidence, share the completed report on that connection.
+
+One account can switch between both workspaces, but it never sees its own products in the buyer catalog. To try both sides, use two accounts.
+
 ## What it does
 
 One account can use both workspaces and switch in the header.
