@@ -1,20 +1,24 @@
-/** Shared Gemini call. Fact extraction sets `responseSchema`; the assistant sets `tools`. */
+import type { Content, FunctionCall } from "@google/genai";
+
+/**
+ * Shared Gemini call. Fact extraction passes a string and `responseSchema`.
+ * The assistant passes `tools`, then echoes `content` (function-call ids and
+ * thought signatures included) on the next turn.
+ */
 export type GeminiRequest = {
   systemInstruction?: string;
-  contents: string | { role: "user" | "model"; text: string }[];
+  contents: string | Content[];
   temperature?: number;
   responseSchema?: unknown;
+  /** Forwarded to the SDK. The assistant owns the tool declarations. */
   tools?: unknown;
-};
-
-export type GeminiFunctionCall = {
-  name: string;
-  args: unknown;
 };
 
 export type GeminiResponse = {
   text: string;
-  functionCalls: GeminiFunctionCall[];
+  /** Model turn to send back unchanged as history. */
+  content: Content;
+  functionCalls: FunctionCall[];
 };
 
 export class GeminiCallError extends Error {
