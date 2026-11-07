@@ -305,13 +305,27 @@ test("empty.pdf marks the result incomplete", async () => {
     expect(named.findings.map((item) => item.requirementId).sort()).toEqual(
       Object.keys(answerKey.baseline.findings).sort(),
     );
-    expect(named.findings.some((item) => item.status === "MISSING")).toBe(false);
+    expect(named.findings.every((item) => item.status === "NEEDS_REVIEW")).toBe(true);
+    expect(
+      named.findings.every(
+        (item) =>
+          item.reason.includes(answerKey.empty.file) ||
+          item.nextAction.includes(answerKey.empty.file),
+      ),
+    ).toBe(true);
 
     const alias = await assess(ownerId, [
       { filename: "blank-scan.pdf", content: readFixture(answerKey.empty.file) },
     ]);
     expect(alias.complete).toBe(false);
     expect(alias.documents.map((item) => item.filename)).toEqual(["blank-scan.pdf"]);
-    expect(alias.findings.some((item) => item.status === "MISSING")).toBe(false);
+    expect(alias.findings.every((item) => item.status === "NEEDS_REVIEW")).toBe(true);
+    expect(
+      alias.findings.every(
+        (item) =>
+          item.reason.includes("blank-scan.pdf") || item.nextAction.includes("blank-scan.pdf"),
+      ),
+    ).toBe(true);
+    expect(alias.findings.some((item) => item.reason.includes(answerKey.empty.file))).toBe(false);
   });
 });

@@ -150,8 +150,13 @@ test("a fact-extraction warning marks the result incomplete and leaves the gap u
     expect(result.findings).toHaveLength(5);
     expect(finding(result.findings, "R3").status).toBe("DOCUMENTED");
     expect(finding(result.findings, "R3").citations.length).toBeGreaterThan(0);
-    expect(finding(result.findings, "R4").status).toBe("NEEDS_REVIEW");
-    expect(finding(result.findings, "R4").citations).toEqual([]);
+    const gap = finding(result.findings, "R4");
+    expect(gap.status).toBe("NEEDS_REVIEW");
+    expect(gap.citations).toEqual([]);
+    expect(gap.reason).toContain("02_Lotus_ISO_Certificate_Demo.pdf");
+    expect(gap.nextAction).toContain("02_Lotus_ISO_Certificate_Demo.pdf");
+    expect(gap.reason).not.toContain("no extractable text");
+    expect(gap.nextAction).not.toContain("no extractable text");
     expect(result.findings.some((item) => item.status === "MISSING")).toBe(false);
     expect(result.documents.map((item) => item.filename).sort()).toEqual([
       "02_Lotus_ISO_Certificate_Demo.pdf",
@@ -206,6 +211,49 @@ test("a failed fact extraction marks the job as needing attention and stores no 
       .from(assessmentResult)
       .where(eq(assessmentResult.jobId, job.id));
     expect(results).toHaveLength(0);
+  } finally {
+    await db.delete(user).where(eq(user.id, ownerId));
+  }
+});
+
+test("an active photo is left out of the assessment", async () => {
+  const ownerId = await createOwner("Dora");
+  try {
+    const productId = await createProduct(ownerId, ["01_Lotus_Material_Datasheet.pdf"]);
+    await db.insert(document).values({
+      id: crypto.randomUUID(),
+      productId,
+      filename: "part-photo.jpg",
+      mimeType: "image/jpeg",
+      kind: "photo",
+      sizeBytes: 8,
+      sha256: "hash-part-photo",
+      content: Buffer.from("jpeg-bytes"),
+      state: "active",
+    });
+    extractFacts.mockImplementation(async () => withWarnings([], []));
+
+    const job = await startAssessment(ownerId, productId);
+    await runAssessment(job.id);
+
+    const seen = extractPages.mock.calls.flatMap((call) => {
+      const batch = call[0] as PdfDocument[];
+      return batch.map((item) => item.filename);
+    });
+    expect(seen).toEqual(["01_Lotus_Material_Datasheet.pdf"]);
+
+    const [stored] = await db.select().from(assessmentJob).where(eq(assessmentJob.id, job.id));
+    expect(stored?.status).toBe("COMPLETED");
+    const [result] = await db
+      .select()
+      .from(assessmentResult)
+      .where(eq(assessmentResult.jobId, job.id));
+    if (!result) throw new Error("missing result");
+    expect(result.complete).toBe(true);
+    expect(result.documents.map((item) => item.filename)).toEqual([
+      "01_Lotus_Material_Datasheet.pdf",
+    ]);
+    expect(finding(result.findings, "R4").status).toBe("MISSING");
   } finally {
     await db.delete(user).where(eq(user.id, ownerId));
   }

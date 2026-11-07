@@ -9,7 +9,7 @@ import { extractFacts } from "./extract-facts";
 import { extractPages, type PdfDocument } from "./pdf-text";
 import { getRequirementSet } from "./requirement-sets";
 import { decideFindings } from "./rules";
-import type { Citation, Observation, PageText } from "./types";
+import type { Citation, Finding, Observation, PageText } from "./types";
 
 /**
  * Claims a queued job and stores one result: page text, extracted facts,
@@ -50,7 +50,10 @@ async function assessClaimed(jobId: string): Promise<{ notificationId: string }>
   }
 
   await setStage(jobId, "extracting_text");
-  const documents = await loadDocuments(job.documentIds);
+  const snapshot = await loadDocuments(job.documentIds);
+  // Photos are not evidence. They are not read, not stored on the result,
+  // and they do not make processing incomplete.
+  const documents = snapshot.filter((row) => row.kind !== "photo");
   const extracted = await readDocuments(documents);
 
   await setStage(jobId, "extracting_facts");
@@ -63,14 +66,18 @@ async function assessClaimed(jobId: string): Promise<{ notificationId: string }>
 
   await setStage(jobId, "checking_rules");
   const assessmentDate = berlinDate(new Date());
-  const findings = decideFindings({
-    requirementSet,
-    observations: facts,
-    citations: citationsFromObservations(facts, extracted.pages),
-    pages: extracted.pages,
-    assessmentDate,
-    complete,
-  });
+  const findings = nameIncompleteFiles(
+    decideFindings({
+      requirementSet,
+      observations: facts,
+      citations: citationsFromObservations(facts, extracted.pages),
+      pages: extracted.pages,
+      assessmentDate,
+      complete,
+    }),
+    extracted.emptyDocuments,
+    facts.warnings,
+  );
 
   await setStage(jobId, "saving");
   return completeJob(jobId, {
@@ -83,6 +90,51 @@ async function assessClaimed(jobId: string): Promise<{ notificationId: string }>
       sha256: row.sha256,
     })),
   });
+}
+
+/** The absence sentence `decideFindings` uses when processing was incomplete. */
+const INCOMPLETE_REASON =
+  "Processing was incomplete, so this requirement cannot be reported as missing.";
+
+function nameIncompleteFiles(
+  findings: Finding[],
+  emptyDocuments: readonly { filename: string }[],
+  warnings: readonly { filename: string }[],
+): Finding[] {
+  if (emptyDocuments.length === 0 && warnings.length === 0) return findings;
+  const copy = incompleteCopy(emptyDocuments, warnings);
+  return findings.map((item) =>
+    item.reason === INCOMPLETE_REASON
+      ? { ...item, reason: copy.reason, nextAction: copy.nextAction }
+      : item,
+  );
+}
+
+function incompleteCopy(
+  emptyDocuments: readonly { filename: string }[],
+  warnings: readonly { filename: string }[],
+): { reason: string; nextAction: string } {
+  const textless = uniqueNames(emptyDocuments.map((item) => item.filename));
+  const warned = uniqueNames(warnings.map((item) => item.filename));
+  const reason = [INCOMPLETE_REASON];
+  const nextAction: string[] = [];
+  if (textless.length > 0) {
+    const names = textless.join(", ");
+    reason.push(`No text could be read from ${names}.`);
+    nextAction.push(`Replace ${names} with a text-based PDF and assess again.`);
+  }
+  if (warned.length > 0) {
+    const names = warned.join(", ");
+    reason.push(`No facts could be extracted from ${names}.`);
+    nextAction.push(
+      `Assess ${names} again. If that file still produces no facts, replace it and assess again.`,
+    );
+  }
+  return { reason: reason.join(" "), nextAction: nextAction.join(" ") };
+}
+
+function uniqueNames(names: readonly string[]): string[] {
+  return [...new Set(names.map((name) => name.trim()).filter((name) => name.length > 0))];
 }
 
 async function loadDocuments(documentIds: readonly string[]) {
