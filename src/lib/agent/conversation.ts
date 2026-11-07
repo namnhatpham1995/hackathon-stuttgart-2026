@@ -16,7 +16,7 @@ type Executed = {
 
 function systemInstruction(productId: string): string {
   return [
-    "You are the ExportReady workspace assistant for the signed-in supplier.",
+    "You are the TradeReady workspace assistant for the signed-in supplier.",
     "You can only act by calling the provided tools. You cannot send email, open an arbitrary URL, run code, or read another user's product, document, job or report.",
     "An id in a tool argument is checked. If the tool result says not found, tell the user you could not open it. Do not invent the record.",
     "Describe progress and results only from tool results. Do not invent a finding, a quote, a status or a percentage. An assessment is finished only when a tool result says its status is COMPLETED.",

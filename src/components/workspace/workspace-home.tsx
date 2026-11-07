@@ -12,7 +12,7 @@ import { fixtureById, listedFixtures } from "./fixtures";
 import { ArrowIcon, DocumentIcon, PlusIcon } from "./icons";
 import { PageHeader } from "./page-chrome";
 import { type FieldErrors, fieldErrors, focusFirstInvalid, profileSchema } from "./schemas";
-import { mergeProducts, writeProduct } from "./store";
+import { mergeProducts } from "./store";
 
 const profileOrder = [
   "companyName",
@@ -31,13 +31,17 @@ const draftOrder = [
   "packaging",
 ] as const;
 
-export function WorkspaceHome() {
-  const [products, setProducts] = useState<WorkspaceProduct[]>(listedFixtures());
+export function WorkspaceHome({ initial }: { initial: WorkspaceProduct[] }) {
+  const [products, setProducts] = useState<WorkspaceProduct[]>([...initial, ...listedFixtures()]);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    setProducts(mergeProducts(listedFixtures()));
-  }, []);
+    const storedIds = new Set(initial.map((product) => product.id));
+    setProducts([
+      ...initial,
+      ...mergeProducts(listedFixtures()).filter((product) => !storedIds.has(product.id)),
+    ]);
+  }, [initial]);
 
   return (
     <div className="workspace-content space-y-7">
@@ -63,8 +67,7 @@ export function WorkspaceHome() {
           initialProfile={products.find((product) => !fixtureById(product.id))?.profile}
           onCancel={() => setCreating(false)}
           onCreated={(product) => {
-            writeProduct(product);
-            setProducts(mergeProducts(listedFixtures()));
+            setProducts((current) => [product, ...current]);
           }}
         />
       ) : null}
@@ -90,7 +93,8 @@ export function WorkspaceHome() {
           </div>
           <ProductTable products={products} />
           <p className="meta mt-5 max-w-[75ch] text-muted">
-            CAP-104 products contain demo data. Products you create are saved in this browser.
+            CAP-104 examples contain demo data. New products are saved to your account. Older
+            browser-local drafts remain available on this device.
           </p>
         </div>
       )}

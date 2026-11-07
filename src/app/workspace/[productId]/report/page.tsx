@@ -7,9 +7,9 @@ import {
   type EvidencePack,
   fixtureById,
   isEvidencePack,
-  lotusProfile,
 } from "@/components/workspace/fixtures";
 import { ReportScreen } from "@/components/workspace/report-screen";
+import { loadWorkspaceProduct } from "@/lib/products/workspace";
 import { requireSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Evidence report" };
@@ -19,39 +19,25 @@ export default async function ReportPage({
   searchParams,
 }: {
   params: Promise<{ productId: string }>;
-  searchParams: Promise<{ evidence?: string }>;
+  searchParams: Promise<{ evidence?: string; result?: string }>;
 }) {
-  await requireSession();
+  const session = await requireSession();
   const { productId } = await params;
-  const { evidence } = await searchParams;
+  const { evidence, result } = await searchParams;
   const fixture = fixtureById(productId);
   const requested = isEvidencePack(evidence) ? evidence : null;
-  const initial = initialProduct(productId, fixture, requested);
+  const initial =
+    (await loadWorkspaceProduct(session.user.id, productId, result)) ??
+    initialProduct(fixture, requested);
 
   return <ReportScreen productId={productId} initial={initial} />;
 }
 
 function initialProduct(
-  productId: string,
   fixture: WorkspaceProduct | null,
   requested: EvidencePack | null,
 ): WorkspaceProduct | null {
-  if (fixture) {
-    const pack = requested ?? (fixture.id === correctedProduct.id ? "corrected" : "baseline");
-    return applyPack(fixture, pack);
-  }
-  if (!requested) return null;
-  return applyPack(
-    {
-      id: productId,
-      name: "Product",
-      requirementSetKey: "neckar-cap-104",
-      requirementSetVersion: 1,
-      fields: {},
-      profile: { ...lotusProfile, companyName: "Declared profile loads with the product" },
-      documents: [],
-      result: null,
-    },
-    requested,
-  );
+  if (!fixture) return null;
+  const pack = requested ?? (fixture.id === correctedProduct.id ? "corrected" : "baseline");
+  return applyPack(fixture, pack);
 }
