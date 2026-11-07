@@ -39,18 +39,23 @@ another lane implements. A stub has the final signature and throws `new Error("n
 Lanes then replace stub bodies in files they own.
 
 ```
- wave 0  [1 rules] [2 roadmap] [3 CONTRACT] [4 fixtures]        all parallel, 3 gates wave 1
- wave 1  [5 pdf] [6 gemini] [7 rules] [8 docs] [9 jobs] [10 email] [11 UI] [12 deploy]
- wave 2  [13 integration]                                       serial, needs 5-11
- wave 3  [14 assistant] [15 voice, optional] [16 submission]
+ wave 0  [1 hackathon-mode rules]                               alone, docs-only, ~10 min
+ wave 1  [2 roadmap] [3 CONTRACT] [4 fixtures]                  parallel, 3 gates wave 2
+ wave 2  [5 pdf] [6 gemini] [7 rules] [8 docs] [9 jobs] [10 email] [11 UI] [12 deploy]
+ wave 3  [13 integration]                                       serial, needs 5-11
+ wave 4  [14 assistant] [15 voice, optional] [16 submission]
 ```
+
+Group 1 merges before anything else is dispatched: until `hackathon-mode.md` is on `main`, workers
+follow the normal rules (planner, up to three review rounds, no draft PR, pushes only at handoff
+points), which would slow the contract and hide work from the roadmap.
 
 | Group | Branch | Owns (creates or edits only these) | Needs |
 |---|---|---|---|
 | 1 | `chore/hackathon-mode` | `.claude/rules/hackathon-mode.md`, `.claude/rules/CLAUDE.md` (one index line) | - |
-| 2 | `feat/live-roadmap` | `roadmap/**`, `vitest.config.ts` (include line), `biome.json` (includes) | - |
-| 3 | `feat/assessment-contract` | `package.json`, `pnpm-lock.yaml`, `src/env.ts`, `.env.example`, `src/db/schema/exportready.ts`, `src/db/schema/index.ts`, `drizzle/**`, `src/proxy.ts`, `next.config.ts`, `vitest.golden.config.ts`, `src/lib/assessment/types.ts`, `src/lib/assessment/requirement-sets.ts`, all stub files below | - |
-| 4 | `feat/demo-fixtures` | `fixtures/exportready/**`, `scripts/make-fixtures.ts` | - |
+| 2 | `feat/live-roadmap` | `roadmap/**`, `vitest.config.ts` (include line), `biome.json` (includes) | 1 |
+| 3 | `feat/assessment-contract` | `package.json`, `pnpm-lock.yaml`, `src/env.ts`, `.env.example`, `src/db/schema/exportready.ts`, `src/db/schema/index.ts`, `drizzle/**`, `src/proxy.ts`, `next.config.ts`, `vitest.golden.config.ts`, `src/lib/assessment/types.ts`, `src/lib/assessment/requirement-sets.ts`, `src/db/schema/exportready.test.ts`, all stub files below | 1 |
+| 4 | `feat/demo-fixtures` | `fixtures/exportready/**`, `scripts/make-fixtures.ts` | 1 |
 | 5 | `feat/pdf-text` | `src/lib/assessment/pdf-text.ts` (+ test) | 3, 4 |
 | 6 | `feat/gemini-extraction` | `src/lib/assessment/extract-facts.ts`, `src/lib/assessment/gemini.ts` | 3, 4 |
 | 7 | `feat/rules-engine` | `src/lib/assessment/rules.ts`, `src/lib/assessment/citations.ts` (+ tests) | 3 |
@@ -242,11 +247,13 @@ History lives in the panel's state only. The source of truth is the database.
 - **Heading convention** (the parser's contract):
   `## <n>. <title> · wave <w> · <milestone id> · branch <type>/<slug>`. Indented `- Blocked: <reason>`
   under a task marks the group Blocked.
-- **Status rules:**
-  - Done: all ticked on `main`.
-  - Ready to merge: a non-draft open PR with all ticked.
-  - In progress: an open PR exists.
+- **Status rules** (first match wins):
   - Blocked: a Blocked note exists.
+  - Done: all ticked on `main`.
+  - Merged, verifying: every task except those marked `(post-merge)` is ticked on `main` and no open
+    PR uses the branch.
+  - Ready to merge: a non-draft open PR with every non-post-merge task ticked.
+  - In progress: an open PR exists.
   - Not started: otherwise.
 - **Without `GITHUB_TOKEN`** it falls back to `raw.githubusercontent.com` for `main` only. The repo is
   public, but that CDN caches for about 5 minutes and shows no PRs.
@@ -290,6 +297,12 @@ History lives in the panel's state only. The source of truth is the database.
   moves.
 - **Tests.** Only the tests named in the tasks. The golden tests run with `pnpm test:golden` by hand,
   not in `pnpm verify`.
+- **Review head.** After a PASS, the only commit allowed before the merge is the tick of that group's
+  review task in `tasks.md`. Any code change after a PASS needs a new review.
+- **Post-merge tasks.** A task marked `(post-merge)` can only be checked once its group is on `main`
+  (production deploys, live roadmap URL, submission). A PR may merge with only those tasks unticked.
+  Afterwards the controller ticks them in a small docs-only PR (`docs/tick-<group>`), which the hook
+  skips. The roadmap shows such a group as "Merged, verifying".
 - **Archive.** Do not archive this change until after submission.
 - **Kept unchanged:** worktrees, never committing to `main`, the pre-push hook with no `--no-verify`,
   no secrets, session checks, one migration PR at a time.
@@ -321,12 +334,20 @@ contract follow-up PR.
 
 ### 15. Where lanes can run
 
+Every push of a code change runs `pnpm verify`, and `test/global-setup.ts` fails hard without
+PostgreSQL on `localhost:5434`. So any agent that pushes code needs a machine where `pnpm dev:setup`
+has run and `pnpm db:up` is running, even for pure lanes.
+
 | Lane needs | Groups | Run on |
 |---|---|---|
-| Nothing but Node | 1, 2, 4, 7, 11 (until wired), 16 | Cursor agents or any worker |
+| Docs only (hook skips) | 1, 16 | any agent, including Cursor cloud agents |
+| Node, no database in the code itself | 2, 4, 5, 7, 11 | [D] / [O-x] workers, or a Cursor agent on a set-up machine |
 | Gemini key in `.env` | 6, 13, 14 | a worker whose `.env` has `GEMINI_API_KEY` |
-| PostgreSQL (`pnpm dev:setup` done) | 3, 8, 9, 10, 13 | [D] / [O-x] workers |
-| Owner's dashboards (Vercel, Neon, Brevo, GitHub token) | 2 (deploy step), 12 | worker prepares; owner clicks |
+| PostgreSQL used by the code | 3, 8, 9, 10, 13 | [D] / [O-x] workers |
+| Owner's dashboards (Vercel, Neon, Brevo, GitHub token) | 2, 12 | worker prepares; owner clicks |
+
+A Cursor cloud agent may write code for a pure lane, but its branch is then pushed by a [D] or
+[O-x] worker that merges `origin/main` and lets the hook run. Never `--no-verify`.
 
 ## Risks / Trade-offs
 
@@ -352,14 +373,15 @@ contract follow-up PR.
 
 ## Migration Plan
 
-1. Merge this proposal PR (docs only).
-2. Wave 0, in parallel: groups 1, 2, 3, 4. The owner creates the roadmap Vercel project and token when
+1. Merge this proposal PR (docs only). Start PostgreSQL (`pnpm db:up`) on every worker machine.
+2. Wave 0: group 1 alone; merge it at once.
+3. Wave 1, in parallel: groups 2, 3, 4. The owner creates the roadmap Vercel project and token when
    group 2 asks.
-3. After group 3 merges: start groups 5-12 in parallel. Group 12 puts the app on Vercel; from then on
+4. After group 3 merges: start groups 5-12 in parallel. Group 12 puts the app on Vercel; from then on
    every merge to `main` deploys production.
-4. After groups 5-11 merge: group 13, then the golden tests.
-5. Then groups 14, 16 and optionally 15. Feature freeze at 15:15.
-6. Rollback: promote the previous Vercel deployment. The schema is additive, so no down-migration is
+5. After groups 5-11 merge: group 13, then the golden tests.
+6. Then groups 14, 16 and optionally 15. Feature freeze at 15:15.
+7. Rollback: promote the previous Vercel deployment. The schema is additive, so no down-migration is
    needed.
 
 ## Open Questions

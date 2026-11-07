@@ -16,6 +16,10 @@ maintained by hand.
 - **WHEN** every task in group 4 is ticked in `tasks.md` on `main`
 - **THEN** the roadmap shows group 4 as Done with its full task count
 
+#### Scenario: Merged group with post-merge checks left
+- **WHEN** every task of group 12 except those marked `(post-merge)` is ticked on `main` and no open pull request uses its branch
+- **THEN** the roadmap shows group 12 as Merged, verifying
+
 #### Scenario: Untouched group shows not started
 - **WHEN** no task of a group is ticked on `main` and no open pull request uses that group's branch
 - **THEN** the roadmap shows the group as Not started
