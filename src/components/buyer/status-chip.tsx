@@ -1,3 +1,5 @@
+"use client";
+
 import Lozenge from "@atlaskit/lozenge";
 import {
   DocumentedIcon,
