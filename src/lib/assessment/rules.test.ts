@@ -73,7 +73,7 @@ test("an ISO certificate valid to 2026-08-01 is EXPIRED on 2026-11-07", () => {
   const fields = {
     supplierName: "Lotus Mould Co., Ltd.",
     scope: "injection moulding",
-    validUntil: "2026-08-01",
+    validityEnd: "2026-08-01",
   };
   const page = pageFor("doc-iso", fields, "02_Lotus_ISO_Certificate_Demo.pdf");
   const cited = support("R2", page, fields);
@@ -87,7 +87,7 @@ test("an ISO certificate valid to 2026-08-01 is EXPIRED on 2026-11-07", () => {
   const certificate = byId(findings, "R2");
   expect(certificate.status).toBe("EXPIRED");
   expect(certificate.evidenceType).toBe("certificate");
-  expect(certificate.observed.validUntil).toBe("2026-08-01");
+  expect(certificate.observed.validityEnd).toBe("2026-08-01");
   expect(certificate.citations).toHaveLength(3);
   expect(certificate.reason).toBe(
     "The extracted document validity end date 2026-08-01 precedes the assessment date 2026-11-07.",
@@ -98,13 +98,16 @@ test("an ISO certificate valid to 2026-08-01 is EXPIRED on 2026-11-07", () => {
   expect(traceability.status).toBe("MISSING");
   expect(traceability.citations).toEqual([]);
   expect(traceability.reason).toBe("No traceability record was found in the processed documents.");
+  for (const id of ["R1", "R3", "R5"]) {
+    expect(byId(findings, id).status).toBe("MISSING");
+  }
 });
 
 test("a certificate still valid on the assessment date is not EXPIRED", () => {
   const fields = {
     supplierName: "Lotus Mould Co., Ltd.",
     scope: "injection moulding",
-    validUntil: "2026-11-07",
+    validityEnd: "2026-11-07",
   };
   const page = pageFor("doc-iso", fields);
   const cited = support("R2", page, fields);
@@ -164,7 +167,7 @@ test("a wrong supplier is MISMATCH before the certificate's expiry", () => {
   const fields = {
     supplierName: "Other Mould Co.",
     scope: "injection moulding",
-    validUntil: "2026-08-01",
+    validityEnd: "2026-08-01",
   };
   const page = pageFor("doc-iso", fields);
   const cited = support("R2", page, fields);
@@ -238,13 +241,33 @@ test("a quote that is not on the cited page is dropped and the finding becomes N
   const material = byId(findingsFor({ pages: [page], observations, citations }), "R1");
   expect(material.status).toBe("NEEDS_REVIEW");
   expect(material.citations).toEqual([]);
+  expect(material.reason).toBe(
+    "A cited quote was not found on the cited page, so the finding cannot be confirmed.",
+  );
+});
+
+test("a certificate scope that does not cover injection moulding is MISMATCH", () => {
+  const fields = {
+    supplierName: "Lotus Mould Co., Ltd.",
+    scope: "CNC machining",
+    validityEnd: "2026-11-07",
+  };
+  const page = pageFor("doc-iso", fields);
+  const cited = support("R2", page, fields);
+  const certificate = byId(
+    findingsFor({ pages: [page], observations: cited.observations, citations: cited.citations }),
+    "R2",
+  );
+
+  expect(certificate.status).toBe("MISMATCH");
+  expect(certificate.reason).toContain("CNC machining");
 });
 
 test("a hyphenated injection-moulding scope still covers the certificate", () => {
   const fields = {
     supplierName: "Lotus Mould Co., Ltd.",
     scope: "injection-moulding",
-    validUntil: "2026-11-07",
+    validityEnd: "2026-11-07",
   };
   const page = pageFor("doc-iso", fields);
   const cited = support("R2", page, fields);
@@ -273,6 +296,70 @@ test("a different packaging code is MISMATCH", () => {
   expect(packaging.status).toBe("MISMATCH");
   expect(packaging.reason).toContain("PKG-07");
   expect(packaging.reason).toContain("PKG-99");
+});
+
+test("packaging that is explicitly accepted for PKG-07 revision 2 is DOCUMENTED", () => {
+  const fields = {
+    partNumber: "CAP-104",
+    revision: "B",
+    packagingCode: "PKG-07",
+    packagingRevision: "2",
+    accepted: "yes",
+  };
+  const page = pageFor("doc-packaging", fields, "04_Lotus_Packaging_Acceptance.pdf");
+  const cited = support("R5", page, fields);
+  const packaging = byId(
+    findingsFor({ pages: [page], observations: cited.observations, citations: cited.citations }),
+    "R5",
+  );
+
+  expect(packaging.status).toBe("DOCUMENTED");
+});
+
+test("matching packaging codes without an explicit acceptance are not DOCUMENTED", () => {
+  const fields = {
+    partNumber: "CAP-104",
+    revision: "B",
+    packagingCode: "PKG-07",
+    packagingRevision: "2",
+  };
+  const page = pageFor("doc-packaging", fields);
+  const cited = support("R5", page, fields);
+  const packaging = byId(
+    findingsFor({ pages: [page], observations: cited.observations, citations: cited.citations }),
+    "R5",
+  );
+
+  expect(packaging.status).toBe("NEEDS_REVIEW");
+});
+
+test("a part number alone is not a traceability record", () => {
+  const fields = { partNumber: "CAP-104" };
+  const page = pageFor("doc-trace", fields);
+  const cited = support("R4", page, fields);
+  const traceability = byId(
+    findingsFor({ pages: [page], observations: cited.observations, citations: cited.citations }),
+    "R4",
+  );
+
+  expect(traceability.status).toBe("NEEDS_REVIEW");
+});
+
+test("a traceability record that links batch, lot and shipment is DOCUMENTED", () => {
+  const fields = {
+    partNumber: "CAP-104",
+    resinBatch: "RB-1",
+    productionLot: "PL-1",
+    shipment: "SH-1",
+  };
+  const page = pageFor("doc-trace", fields);
+  const cited = support("R4", page, fields);
+  const traceability = byId(
+    findingsFor({ pages: [page], observations: cited.observations, citations: cited.citations }),
+    "R4",
+  );
+
+  expect(traceability.status).toBe("DOCUMENTED");
 });
 
 test("conflicting revisions are NEEDS_REVIEW rather than a silent choice", () => {

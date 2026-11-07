@@ -12,9 +12,11 @@ import type {
 import { evidenceTypeLabels, findingSchema } from "./types";
 
 /**
- * Observation fields are the keys of `ExpectedValues`, plus `validUntil`
- * (`YYYY-MM-DD`) for a document validity end. There is no expected end date
- * on the requirement: expiry is `validUntil` strictly before the assessment date.
+ * Observation fields are the keys of `ExpectedValues`, plus the names group 6
+ * asks the model for: `validityEnd` (`YYYY-MM-DD`), `accepted` (`yes` when the
+ * page explicitly accepts the packaging), and the traceability links
+ * `resinBatch`, `productionLot` and `shipment`. Expiry is `validityEnd`
+ * strictly before the assessment date. There is no expected end date.
  *
  * Precedence when several issues apply: conflicting values on the submitted
  * pages, then identity (part, supplier), then expiry, then revision, grade,
@@ -175,6 +177,7 @@ function groupedValues(observations: Observation[]): Map<string, string[]> {
   for (const observation of observations) {
     if (observation.value === null) continue;
     const value = observation.value.trim();
+    if (value.length === 0) continue;
     const values = groups.get(observation.field) ?? [];
     if (!values.some((existing) => valuesEqual(existing, value))) values.push(value);
     groups.set(observation.field, values);
@@ -210,9 +213,9 @@ function collectIssues(
     }
   }
 
-  const expiry = lookup(groups, "validUntil");
+  const expiry = lookup(groups, "validityEnd");
   if (requirement.kind === "certificate" || expiry.state !== "absent") {
-    if (expiry.state === "absent") issues.push({ kind: "missing-field", field: "validUntil" });
+    if (expiry.state === "absent") issues.push({ kind: "missing-field", field: "validityEnd" });
     else if (expiry.state === "value") {
       const validUntil = canonicalDate(expiry.value);
       const assessed = canonicalDate(assessmentDate);
@@ -238,6 +241,25 @@ function collectIssues(
     }
     if (!valuesEqual(found.value, expected)) {
       issues.push({ kind: "mismatch", field, expected, observed: found.value });
+    }
+  }
+
+  if (requirement.kind === "packaging_acceptance") {
+    const accepted = lookup(groups, "accepted");
+    if (accepted.state === "absent") issues.push({ kind: "missing-field", field: "accepted" });
+    else if (accepted.state === "value" && !valuesEqual(accepted.value, "yes")) {
+      issues.push({
+        kind: "mismatch",
+        field: "accepted",
+        expected: "yes",
+        observed: accepted.value,
+      });
+    }
+  }
+
+  if (requirement.kind === "traceability_record") {
+    for (const field of ["resinBatch", "productionLot", "shipment"]) {
+      if (lookup(groups, field).state === "absent") issues.push({ kind: "missing-field", field });
     }
   }
 
@@ -273,7 +295,11 @@ const fieldLabels: Record<string, string> = {
   scope: "scope",
   packagingCode: "packaging code",
   packagingRevision: "packaging revision",
-  validUntil: "validity end date",
+  validityEnd: "validity end date",
+  accepted: "explicit acceptance",
+  resinBatch: "resin batch",
+  productionLot: "production lot",
+  shipment: "shipment",
 };
 
 function label(field: string): string {
@@ -289,6 +315,9 @@ function describe(requirement: Requirement, issue: Issue, assessmentDate: string
       if (issue.field === "revision") {
         const noun = requirement.kind === "inspection_report" ? "report" : "document";
         return `Buyer requires revision ${issue.expected}; ${noun} identifies ${issue.observed}.`;
+      }
+      if (issue.field === "accepted") {
+        return "The document does not explicitly accept the packaging.";
       }
       return `Buyer requires ${label(issue.field)} ${issue.expected}; document identifies ${issue.observed}.`;
     case "scope":
@@ -341,8 +370,9 @@ function observedRecord(
     const values = groups.get(field);
     observed[field] = values ? values.join(" / ") : null;
   }
-  const validUntil = groups.get("validUntil");
-  if (validUntil) observed.validUntil = validUntil.join(" / ");
+  for (const [field, values] of groups) {
+    if (observed[field] === undefined) observed[field] = values.join(" / ");
+  }
   return observed;
 }
 

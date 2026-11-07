@@ -49,3 +49,25 @@ test("drops an invented quote, an unknown document and an unknown page, and keep
     },
   ]);
 });
+
+test("drops an empty quote and a quote that differs only by case", () => {
+  const kept = validateCitations(
+    [
+      {
+        documentId: certificate.documentId,
+        filename: certificate.filename,
+        page: 1,
+        quote: "   ",
+      },
+      {
+        documentId: certificate.documentId,
+        filename: certificate.filename,
+        page: 1,
+        quote: "valid until: 2026-08-01",
+      },
+    ],
+    [certificate],
+  );
+
+  expect(kept).toEqual([]);
+});
