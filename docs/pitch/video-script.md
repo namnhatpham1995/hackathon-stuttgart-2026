@@ -70,7 +70,7 @@ Leave out any interview result unless `docs/pitch/customer-learning.md` has a re
 
 We start with Vietnamese manufacturers and European buyers. A supplier sees the exact gap. A buyer reads the evidence behind it. From supplier potential to buyer confidence.
 
-**On screen:** the demo URL <https://tradeready-eu.vercel.app>, the team names the owner has filled in, and the tagline.
+**On screen:** the demo URL <https://exportready-production.up.railway.app>, the team names the owner has filled in, and the tagline.
 
 ## Fallback if 11, 13 or 17 are still open
 
@@ -80,4 +80,4 @@ Use this **instead of** the 0:52–2:05 block. Keep the title, problem, solution
 
 The libraries that read the page, check the quote and decide the status are on main, and the app is deployed. The workspace screen, the live assessment and the buyer share are still merging, so this recording does not show that click-through. When they land, the demo is Neckar's request, Lotus Mould's shared report, and the second share after the inspection file is replaced.
 
-**On screen:** <https://tradeready-eu.vercel.app> after sign-in, then the README architecture diagram. Do not tour an unfinished pull request as if it were production.
+**On screen:** <https://exportready-production.up.railway.app> after sign-in, then the README architecture diagram. Do not tour an unfinished pull request as if it were production.
