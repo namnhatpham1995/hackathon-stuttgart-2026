@@ -253,12 +253,16 @@ The production key is not scoped to a workspace, so Claude rejects extraction wi
 - [x] 23.2 (post-merge) Set `ANTHROPIC_WORKSPACE_ID` on Railway, start the TC01 assessment again on production and confirm six DOCUMENTED findings
   - Note: the header is accepted; six DOCUMENTED findings with Sonnet (see 21.3).
 
-## Found on production (fix proposal pending)
+## 24. Workspace Replace and stale error · wave 4 · M4 · branch fix/workspace-replace-and-stale-error
 
-Found while rerunning TC01 on production. A proposal and a fix are to follow.
+Found while rerunning TC01 on production. (1) When a product has no result for its current documents, a requirement row picks its document by filename words written for the demo checklist (R5 "packaging"), so on the TC01 checklist R5 Traceability showed `TC01_07_Packaging_Specification_CAP104.pdf`, which R6 also showed, and Replace on R5 replaced the packaging specification. With a result present, rows map through the findings' citations and are correct. (2) After "Upload and assess" the progress view kept the previous run's "Processing incomplete" error: a retried run reuses the failed job's id, so `ProgressView` is not remounted, its polling had stopped and its state still held the failed job. Owns `src/components/workspace/{documents,upload-card,product-workspace}.ts(x)` and `src/components/workspace/documents.test.ts`. The default model stays `claude-haiku-5-5`.
 
-- Replace can target the wrong file. When the product has no result for its current documents, a requirement row can show another requirement's document (R5 Traceability showed `TC01_07_Packaging_Specification_CAP104.pdf`), and that row's Replace replaces it. Verify: with a new, unassessed document set, each row shows only a document of its own evidence type or "No file", and Replace on R5 replaces the traceability record.
-- After "Upload and assess" the page keeps showing the previous run's error until it is reloaded. Verify: start an assessment on a product whose last run failed; the old error disappears and the stages show the new run without a reload.
+- [x] 24.1 Proposal: move both bugs out of "Found on production" into this group; verify `openspec validate exportready-hackathon-build --strict`
+- [ ] 24.2 Match a requirement to a document by the requirement's evidence kind (product specification, material declaration, inspection report, certificate, traceability record, packaging specification), not by demo requirement ids, and let a document belong to at most one requirement row; move the mapping into `documents.ts` as a pure function used by `upload-card.tsx`; verify `pnpm test src/components/workspace/documents.test.ts`
+  - Tests: on the TC01 checklist with the seven TC01 file names and no findings, R5 gets the traceability record, R6 the packaging specification, no document appears on two rows and R4 gets "No file" when the certificate is missing; the demo checklist keeps its mapping; a document the supplier assigned to a requirement stays there (pure)
+- [ ] 24.3 Start a new run with a fresh progress view: key `ProgressView` by job id and start time so a retried job that reuses an id shows its own stages, and clear the upload error when a run starts; verify `pnpm typecheck` and, on a product whose last run failed, no old error after "Upload and assess" without a reload
+- [ ] 24.4 (post-merge) On production with the TC01 product, replace one document in a new unassessed set: each row shows only a document of its own evidence type or "No file", Replace on R5 replaces the traceability record, and a retried run shows no old error
+- Not in this group: the job snapshot is keyed by file content (`hashDocumentSet`, sha256), so re-uploading an identical PDF returns the old finished job without saying so. A later message such as "No changes since the last assessment" could tell the supplier.
 
 ## Workflow follow-up
 
