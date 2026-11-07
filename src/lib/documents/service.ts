@@ -16,7 +16,7 @@ export type DocumentState = (typeof documentStates)[number];
 
 /** 4 MiB. The database check uses the same bound. */
 export const maxDocumentBytes = 4 * 1024 * 1024;
-export const maxActivePdfs = 5;
+export const maxActivePdfs = 8;
 export const maxActivePhotos = 2;
 
 export const documentTooLargeMessage = "This file is over the 4 MB limit";
@@ -351,5 +351,23 @@ export async function finaliseDocuments(
     const visible = active.filter((row) => row.state === "active");
     assertWithinLimits(projectedCounts(visible));
     return visible;
+  });
+}
+
+/** Undo only a staged upload. The prior active document remains available. */
+export async function discardPendingDocument(
+  userId: string,
+  productId: string,
+  documentId: string,
+) {
+  return db.transaction(async (tx) => {
+    await lockOwnedProduct(tx, userId, productId);
+    const rows = await loadDocuments(tx, productId);
+    const target = rows.find((row) => row.id === documentId);
+    if (!target) throw new DocumentRequestError(404, "Document not found");
+    if (target.state === "inactive") return;
+    if (target.state !== "pending")
+      throw new DocumentRequestError(400, "Only a pending upload can be undone");
+    await tx.update(document).set({ state: "inactive" }).where(eq(document.id, target.id));
   });
 }

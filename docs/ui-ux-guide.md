@@ -5,6 +5,12 @@ breaking them. The tools do most of the work: **impeccable** for design and crit
 **ui-ux-pro-max** for searchable style, palette, font and UX data, and **ux-review** for auditing the
 running app like real users. This page is the order to use them in and the rules they check.
 
+## Design direction (ExportReady)
+
+Agreed for the hackathon workspace. Tokens and component rules are in `DESIGN.md` and `src/app/globals.css`.
+
+The workspace uses Vanta and Drata page structure with ExportReady’s own colours. Inter at compact sizes: 14px body, 13px meta, a 26px semibold page title, weights 400/500/600, normal letter-spacing. Layout is a top bar, a docked assistant on the left, a summary beside an evidence card, requirement checklist rows, and a right-hand info sidebar. Status chips stay the existing soft tints (`DOCUMENTED`, `MISSING`, `MISMATCH`, `EXPIRED`, `NEEDS_REVIEW`). Expired certificates and incomplete processing use an amber section message. There is no score, percentage, gauge, "verified" badge, or "Compliant" badge. Counts read “1 documented · 0 open” and “2 of 5 documented”.
+
 ## 1. Before the first screen
 
 1. `/impeccable init` writes `PRODUCT.md` (who uses it, what they come to do, the voice) and

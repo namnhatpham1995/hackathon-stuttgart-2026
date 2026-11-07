@@ -69,6 +69,34 @@ result. Any other signed-in user SHALL get "not found".
 - **WHEN** a third signed-in user requests a connection's shared report by ID
 - **THEN** the response is 404
 
+### Requirement: Buyers have a workspace of their own
+A signed-in user SHALL have a buyer workspace at `/buyer` that lists only their own requests, newest
+first, each with its connected suppliers, the status of each connection and a link to the report once
+it is shared. It SHALL show counts of open requests, connected suppliers and shared reports, and no
+score. It SHALL link to the supplier workspace, and the supplier workspace SHALL link back.
+
+#### Scenario: Neckar follows its request
+- **WHEN** Lotus Mould has shared the baseline result on Neckar's CAP-104 request and the buyer opens `/buyer`
+- **THEN** the request shows Lotus Mould with status "shared" and a "View report" link to that connection
+
+#### Scenario: Another buyer's requests stay hidden
+- **WHEN** a second buyer opens `/buyer`
+- **THEN** none of Neckar's requests or connections appear
+
+### Requirement: Buyers can search listed products
+The buyer workspace SHALL let a buyer search listed products by name, part number or supplier
+company, and filter by category and country. Results SHALL show only the listing fields and the
+buyer's own connection status, and SHALL never include unlisted or own products, documents, results
+or email addresses. "Request evidence" SHALL work as it does in the directory.
+
+#### Scenario: Find a supplier by part number
+- **WHEN** the buyer searches "CAP-104" and Lotus Mould's CAP-104 product is listed
+- **THEN** it is shown with its declared profile and a "Request evidence" button
+
+#### Scenario: Unlisted product
+- **WHEN** a buyer opens the catalog page of a product that is not listed
+- **THEN** the response is 404
+
 ### Requirement: The other party is notified
 Creating a buyer-initiated connection SHALL notify the supplier, and sharing a report SHALL notify the
 buyer. Each notice SHALL appear in the recipient's inbox and SHALL be emailed once to the recipient's own

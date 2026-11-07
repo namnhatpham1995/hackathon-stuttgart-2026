@@ -24,6 +24,8 @@ const envSchema = z.object({
   GITHUB_CLIENT_SECRET: optional,
   GEMINI_API_KEY: optional,
   GEMINI_MODEL: optional,
+  ANTHROPIC_API_KEY: optional,
+  ANTHROPIC_MODEL: optional,
   /** Railway origin. Set on Vercel only; unset locally and on Railway. */
   BACKEND_URL: optionalUrl,
   BREVO_API_KEY: optional,
@@ -37,6 +39,8 @@ export type Env = z.infer<typeof envSchema>;
 const featureEnv = [
   "GEMINI_API_KEY",
   "GEMINI_MODEL",
+  "ANTHROPIC_API_KEY",
+  "ANTHROPIC_MODEL",
   "BREVO_API_KEY",
   "BREVO_SENDER_EMAIL",
   "APP_BASE_URL",

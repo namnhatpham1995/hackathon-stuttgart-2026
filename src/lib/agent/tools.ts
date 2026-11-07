@@ -619,7 +619,13 @@ export async function executeAgentTool(
     );
   }
   try {
-    return await handlers[name](userId, contextProductId, call.args);
+    const result = await handlers[name](userId, contextProductId, call.args);
+    if (result.directive) {
+      const targetId = workflowArgs.parse(call.args ?? {}).productId ?? contextProductId;
+      if (targetId !== contextProductId)
+        result.directive = { ...result.directive, productId: targetId };
+    }
+    return result;
   } catch (error) {
     const known = knownFailure(error);
     if (known) return known;

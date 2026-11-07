@@ -3,12 +3,12 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { extractFacts } from "./extract-facts";
 import type { Observation, PageText, Requirement } from "./types";
 
-const { callGemini } = vi.hoisted(() => ({
-  callGemini: vi.fn(),
+const { callClaude } = vi.hoisted(() => ({
+  callClaude: vi.fn(),
 }));
 
-vi.mock("./gemini", () => ({
-  callGemini,
+vi.mock("./claude", () => ({
+  callClaude,
 }));
 
 const certificate: Requirement = {
@@ -60,31 +60,26 @@ const inspectionObservation: Observation = {
   quote: "Drawing revision: A.",
 };
 
-type GeminiRequest = {
-  systemInstruction?: string;
-  contents: string;
-  temperature?: number;
-  responseSchema?: unknown;
+type ClaudeRequest = {
+  system: string;
+  content: string;
+  schema: Record<string, unknown>;
 };
 
 function modelResponse(observations: Observation[]) {
-  return {
-    text: JSON.stringify({ observations }),
-    content: { role: "model" as const, parts: [] },
-    functionCalls: [],
-  };
+  return { text: JSON.stringify({ observations }) };
 }
 
-function requestBody(request: GeminiRequest): { documentIds: string[]; pages: string } {
-  return JSON.parse(request.contents) as { documentIds: string[]; pages: string };
+function requestBody(request: ClaudeRequest): { documentIds: string[]; pages: string } {
+  return JSON.parse(request.content) as { documentIds: string[]; pages: string };
 }
 
 beforeEach(() => {
-  callGemini.mockReset();
+  callClaude.mockReset();
 });
 
 test("retries a document the first extraction omitted and keeps the retried observation", async () => {
-  callGemini.mockImplementation(async (request: GeminiRequest) => {
+  callClaude.mockImplementation(async (request: ClaudeRequest) => {
     const body = requestBody(request);
     if (body.documentIds.length === 1 && body.documentIds[0] === "doc-03") {
       return modelResponse([inspectionObservation]);
@@ -94,27 +89,27 @@ test("retries a document the first extraction omitted and keeps the retried obse
 
   const result = await extractFacts({ requirements: [certificate, inspection], pages });
 
-  expect(callGemini).toHaveBeenCalledTimes(2);
-  const first = callGemini.mock.calls[0]?.[0] as GeminiRequest;
-  const second = callGemini.mock.calls[1]?.[0] as GeminiRequest;
-  expect(first.systemInstruction).toContain("every uploaded document");
-  expect(first.systemInstruction).toContain('"doc-02"');
-  expect(first.systemInstruction).toContain('"doc-03"');
+  expect(callClaude).toHaveBeenCalledTimes(2);
+  const first = callClaude.mock.calls[0]?.[0] as ClaudeRequest;
+  const second = callClaude.mock.calls[1]?.[0] as ClaudeRequest;
+  expect(first.system).toContain("every uploaded document");
+  expect(first.system).toContain('"doc-02"');
+  expect(first.system).toContain('"doc-03"');
   expect(requestBody(first).documentIds).toEqual(["doc-02", "doc-03"]);
 
   const retry = requestBody(second);
   expect(retry.documentIds).toEqual(["doc-03"]);
   expect(retry.pages).toContain("documentId: doc-03");
   expect(retry.pages).not.toContain("doc-02");
-  expect(second.systemInstruction).toContain('"doc-03"');
-  expect(second.systemInstruction).not.toContain('"doc-02"');
+  expect(second.system).toContain('"doc-03"');
+  expect(second.system).not.toContain('"doc-02"');
 
   expect(result.warnings).toEqual([]);
   expect([...result]).toEqual([certificateObservation, inspectionObservation]);
 });
 
 test("warns when a document still has no observations after its retry", async () => {
-  callGemini.mockImplementation(async (request: GeminiRequest) => {
+  callClaude.mockImplementation(async (request: ClaudeRequest) => {
     const body = requestBody(request);
     if (body.documentIds.length === 1) return modelResponse([]);
     return modelResponse([certificateObservation]);
@@ -122,8 +117,8 @@ test("warns when a document still has no observations after its retry", async ()
 
   const result = await extractFacts({ requirements: [certificate, inspection], pages });
 
-  expect(callGemini).toHaveBeenCalledTimes(2);
-  expect(requestBody(callGemini.mock.calls[1]?.[0] as GeminiRequest).documentIds).toEqual([
+  expect(callClaude).toHaveBeenCalledTimes(2);
+  expect(requestBody(callClaude.mock.calls[1]?.[0] as ClaudeRequest).documentIds).toEqual([
     "doc-03",
   ]);
   expect([...result]).toEqual([certificateObservation]);
@@ -138,17 +133,16 @@ test("warns when a document still has no observations after its retry", async ()
 });
 
 test("does not retry when every uploaded document has an observation", async () => {
-  callGemini.mockResolvedValue(modelResponse([certificateObservation, inspectionObservation]));
+  callClaude.mockResolvedValue(modelResponse([certificateObservation, inspectionObservation]));
 
   const result = await extractFacts({ requirements: [certificate, inspection], pages });
 
-  expect(callGemini).toHaveBeenCalledTimes(1);
-  const request = callGemini.mock.calls[0]?.[0] as GeminiRequest;
-  expect(request.temperature).toBe(0);
-  expect(request.responseSchema).toBeDefined();
-  expect(request.systemInstruction).toContain("every uploaded document");
-  expect(request.systemInstruction).toContain('"doc-02"');
-  expect(request.systemInstruction).toContain('"doc-03"');
+  expect(callClaude).toHaveBeenCalledTimes(1);
+  const request = callClaude.mock.calls[0]?.[0] as ClaudeRequest;
+  expect(request.schema).toMatchObject({ type: "object", additionalProperties: false });
+  expect(request.system).toContain("every uploaded document");
+  expect(request.system).toContain('"doc-02"');
+  expect(request.system).toContain('"doc-03"');
   expect(requestBody(request).documentIds).toEqual(["doc-02", "doc-03"]);
   expect(Array.isArray(result)).toBe(true);
   expect(result.warnings).toEqual([]);

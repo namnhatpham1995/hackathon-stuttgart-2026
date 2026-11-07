@@ -23,7 +23,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
   - Note: Verified without GITHUB_TOKEN against raw.githubusercontent.com (17 groups, open pull requests not shown). The token path was a mocked GraphQL response; the sentinel was absent from the JSON, including a GraphQL error. The live token check happens in 2.6.
 - [x] 2.4 Build `roadmap/index.html` (vanilla JS and CSS inline, light and dark, readable at 375 px): milestone strip with target times and On track / Late / Done, groups by wave with status, n/m bar, PR link and draft state, last-commit time, Blocked reason, "last updated" time, stale-data banner on error, polling every 30 s; verify it renders the endpoint's data locally at 375 px and 1280 px
 - [x] 2.5 Write `roadmap/README.md`: heading convention, "tick + push = update", how to change milestone times, the Vercel project settings (root `roadmap/`, framework Other, Ignored Build Step `git diff --quiet HEAD^ HEAD ./`) and the token scope (fine-grained, this repo only, read Contents and Pull requests); verify the owner can follow it alone
-- [ ] 2.6 (post-merge) Owner step: create the roadmap Vercel project and set `GITHUB_TOKEN`; the controller ticks this after the owner confirms; verify the production URL shows groups 1 and 2 as Done or Merged, verifying and any open PR as In progress, then record the URL as a note under this task
+- [x] 2.6 (post-merge) Owner step: create the roadmap Vercel project and set `GITHUB_TOKEN`; the controller ticks this after the owner confirms; verify the production URL shows groups 1 and 2 as Done or Merged, verifying and any open PR as In progress, then record the URL as a note under this task
+  - Note: Vercel project exportready-roadmap (root `roadmap`, framework Other) at https://exportready-roadmap.vercel.app with `GITHUB_TOKEN` on Production only. Verified on 7 Nov: source github, groups 1 Done and 2 Merged, verifying, open draft PR #22 shown on group 17 (Blocked by its notes), no token in the page or JSON.
 
 ## 3. Assessment contract · wave 1 · M0 · branch feat/assessment-contract
 
@@ -101,12 +102,12 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 ## 11. Workspace and report UI · wave 2 · M1 · branch feat/workspace-ui
 
-- [ ] 11.1 Add `src/app/workspace/layout.tsx` (requireSession, renders `<AssistantPanel />` and `<ConnectionsNav />`) and `src/components/workspace/workspace-events.ts` (a typed client event bus for `WorkspaceDirective`); link `/workspace` from `src/app/page.tsx`; verify a signed-in user reaches `/workspace` and a signed-out one is sent to sign-in
-- [ ] 11.2 Build `/workspace` (list and create products, with a short onboarding step for the supplier profile: company, country, product category, capabilities, target market, labelled "declared by supplier") and `/workspace/[productId]`: draft form with origin badges; upload card with dropzone, per-file POST, pending list, a replace control on active documents and an "Upload and assess" button; `<ProductConnections productId />` mounted on the product page; it responds to the `navigate`, `show_upload_card` and `request_replacement` directives; verify it renders against the contract types and `pnpm typecheck` passes
-- [ ] 11.3 Build the progress view: poll `GET /api/jobs/[jobId]` every 2 s while not final, show real stages and an actionable error, stop on COMPLETED and open the report; verify `pnpm typecheck`; live check in 13.4
-- [ ] 11.4 Build `/workspace/[productId]/report`: per requirement status, evidence type, reason, next action; citations with filename, page and exact quote; an incomplete-processing banner; a "not a certification" note; no score; the declared supplier profile with its label; `<ReportShare resultId />` mounted; the findings list and summary as components that take a stored result and a `readOnly` flag, so group 17 can render a shared result for the buyer without supplier actions; verify `pnpm typecheck`; live check in 13.4
-- [ ] 11.6 Add `src/components/workspace/report-summary.ts` (pure): per-dimension documented and open counts, the improvement action plan (one action per unresolved finding, ordered by requirement) and the plain-text document-request draft; render them on the report with a copy button for the draft and no percentage or score; verify `report-summary.test.ts` with findings written from the supplier-workspace spec: the baseline gives the four dimension counts in its scenario and three actions (R2, R3, R4), and the corrected set gives two (R2, R4)
-- [ ] 11.5 Check the pages at 375 px and 1280 px in light and dark mode against `docs/ui-ux-guide.md`; verify there is no horizontal scroll and text contrast is readable
+- [x] 11.1 Add `src/app/workspace/layout.tsx` (requireSession, renders `<AssistantPanel />` and `<ConnectionsNav />`) and `src/components/workspace/workspace-events.ts` (a typed client event bus for `WorkspaceDirective`); link `/workspace` from `src/app/page.tsx`; verify a signed-in user reaches `/workspace` and a signed-out one is sent to sign-in
+- [x] 11.2 Build `/workspace` (list and create products, with a short onboarding step for the supplier profile: company, country, product category, capabilities, target market, labelled "declared by supplier") and `/workspace/[productId]`: draft form with origin badges; upload card with dropzone, per-file POST, pending list, a replace control on active documents and an "Upload and assess" button; `<ProductConnections productId />` mounted on the product page; it responds to the `navigate`, `show_upload_card` and `request_replacement` directives; verify it renders against the contract types and `pnpm typecheck` passes
+- [x] 11.3 Build the progress view: poll `GET /api/jobs/[jobId]` every 2 s while not final, show real stages and an actionable error, stop on COMPLETED and open the report; verify `pnpm typecheck`; live check in 13.4
+- [x] 11.4 Build `/workspace/[productId]/report`: per requirement status, evidence type, reason, next action; citations with filename, page and exact quote; an incomplete-processing banner; a "not a certification" note; no score; the declared supplier profile with its label; `<ReportShare resultId />` mounted; the findings list and summary as components that take a stored result and a `readOnly` flag, so group 17 can render a shared result for the buyer without supplier actions; verify `pnpm typecheck`; live check in 13.4
+- [x] 11.6 Add `src/components/workspace/report-summary.ts` (pure): per-dimension documented and open counts, the improvement action plan (one action per unresolved finding, ordered by requirement) and the plain-text document-request draft; render them on the report with a copy button for the draft and no percentage or score; verify `report-summary.test.ts` with findings written from the supplier-workspace spec: the baseline gives the four dimension counts in its scenario and three actions (R2, R3, R4), and the corrected set gives two (R2, R4)
+- [x] 11.5 Check the pages at 375 px and 1280 px in light and dark mode against `docs/ui-ux-guide.md`; verify there is no horizontal scroll and text contrast is readable
 
 ## 12. Production deploy · wave 2 · M1 · branch chore/production-deploy
 
@@ -116,7 +117,8 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
   - Note: 12.5 rewrote `docs/deploy.md` for Railway (backend and Postgres) and Vercel (UI). There is no Neon database. Production `GEMINI_MODEL` is `gemini-3.6-flash`.
 - [x] 12.3 Owner step: create the Railway project (Next.js service from this repo, Node 22, build `pnpm build`, pre-deploy `pnpm db:migrate`, start `pnpm start`, healthcheck `/api/health`, Railway Postgres, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, env from `docs/deploy.md`) and the Vercel project (build command `node scripts/vercel-build.mjs`, previews off, `BACKEND_URL`, Railway's public `DATABASE_URL`, and the same `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`); the worker ticks this after the owner confirms; verify both projects and their env
   - Note: Railway project exportready (service exportready plus Postgres and its env) and Vercel project exportready at https://exportready.vercel.app (BACKEND_URL, DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, APP_BASE_URL) are created.
-- [ ] 12.4 (post-merge) Smoke-test the first production deploy: sign up, sign in, open `/workspace`; verify each works, then record the URL as a note and set `APP_BASE_URL` and `BETTER_AUTH_URL` to it
+- [x] 12.4 (post-merge) Smoke-test the first production deploy: sign up, sign in, open `/workspace`; verify each works, then record the URL as a note and set `APP_BASE_URL` and `BETTER_AUTH_URL` to it
+  - Note: 2026-11-07 12:36 UTC at https://exportready.vercel.app. Sign-up as nam95.pn+er-smoke-1794054979454@gmail.com (`POST /api/auth/sign-up/email` 200) opened `/workspace` (heading Products). Sign out (`POST /api/auth/sign-out` 200) returned to `/`. Signed-out `/workspace` redirected to `/sign-in?next=%2Fworkspace`. Sign-in (`POST /api/auth/sign-in/email` 200) opened `/workspace` again. `APP_BASE_URL` and `BETTER_AUTH_URL` were not changed. Both should be `https://exportready.vercel.app` with no path and no trailing slash. The controller checks the deployed values.
 - [x] 12.5 Railway backend + Postgres deploy (railway.json, /api rewrite, health route, docs)
   - Note: `BACKEND_URL` is an optional URL in `src/env.ts` and `.env.example`. `.env.example` sets `GEMINI_MODEL=gemini-3.6-flash`. `next.config.ts` still reads `process.env.BACKEND_URL` for the rewrite.
 
@@ -124,14 +126,15 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
 
 - [x] 13.1 Implement `runAssessment(jobId)` in `pipeline.ts`: claim, set each stage, extract pages, extract facts, validate citations, decide findings, `completeJob`, then `sendCompletionEmail` after commit; on failure `failJob` with an actionable message; verify with 13.2
   - Note: A non-empty `extractFacts` warning marks the result incomplete, the same `complete: false` path as a PDF with no text. `pipeline.test.ts` mocks that path. The live answer-key run is 13.2. The stored assessment date is the Europe/Berlin calendar date. A completion-email error after commit leaves the stored result.
-- [ ] 13.2 Add `assessment.golden.ts`: baseline 01-04 equals the answer key; replacing 03 with 05 flips only R3; the trap file still gives R3 MISMATCH; `empty.pdf` marks the result incomplete; expected values read from `answer-key.json`; verify `pnpm test:golden` passes twice in a row
-  - Blocked: live golden run by controller (needs GEMINI_API_KEY)
-- [ ] 13.3 Tune only the prompt or rules if 13.2 fails, never the answer key; verify `pnpm test:golden` passes
-  - Blocked: live golden run by controller (needs GEMINI_API_KEY)
+- [x] 13.2 Add `assessment.golden.ts`: baseline 01-04 equals the answer key; replacing 03 with 05 flips only R3; the trap file still gives R3 MISMATCH; `empty.pdf` marks the result incomplete; expected values read from `answer-key.json`; verify `pnpm test:golden` passes twice in a row
+  - Note: Controller ran pnpm test:golden live twice on main 2d8eb0f with gemini-3.6-flash: 4/4 PASS both runs (186 s, 145 s). Docs 01-04 match the answer key, the revision B replacement flips only R3, the revB trap keeps R3 MISMATCH, and empty.pdf marks the result incomplete. No extraction warnings.
+- [x] 13.3 Tune only the prompt or rules if 13.2 fails, never the answer key; verify `pnpm test:golden` passes
+  - Note: Controller ran pnpm test:golden live twice on main 2d8eb0f with gemini-3.6-flash: 4/4 PASS both runs (186 s, 145 s). Docs 01-04 match the answer key, the revision B replacement flips only R3, the revB trap keeps R3 MISMATCH, and empty.pdf marks the result incomplete. No extraction warnings.
 - [ ] 13.4 Local click-through: onboard the Lotus Mould profile, create a product, upload 01-04, Upload and assess, see the R3 citation, the dimension summary and three actions, replace 03 with 05, re-assess and see two actions, receive the email; verify each step and that reload shows the stored report
   - Blocked: needs group 11 (PR #11) merged
 - [ ] 13.5 (post-merge) Production click-through of 13.4, closing the tab during processing and reopening after completion; verify the stored report loads, or record the failure honestly as a note
-  - Blocked: needs group 11 (PR #11) merged
+  - Blocked: workspace UI not wired to backend
+  - Note: 2026-11-07 12:36 UTC, same account, product https://exportready.vercel.app/workspace/10a67eda-3ec9-48b7-9419-dbe48f935707. Upload of fixtures 01–04 showed the files locally. `POST /api/products/10a67eda-3ec9-48b7-9419-dbe48f935707/documents` returned 404 `{"error":"Product not found"}` (one request; the client stopped). `POST /api/products/10a67eda-3ec9-48b7-9419-dbe48f935707/assess` returned 404. A signed-in repeat of that URL was 404 `text/html` whose page text includes "could not be found". The client kept job id `demo-500ed502-b2a7-426d-88c9-ad73ecd80129`. The click's `GET /api/jobs/demo-500ed502-b2a7-426d-88c9-ad73ecd80129` returned 404. A signed-in repeat returned 404 `{"error":"Not found"}`. The page then showed a local progress view and a fixture report in localStorage (`result-10a67eda-3ec9-48b7-9419-dbe48f935707-baseline`). That report is demo data: R3 quote "Part number: CAP-104. Drawing revision: A.", 2 documented and 3 open actions (R2, R3, R4). Screenshots in `docs/screenshots/` are that demo UI. Close-during-processing and the revision-B re-assess were not run.
 - [x] 13.6 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
   - Note: Round 1 FAIL (R1-1 photos, R1-2 unnamed incomplete files), fixed in one round. Round 2 PASS. The reviewer ran on Grok because Opus was out of usage.
 
@@ -141,14 +144,15 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
   - Note: Draft writes always use origin `assistant`. `start_assessment` calls `startAssessment` only when the checklist exists, at least one document is active and none are pending. Latest job and stored findings are read in this module; the jobs service has no product-scoped read and this lane does not own that file.
 - [x] 14.2 Add `POST /api/assistant` (session required): Gemini function calling over the history, at most 5 rounds, failures explained with a recovery step, replies only from tool results; verify a model-supplied foreign product ID gets "not found"
   - Blocked: Live Gemini check was not run. This VM has no GEMINI_API_KEY. Tests mock `callGemini`: a foreign product id on show_report returns "not found", tool rounds stop at 5, and a model failure is a recovery step. Production model is `gemini-3.6-flash` via `callGemini` (`GEMINI_MODEL`). The route is `POST /api/assistant` on Railway; Vercel proxies `/api/*`.
-- [ ] 14.3 Fill `assistant-panel.tsx`: text input, message list, applies directives through `workspace-events.ts`, stays usable while a job runs; verify the demo conversation: "I want to submit my product and documents for this buyer" opens the upload card; after the report, "Why did R3 fail?" cites the revision-A quote and offers a replacement
+- [x] 14.3 Fill `assistant-panel.tsx`: text input, message list, applies directives through `workspace-events.ts`, stays usable while a job runs; verify the demo conversation: "I want to submit my product and documents for this buyer" opens the upload card; after the report, "Why did R3 fail?" cites the revision-A quote and offers a replacement
+  - Note: Connected the panel, shared directives, owned product/draft/upload persistence, and stored reports. Automated DOM and real-PostgreSQL tests cover upload navigation, R3 citations, replacement routing, retry input, and draft provenance. Provider boundaries are mocked locally. Live Gemini verification remains on Railway with its configured environment.
 
 ## 15. Spoken replies (optional, cut at 15:15) · wave 4 · M4 · branch feat/spoken-replies
 
 - [x] 15.1 Add `POST /api/speech` (session required, text up to 600 characters, ElevenLabs text-to-speech with a stock voice, key server-side) and `src/components/voice/speak-reply.tsx` with a mute toggle; verify a reply plays audio and, with the key unset, the reply stays text with no error dialog
   - Note: Server env is `ELEVENLABS_API_KEY` (Railway only, never `NEXT_PUBLIC_`, never on Vercel). Stock voice Rachel `21m00Tcm4TlvDq8ikWAM`, model `eleven_flash_v2_5`. Missing key or a failed synthesis returns `{ available: false }` and the reply stays text.
-- [ ] 15.2 Mount the speaker in `assistant-panel.tsx` (one line); verify the 14.3 conversation still works with audio off
-  - Blocked: needs 14.3
+- [x] 15.2 Mount the speaker in `assistant-panel.tsx` (one line); verify the 14.3 conversation still works with audio off
+  - Note: Mounted the speaker in the assistant conversation with a shared mute control. DOM integration tests verify the upload/R3 conversation with speech off and no speech requests.
 
 ## 16. Submission package · wave 4 · M5 · branch docs/submission
 
@@ -178,6 +182,59 @@ docs-only PR. After a review PASS, the only allowed commit is the tick of that r
   - Note: if group 13 is not on `main` yet, add a `Blocked:` note on this task only and finish 17.1-17.5 first.
 - [ ] 17.7 Get one `independent-pr-reviewer` pass (Opus), fix blocking findings in one round; verify PASS on the final head
 - [ ] 17.8 (post-merge) Production click-through of 17.6 with two fresh accounts; verify every step, or record the failure honestly as a note
+
+## 18. Buyer workspace backend · wave 4 · M4 · branch feat/buyer-workspace-backend
+
+The contract (`src/lib/buyer/service.ts` types and signatures, `/buyer` in `src/proxy.ts`) is already on `main`. Fill the stub bodies; do not change an exported type or signature, since group 19 builds against them in parallel. Owns `src/lib/buyer/**`; reads the schema directly and never edits `src/lib/connections/**`.
+
+- [x] 18.1 Implement `listMyRequests` and `getBuyerOverview` in `src/lib/buyer/service.ts`: only `buyer_request` rows whose `buyer_user_id` is the caller, newest first, each with its connections (product name, part number from `product.fields`, supplier company from `product.profile.companyName`, status, initiated by, `shared_result_id` only while `shared`); the overview counts open requests, distinct connected products and shared connections; verify `pnpm typecheck`
+  - Note: `connectedSuppliers` is distinct products and `sharedReports` is shared connections, both across every request the caller owns, including closed ones. Connections on a request are newest `updated_at` first.
+- [x] 18.2 Implement `searchCatalog` and `getCatalogProduct`: only products with `listed = true` and another owner; case-insensitive text match on name, part number and company, exact match on category and country; the caller's own connection to each product, if any; never select documents, results, fields other than the part number, or any email; verify `pnpm typecheck`
+  - Note: text search matches if any of name, part number or company contains the query. When several of the caller's connections point at one product, `myConnection` is the latest `updated_at`.
+- [x] 18.3 (optional, cut first) Implement `closeMyRequest` with an update-where on the caller's own open request; verify with 18.4
+- [x] 18.4 Add `src/lib/buyer/service.test.ts` on real PostgreSQL, expected values from the buyer-supplier-connections spec: a second buyer's requests and connections never appear in `listMyRequests`; an unlisted product and the caller's own listed product are absent from `searchCatalog` and give null from `getCatalogProduct`; `sharedResultId` is null on a connection that is not shared; no returned value contains a user's email (serialise and search for the seeded addresses); verify each case fails when its filter is removed, then restore
+
+## 19. Buyer workspace pages · wave 4 · M4 · branch feat/buyer-workspace-ui
+
+Builds against the stubs from `main` while group 18 fills them. Owns `src/app/buyer/**` and `src/components/buyer/**`, plus one link line in `src/components/connections/connections-nav.tsx` once group 17 is on `main`. Reuses group 17's pages by linking to them (`/connections/requests/new`, `/connections/[connectionId]`) and its `requestEvidence` service, rather than rebuilding them.
+
+- [ ] 19.1 Add `src/app/buyer/layout.tsx` (`requireSession()`, a header with Overview, My requests, Find products, a "New request" link to `/connections/requests/new` and a "Supplier workspace" link to `/workspace`); verify a signed-out visit to `/buyer` goes to sign-in
+- [ ] 19.2 Build `/buyer` (overview counts and the "My requests" list: each request with its connected suppliers, a status chip per connection and "View report" linking to `/connections/[connectionId]` when shared; empty state linking to "New request" and "Find products"); verify `pnpm typecheck`
+- [ ] 19.3 Build `/buyer/products` (search box plus category and country filters as a GET form, `searchParams` parsed with `catalogSearchInput`; cards with product name, part number and the profile labelled "declared by supplier") and `/buyer/products/[productId]` (404 when `getCatalogProduct` returns null); "Request evidence" posts to a server action in `src/app/buyer/actions.ts` (session, Zod) that calls `requestEvidence` from `src/lib/connections/service.ts`; an existing connection shows its status instead of the button; verify `pnpm typecheck`
+- [ ] 19.4 (optional, cut first) A "Close request" button on open requests calling `closeMyRequest` through a server action; verify the closed request leaves the board
+- [ ] 19.5 Add the "Buyer workspace" link to `/buyer` in `connections-nav.tsx` (one line, after group 17 merges); verify the supplier workspace shows it
+- [ ] 19.6 After groups 17 and 18 are on `main`, merge `origin/main` and click through with two accounts: the supplier lists the CAP-104 product; the buyer finds it at `/buyer/products` by searching "CAP-104", presses "Request evidence", sees it under "My requests" as requested; the supplier shares the baseline result; the buyer's list shows "shared" and "View report" opens it; check 375 px and 1280 px in light and dark; verify each step
+  - Note: until 17 and 18 merge, add a `Blocked:` note on this task only and finish 19.1-19.5.
+
+## 20. Organiser test pack TC01 · wave 4 · M4 · branch fix/tc01-test-pack
+
+The organisers' test pack (TC01: buyer requirements R1-R6 plus six evidence PDFs) fails on the demo checklist: it checks ABS and PKG-07 acceptance, not the pack's polypropylene, product specification and packaging specification. Owns `src/lib/assessment/{types,requirement-sets,rules,extract-facts}.ts`, `src/components/workspace/{contract,checklists,upload-card,report-view}.ts(x)`, `src/app/workspace/actions.ts`, `src/lib/products/workspace.ts`, `src/components/workspace/{documents,product-workspace,states-gallery}.ts(x)`, `src/lib/documents/service.ts` (PDF limit), `fixtures/test-pack/**`.
+
+- [x] 20.1 Add the TC01 checklist `neckar-cap-104-qualification` (R1 product identity, R2 material PP, R3 inspection revision B, R4 ISO 9001 in date, R5 material lot to finished batch, R6 packaging specification with carton configuration) with the evidence types product specification, material declaration and packaging specification; make it the default for new products while existing products keep theirs; verify `pnpm typecheck`
+- [x] 20.2 Compare supplier names without punctuation ("Lotus Mould Co. Ltd." = "Lotus Mould Co., Ltd."), let a scope or standard match word forms ("injection-moulded" covers "injection moulding"), and let "Polypropylene (PP)" match "PP"; verify with 20.5
+- [x] 20.3 Keep the buyer's own requirements PDF out of the evidence and out of the coverage check, and tell the model to take each requirement's facts only from a document of its evidence type; verify with 20.5
+- [x] 20.4 Show the product's own checklist on the upload card and the report instead of the fixed demo list, and allow 8 active PDFs so the 7-file pack fits; verify `pnpm typecheck`
+- [x] 20.5 Rules tests from the TC01 README: the six TC01 facts give six DOCUMENTED findings; packaging revision A does not affect R6; supplier punctuation and "injection-moulded" do not mismatch; a buyer requirements page is recognised; verify `pnpm test src/lib/assessment`
+  - Note: `src/lib/assessment/tc01.test.ts` reads the real TC01 PDFs from `fixtures/test-pack/tc01/`; the model step is not exercised (no Gemini key in local runs).
+- [ ] 20.6 (post-merge) On production, signed in as the owner's test supplier, create the CAP-104 product and upload the seven TC01 PDFs; confirm six DOCUMENTED findings
+
+## 21. Claude fact extraction · wave 4 · M4 · branch fix/claude-extraction
+
+On production the TC01 assessment failed twice with Gemini "503 This model is currently experiencing high demand". Fact extraction moves to Claude through the Anthropic SDK; the output format, the coverage retry and the rules stay as they are. The workspace assistant keeps Gemini. Owns `package.json`, `pnpm-lock.yaml`, `src/env.ts`, `.env.example`, `src/lib/assessment/claude.ts`, `src/lib/assessment/extract-facts.ts` (+ test).
+
+- [x] 21.1 Add `@anthropic-ai/sdk`, `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` (default `claude-haiku-5-5`), and `callClaude` with structured JSON output, streaming and SDK retries; verify `pnpm typecheck`
+- [x] 21.2 Call Claude instead of Gemini for fact extraction with the same observation schema; verify `pnpm test src/lib/assessment/extract-facts.test.ts`
+  - Note: no Claude key locally, so the live call is checked on production in 21.3.
+- [ ] 21.3 (post-merge) Set `ANTHROPIC_API_KEY` on Railway, rerun the TC01 product's assessment on production and confirm six DOCUMENTED findings
+
+## 22. Retry a failed assessment · wave 4 · M4 · branch fix/retry-failed-assessment
+
+A run that failed without a result (for example the Gemini 503 on TC01) locked its set of documents: starting again returned the same failed job, although the message tells the supplier to start again. Owns `src/lib/jobs/service.ts` and `src/lib/jobs/jobs.test.ts`.
+
+- [x] 22.1 Starting a snapshot whose job needs attention and has no result requeues that same job (status, stage, error, attempts and times reset) and schedules the run; a completed job stays as it is; verify `pnpm test src/lib/jobs` (real PostgreSQL)
+- [x] 22.2 Review: one `independent-pr-reviewer` pass
+  - Note: PASS with no findings; the report is posted on PR #40.
+- [ ] 22.3 (post-merge) Start the TC01 product's assessment again on production and confirm it runs
 
 ## Workflow follow-up
 

@@ -44,6 +44,7 @@ Lanes then replace stub bodies in files they own.
  wave 2  [5 pdf] [6 gemini] [7 rules] [8 docs] [9 jobs] [10 email] [11 UI] [12 deploy]
  wave 3  [13 integration] [17 connections]                      13 needs 5-11; 17 needs 8-11
  wave 4  [14 assistant] [15 voice, optional] [16 submission]
+         [18 buyer backend] [19 buyer pages]                    parallel on the buyer contract stub
 ```
 
 Group 1 merges before anything else is dispatched: until `hackathon-mode.md` is on `main`, workers
@@ -69,6 +70,8 @@ points), which would slow the contract and hide work from the roadmap.
 | 15 | `feat/spoken-replies` | `src/components/voice/**`, `src/app/api/speech/**`, one mount line in `assistant-panel.tsx` | 14 merged |
 | 16 | `docs/submission` | `README.md`, `docs/pitch/**` | 13 |
 | 17 | `feat/buyer-supplier-connections` | `src/lib/connections/**`, `src/components/connections/**`, `src/app/connections/**` | 8-11 |
+| 18 | `feat/buyer-workspace-backend` | `src/lib/buyer/**` (bodies only; the exported types and signatures are the contract) | buyer contract on `main` |
+| 19 | `feat/buyer-workspace-ui` | `src/app/buyer/**`, `src/components/buyer/**`, one link line in `connections-nav.tsx` | buyer contract on `main`; 17 merged for the link and the click-through |
 
 Every lane also ticks its own group's lines in this change's `tasks.md`. Groups are separate sections,
 so those edits merge cleanly.
@@ -382,6 +385,7 @@ The same codebase is deployed twice. There is no Neon database.
 | Another user's job returns 404 | 9 | real PG |
 | Roadmap parser: ticks, Blocked notes, heading metadata, status rules | 2 | pure |
 | Report summary: dimension counts and action plan for the baseline and the corrected findings | 11 | pure |
+| Buyer workspace: another buyer's requests never appear; unlisted and own products are absent from the catalog; no email in any result | 18 | real PG |
 | Connections: the buyer sees only the shared result; a third user gets 404; a duplicate connection and a shared status without a result are rejected by the database | 17 | real PG |
 | Golden baseline: documents 01-04 match the answer key | 13 | live Gemini, `pnpm test:golden` |
 | Golden correction: replacing 03 with 05 flips only R3 | 13 | live Gemini, `pnpm test:golden` |
@@ -407,9 +411,9 @@ has run and `pnpm db:up` is running, even for pure lanes.
 | Lane needs | Groups | Run on |
 |---|---|---|
 | Docs only (hook skips) | 1, 16 | any agent, including Cursor cloud agents |
-| Node, no database in the code itself | 2, 4, 5, 7, 11 | [D] / [O-x] workers, or a Cursor agent on a set-up machine |
+| Node, no database in the code itself | 2, 4, 5, 7, 11, 19 | [D] / [O-x] workers, or a Cursor agent on a set-up machine |
 | Gemini key in `.env` | 6, 13, 14 | a worker whose `.env` has `GEMINI_API_KEY` |
-| PostgreSQL used by the code | 3, 8, 9, 10, 13, 17 | [D] / [O-x] workers |
+| PostgreSQL used by the code | 3, 8, 9, 10, 13, 17, 18 | [D] / [O-x] workers |
 | Owner's dashboards (Vercel, Railway, Brevo, GitHub token) | 2, 12 | worker prepares; owner clicks |
 
 A Cursor cloud agent may write code for a pure lane, but its branch is then pushed by a [D] or
@@ -451,6 +455,42 @@ A Cursor cloud agent may write code for a pure lane, but its branch is then push
   anyone with the URL and need expiry and revocation; a connection scopes the share to one signed-in
   buyer.
 
+### 17. Buyer workspace (groups 18 and 19)
+
+Group 17 gives the buyer separate pages (board, directory, inbox, a shared report) but no home. The
+buyer workspace at `/buyer` adds one: the buyer's own requests with their suppliers and statuses, and a
+searchable catalog of listed products. It was added while group 17 was already in progress, so it
+never edits group 17's files except one nav link after 17 merges.
+
+```
+ contract on main:  src/lib/buyer/service.ts  (types, signatures, stubs that throw)  +  /buyer in proxy.ts
+        |                                         |
+ group 18 (backend)                        group 19 (pages)
+   fills the bodies with Drizzle             /buyer, /buyer/products, /buyer/products/[id]
+   reads buyer_request,                      calls the buyer service, plus group 17's
+   request_connection, product               requestEvidence for "Request evidence"
+   + real-PG test                            links to /connections/requests/new and /connections/[id]
+        _______________ both merge, then 19.6 clicks through _______________/
+```
+
+- **No migration.** Everything reads existing columns: `buyer_request.buyer_user_id`, `status`,
+  `visibility`; `request_connection.status`, `initiated_by`, `shared_result_id`; `product.listed`,
+  `fields` (part number) and `profile` (company, country, category).
+- **Scoping.** Every query filters by the caller: `listMyRequests` by `buyer_user_id`, the catalog by
+  `listed = true` and another owner. The catalog selects listing columns only, so no document, result or
+  email can leak, and the report itself is still read only through group 17's connection page.
+- **Contract first.** The planning PR that added these groups also landed `src/lib/buyer/service.ts`
+  with final types and stubs, and `/buyer` in the proxy matcher, so groups 18 and 19 start at the same
+  time and touch disjoint files. Group 18 may not change an exported type or signature; if it must, it
+  adds a `Blocked:` note and the controller changes the contract in a small PR.
+- **Review.** No Opus pass, to fit before the feature freeze: the backend is read-only queries plus one
+  update-where, and 18.4 tests every scoping rule against real PostgreSQL. The controller reads both
+  diffs.
+- **Cut order.** Closing a request (18.3, 19.4) goes first, then the filters (text search stays). The
+  home list and the catalog with "Request evidence" are the demo path.
+- Alternative considered: re-split group 17 into backend and frontend groups. Rejected because group 17
+  was already claimed with a draft PR, and rewriting its tasks would collide with that worker.
+
 ## Risks / Trade-offs
 
 - [Contract PR is late, so wave 1 waits] → Keep it to schema, types and stubs only. It gets the first
@@ -485,7 +525,8 @@ A Cursor cloud agent may write code for a pure lane, but its branch is then push
    Next.js server plus PostgreSQL on Railway; from then on every merge to `main` deploys both.
 5. After groups 5-11 merge: group 13, then the golden tests. Group 17 starts as soon as 8-11 merge,
    in parallel with 13.
-6. Then groups 14, 16 and optionally 15. Feature freeze at 15:15.
+6. Then groups 14, 16 and optionally 15. Groups 18 and 19 start together once the buyer contract is on
+   `main`. Feature freeze at 15:15.
 7. Rollback: redeploy the previous Railway deployment and promote the previous Vercel deployment.
    The schema is additive, so no down-migration is needed.
 

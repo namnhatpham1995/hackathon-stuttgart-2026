@@ -48,7 +48,10 @@ also production, so the plan has to keep every merge point green.
   - suppliers list products in a directory that shows only the declared profile,
   - either side starts contact (a supplier responds, or a buyer asks a listed supplier for evidence),
   - the supplier answers with a new or existing product and shares one result with that one buyer,
-  - each side is notified in an in-app inbox and by email to their own account address.
+  - each side is notified in an in-app inbox and by email to their own account address,
+  - a buyer workspace at `/buyer` follows the buyer's own requests and their suppliers, and searches
+    listed products by text, category and country. It is built as a backend group and a pages group
+    that run in parallel against a stub contract already on `main`.
 - **Kept out from the idea**: numeric readiness scores, public (signed-out) passports, buyer-defined
   checklists (buyers pick from the fixed requirement sets), free-form messaging threads, compliance
   conclusions and Supabase.
@@ -86,7 +89,8 @@ None. `openspec/specs/` is empty.
 - **New code**: `src/lib/assessment/`, `src/lib/documents/`, `src/lib/jobs/`, `src/lib/notify/`,
   `src/lib/agent/`, `src/app/workspace/`, `src/components/workspace/`, `src/components/assistant/`,
   `src/app/api/jobs/`, `src/app/api/assistant/`, `src/lib/connections/`, `src/components/connections/`,
-  `src/app/connections/`, `fixtures/exportready/`, `roadmap/`.
+  `src/app/connections/`, `src/lib/buyer/`, `src/app/buyer/`, `src/components/buyer/`,
+  `fixtures/exportready/`, `roadmap/`.
 - **Schema**: seven new tables and one migration, all in the contract group (see design.md). `src/proxy.ts` also guards
   `/workspace` and `/connections`.
 - **Dependencies**: `@google/genai` (Gemini), `unpdf` (PDF text). Brevo and ElevenLabs are called
