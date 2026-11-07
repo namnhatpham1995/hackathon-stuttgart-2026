@@ -8,13 +8,14 @@ import {
   readWorkspace,
   undoWorkspaceUpload,
 } from "@/app/workspace/actions";
+import { ProductConnections } from "@/components/connections/product-connections";
 import { Button } from "@/components/ui/button";
+import { checklistFor } from "./checklists";
 import type { ProductDocument, WorkspaceProduct } from "./contract";
 import { classifyFile, packFromFilenames, rejectionForFile } from "./documents";
 import { DraftForm } from "./draft-form";
 import { buildResult, type EvidencePack, fixtureById } from "./fixtures";
 import { MetaItem, PageHeader, ProductNav } from "./page-chrome";
-import { ProductConnections } from "@/components/connections/product-connections";
 import { ProgressView } from "./progress-view";
 import { readProduct, writeProduct } from "./store";
 import { UploadCard } from "./upload-card";
@@ -285,6 +286,7 @@ export function ProductWorkspace({
         requirements v{product.requirementSetVersion}
       </p>
       <UploadCard
+        checklist={checklistFor(product.requirementSetKey, product.requirementSetVersion)}
         documents={product.documents}
         replacing={replacing}
         highlighted={highlighted}
